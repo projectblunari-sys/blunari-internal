@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SecuritySettings, APIKey, TrustedDevice } from '@/types/profile';
+import { APIKeyManager } from '@/components/security/APIKeyManager';
+import { TwoFactorAuth } from '@/components/security/TwoFactorAuth';
 import { 
   Shield, 
   Key, 
@@ -330,86 +332,25 @@ export function SecurityTab({ securitySettings, apiKeys, onUpdateSecurity, onUpd
         </CardContent>
       </Card>
 
-      {/* API Keys */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              API Keys
-            </span>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Create API Key
-            </Button>
-          </CardTitle>
-          <CardDescription>
-            Manage API keys for programmatic access
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {apiKeys.map((key) => (
-              <div key={key.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h4 className="font-medium">{key.name}</h4>
-                    <Badge className={key.isActive 
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                      : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                    }>
-                      {key.isActive ? 'Active' : 'Revoked'}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    {key.description}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>Key: {key.keyPreview}</span>
-                    {key.lastUsedAt && (
-                      <span>Last used: {new Date(key.lastUsedAt).toLocaleDateString()}</span>
-                    )}
-                    {key.expiresAt && (
-                      <span>Expires: {new Date(key.expiresAt).toLocaleDateString()}</span>
-                    )}
-                  </div>
-                  <div className="flex gap-1 mt-2">
-                    {key.permissions.map((permission) => (
-                      <Badge key={permission} variant="outline" className="text-xs">
-                        {permission}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(key.keyPreview);
-                      toast({
-                        title: "Copied",
-                        description: "API key preview copied to clipboard.",
-                      });
-                    }}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  {key.isActive && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRevokeAPIKey(key.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Enhanced Security Features */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <APIKeyManager 
+          apiKeys={apiKeys} 
+          onUpdateAPIKeys={onUpdateAPIKeys} 
+        />
+        <TwoFactorAuth
+          isEnabled={securitySettings.twoFactorEnabled}
+          backupCodes={securitySettings.backupCodes}
+          onToggle2FA={(enabled) => onUpdateSecurity({
+            ...securitySettings,
+            twoFactorEnabled: enabled
+          })}
+          onRegenerateBackupCodes={(codes) => onUpdateSecurity({
+            ...securitySettings,
+            backupCodes: codes
+          })}
+        />
+      </div>
     </div>
   );
 }

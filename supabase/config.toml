@@ -45,3 +45,9 @@ verify_jwt = false
 
 [functions.system-health]
 verify_jwt = false
+
+[functions.rate-limiter]
+verify_jwt = false
+
+[functions.log-audit-event]
+verify_jwt = true
