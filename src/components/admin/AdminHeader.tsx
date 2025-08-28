@@ -39,11 +39,7 @@ export function AdminHeader() {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Quick Actions */}
-          <Button size="sm" className="hidden sm:flex">
-            <Plus className="h-4 w-4 mr-2" />
-            New Tenant
-          </Button>
+          {/* Quick Actions - Removed New Tenant button as it belongs in tenant section */}
 
           {/* Notifications */}
           <Button variant="outline" size="icon" className="relative">

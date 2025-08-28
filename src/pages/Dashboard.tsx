@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react"
-import { AdminLayout } from "@/components/admin/AdminLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -227,61 +226,52 @@ const Dashboard = () => {
 
   if (error && !realtimeData) {
     return (
-      <AdminLayout>
-        <div className="space-y-6">
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              {error} - Please try refreshing the page or contact support if the issue persists.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </AdminLayout>
+      <div className="space-y-6">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {error} - Please try refreshing the page or contact support if the issue persists.
+          </AlertDescription>
+        </Alert>
+      </div>
     )
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6" role="main" aria-label="Platform Administration Dashboard">
-        {/* Header with Connection Status */}
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">Platform Administration</h1>
-              <div className="flex items-center gap-2">
-                {isConnected ? (
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">
-                    <Wifi className="h-3 w-3 mr-1" />
-                    Live
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive">
-                    <WifiOff className="h-3 w-3 mr-1" />
-                    Offline
-                  </Badge>
-                )}
-                {lastUpdated && (
-                  <span className="text-xs text-muted-foreground">
-                    Updated: {lastUpdated.toLocaleTimeString()}
-                  </span>
-                )}
-              </div>
-            </div>
-            <p className="text-muted-foreground">
-              Internal staff dashboard for platform management and analytics
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <ExportControls dateRange={dateRange} disabled={loading} />
-            <DateRangeFilter
-              value={dateRange}
-              onChange={handleDateRangeChange}
-              onRefresh={handleRefresh}
-              isLoading={loading}
-            />
+    <div className="space-y-6" role="main" aria-label="Platform Administration Dashboard">
+      {/* Connection Status and Last Updated Info */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {isConnected ? (
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <Wifi className="h-3 w-3 mr-1" />
+                Live
+              </Badge>
+            ) : (
+              <Badge variant="destructive">
+                <WifiOff className="h-3 w-3 mr-1" />
+                Offline
+              </Badge>
+            )}
+            {lastUpdated && (
+              <span className="text-xs text-muted-foreground">
+                Updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
           </div>
         </div>
+        
+        <div className="flex items-center gap-3">
+          <ExportControls dateRange={dateRange} disabled={loading} />
+          <DateRangeFilter
+            value={dateRange}
+            onChange={handleDateRangeChange}
+            onRefresh={handleRefresh}
+            isLoading={loading}
+          />
+        </div>
+      </div>
 
         {/* KPI Metrics Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -685,7 +675,6 @@ const Dashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
   )
 }
 
