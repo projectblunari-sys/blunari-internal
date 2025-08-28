@@ -10,13 +10,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Bell, Search, Plus } from "lucide-react"
+import { Bell, Search, Plus, User, Settings, HelpCircle, LogOut } from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { Input } from "@/components/ui/input"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Link, useNavigate } from "react-router-dom"
 
 export function AdminHeader() {
   const { user, profile, signOut } = useAuth()
+  const navigate = useNavigate()
 
   const initials = profile?.first_name && profile?.last_name 
     ? `${profile.first_name[0]}${profile.last_name[0]}` 
@@ -74,11 +76,21 @@ export function AdminHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/admin/profile')}>
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/admin/settings')}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <HelpCircle className="mr-2 h-4 w-4" />
+                Support
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut}>
+                <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>
