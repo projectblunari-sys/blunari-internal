@@ -198,6 +198,54 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          description: string | null
+          employee_id: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key_hash: string
+          key_name: string
+          key_preview: string
+          last_used_at: string | null
+          permissions: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          employee_id?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash: string
+          key_name: string
+          key_preview: string
+          last_used_at?: string | null
+          permissions?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          employee_id?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_hash?: string
+          key_name?: string
+          key_preview?: string
+          last_used_at?: string | null
+          permissions?: Json | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       auto_provisioning: {
         Row: {
           completed_at: string | null
@@ -1957,6 +2005,33 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          identifier: string
+          metadata: Json | null
+          rate_limit_key: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          identifier: string
+          metadata?: Json | null
+          rate_limit_key: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          identifier?: string
+          metadata?: Json | null
+          rate_limit_key?: string
+        }
+        Relationships: []
+      }
       request_traces: {
         Row: {
           created_at: string
@@ -2111,6 +2186,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_events: {
+        Row: {
+          created_at: string
+          employee_id: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          employee_id?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       service_health_status: {
         Row: {
@@ -2553,6 +2673,45 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_info: Json | null
+          expires_at: string
+          id: string
+          ip_address: unknown | null
+          is_active: boolean | null
+          last_activity: string | null
+          location_data: Json | null
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          location_data?: Json | null
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown | null
+          is_active?: boolean | null
+          last_activity?: string | null
+          location_data?: Json | null
+          session_token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       widget_configs: {
         Row: {
           configuration: Json
@@ -2624,6 +2783,10 @@ export type Database = {
           domain_name: string
         }[]
       }
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_health_incident: {
         Args: {
           p_health_status: string
@@ -2654,6 +2817,10 @@ export type Database = {
         Args: { required_role: Database["public"]["Enums"]["employee_role"] }
         Returns: boolean
       }
+      hash_api_key: {
+        Args: { api_key: string }
+        Returns: string
+      }
       log_employee_activity: {
         Args: {
           p_action: string
@@ -2662,6 +2829,18 @@ export type Database = {
           p_resource_type?: string
         }
         Returns: undefined
+      }
+      log_security_event: {
+        Args: {
+          p_employee_id?: string
+          p_event_data?: Json
+          p_event_type: string
+          p_ip_address?: unknown
+          p_severity?: string
+          p_user_agent?: string
+          p_user_id?: string
+        }
+        Returns: string
       }
       process_pos_event: {
         Args: {
@@ -2736,6 +2915,10 @@ export type Database = {
       }
       user_has_tenant_access: {
         Args: { target_tenant_id: string }
+        Returns: boolean
+      }
+      validate_api_key_permissions: {
+        Args: { p_key_hash: string; p_required_permission: string }
         Returns: boolean
       }
       verify_domain: {

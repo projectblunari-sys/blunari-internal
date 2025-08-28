@@ -78,7 +78,7 @@ export function APIKeyManager({ apiKeys, onUpdateAPIKeys }: APIKeyManagerProps) 
         description: data.description || '',
         keyPreview: SecurityAPIKeyManager.maskAPIKey(apiKey),
         permissions: data.permissions,
-        expiresAt: data.expiresAt || undefined,
+        expiresAt: typeof data.expiresAt === 'string' ? data.expiresAt : data.expiresAt?.toISOString(),
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
