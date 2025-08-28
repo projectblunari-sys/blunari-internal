@@ -14,7 +14,429 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      booking_holds: {
+        Row: {
+          booking_time: string
+          created_at: string
+          duration_minutes: number
+          expires_at: string
+          id: string
+          party_size: number
+          session_id: string
+          table_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          booking_time: string
+          created_at?: string
+          duration_minutes?: number
+          expires_at: string
+          id?: string
+          party_size: number
+          session_id: string
+          table_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          booking_time?: string
+          created_at?: string
+          duration_minutes?: number
+          expires_at?: string
+          id?: string
+          party_size?: number
+          session_id?: string
+          table_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_holds_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_holds_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          booking_time: string
+          created_at: string
+          deposit_amount: number | null
+          deposit_paid: boolean
+          deposit_required: boolean
+          duration_minutes: number
+          guest_email: string
+          guest_name: string
+          guest_phone: string | null
+          id: string
+          party_size: number
+          special_requests: string | null
+          status: string
+          table_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          booking_time: string
+          created_at?: string
+          deposit_amount?: number | null
+          deposit_paid?: boolean
+          deposit_required?: boolean
+          duration_minutes?: number
+          guest_email: string
+          guest_name: string
+          guest_phone?: string | null
+          id?: string
+          party_size: number
+          special_requests?: string | null
+          status?: string
+          table_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          booking_time?: string
+          created_at?: string
+          deposit_amount?: number | null
+          deposit_paid?: boolean
+          deposit_required?: boolean
+          duration_minutes?: number
+          guest_email?: string
+          guest_name?: string
+          guest_phone?: string | null
+          id?: string
+          party_size?: number
+          special_requests?: string | null
+          status?: string
+          table_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      domains: {
+        Row: {
+          created_at: string
+          domain: string
+          domain_type: string
+          id: string
+          ssl_status: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          verification_record: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          domain_type: string
+          id?: string
+          ssl_status?: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          verification_record?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          domain_type?: string
+          id?: string
+          ssl_status?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          verification_record?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domains_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_outbox: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          max_retries: number
+          payload: Json
+          processed_at: string | null
+          retry_count: number
+          scheduled_at: string
+          status: string
+          tenant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          max_retries?: number
+          payload: Json
+          processed_at?: string | null
+          retry_count?: number
+          scheduled_at?: string
+          status?: string
+          tenant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          max_retries?: number
+          payload?: Json
+          processed_at?: string | null
+          retry_count?: number
+          scheduled_at?: string
+          status?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_outbox_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provisioning_runs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          idempotency_key: string
+          request_data: Json
+          result_data: Json | null
+          status: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key: string
+          request_data: Json
+          result_data?: Json | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string
+          request_data?: Json
+          result_data?: Json | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provisioning_runs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      provisioning_steps: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          run_id: string
+          started_at: string | null
+          status: string
+          step_data: Json | null
+          step_name: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          run_id: string
+          started_at?: string | null
+          status?: string
+          step_data?: Json | null
+          step_name: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          run_id?: string
+          started_at?: string | null
+          status?: string
+          step_data?: Json | null
+          step_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provisioning_steps_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "provisioning_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_tables: {
+        Row: {
+          active: boolean
+          capacity: number
+          created_at: string
+          id: string
+          name: string
+          position_x: number | null
+          position_y: number | null
+          table_type: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          capacity: number
+          created_at?: string
+          id?: string
+          name: string
+          position_x?: number | null
+          position_y?: number | null
+          table_type?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          id?: string
+          name?: string
+          position_x?: number | null
+          position_y?: number | null
+          table_type?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tables_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_features: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          feature_key: string
+          id: string
+          source: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          feature_key: string
+          id?: string
+          source?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          feature_key?: string
+          id?: string
+          source?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_features_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          name: string
+          slug: string
+          status: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          name: string
+          slug: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          name?: string
+          slug?: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
