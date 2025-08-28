@@ -10,23 +10,20 @@ export default function NewTenantPage() {
 
   const handleProvisioningComplete = async (data: ProvisioningData) => {
     try {
-      // Call the enhanced provision_tenant function with all the new data
-      const { data: result, error } = await supabase.rpc('provision_tenant', {
-        p_user_id: data.ownerEmail, // Will be replaced with actual user creation in future
-        p_restaurant_name: data.restaurantName,
-        p_restaurant_slug: data.slug,
-        p_timezone: data.timezone,
-        p_currency: 'USD'
+      // Call the comprehensive provision-tenant edge function
+      const { data: result, error } = await supabase.functions.invoke('provision-tenant', {
+        body: data
       })
 
       if (error) throw error
 
-      // TODO: Create additional data (business hours, party size config, subscription, etc.)
-      // This will be implemented with proper edge functions in the future
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to provision tenant')
+      }
 
       toast({
         title: "Success!",
-        description: `${data.restaurantName} has been successfully created!`,
+        description: result.message || `${data.restaurantName} has been successfully created!`,
       })
 
       // Navigate back to tenants list

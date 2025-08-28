@@ -868,13 +868,27 @@ export type Database = {
         }[]
       }
       provision_tenant: {
-        Args: {
-          p_currency?: string
-          p_restaurant_name: string
-          p_restaurant_slug: string
-          p_timezone?: string
-          p_user_id: string
-        }
+        Args:
+          | {
+              p_address?: Json
+              p_cuisine_type_id?: string
+              p_currency?: string
+              p_description?: string
+              p_email?: string
+              p_phone?: string
+              p_restaurant_name: string
+              p_restaurant_slug: string
+              p_timezone?: string
+              p_user_id: string
+              p_website?: string
+            }
+          | {
+              p_currency?: string
+              p_restaurant_name: string
+              p_restaurant_slug: string
+              p_timezone?: string
+              p_user_id: string
+            }
         Returns: string
       }
       user_has_tenant_access: {

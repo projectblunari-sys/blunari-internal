@@ -1,4 +1,3 @@
-import { AdminLayout } from "@/components/admin/AdminLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +20,6 @@ import { Separator } from "@/components/ui/separator"
 
 const SettingsPage = () => {
   return (
-    <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -378,7 +376,6 @@ const SettingsPage = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
   )
 }
 
