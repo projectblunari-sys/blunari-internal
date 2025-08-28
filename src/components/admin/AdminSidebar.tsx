@@ -259,9 +259,12 @@ export const AdminSidebar = memo(() => {
         <div className="flex items-center justify-between p-4">
           {open && (
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-elegant">
-                <Building className="h-4 w-4 text-primary-foreground" />
-              </div>
+              <img
+                src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png"
+                alt="Blunari"
+                className="h-8 w-8 rounded-lg object-cover shadow-elegant"
+                loading="lazy"
+              />
               <div>
                 <span className="text-lg font-bold text-sidebar-foreground">Blunari</span>
                 <p className="text-xs text-sidebar-foreground/70">Admin Portal</p>
@@ -269,9 +272,12 @@ export const AdminSidebar = memo(() => {
             </div>
           )}
           {!open && (
-            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-elegant mx-auto">
-              <Building className="h-4 w-4 text-primary-foreground" />
-            </div>
+            <img
+              src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png"
+              alt="Blunari"
+              className="h-8 w-8 rounded-lg object-cover shadow-elegant mx-auto"
+              loading="lazy"
+            />
           )}
         </div>
       </SidebarHeader>

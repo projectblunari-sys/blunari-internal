@@ -83,22 +83,7 @@ export function AdminHeader() {
       <div className="flex h-16 items-center justify-between px-6">
         {/* Left Section */}
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <SidebarTrigger className="h-9 w-9 rounded-md hover:bg-accent/50 transition-colors duration-200" />
-            
-            {/* Brand & Page Title */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-elegant">
-                  <Briefcase className="h-4 w-4 text-primary-foreground" />
-                </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-lg font-semibold text-foreground">{getPageTitle()}</h1>
-                  <p className="text-xs text-muted-foreground">Blunari Admin</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <SidebarTrigger className="h-9 w-9 rounded-md hover:bg-accent/50 transition-colors duration-200" />
           
           {/* Enhanced Search */}
           <div className="relative hidden lg:block">
