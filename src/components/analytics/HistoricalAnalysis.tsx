@@ -1,498 +1,375 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  AreaChart, 
-  Area,
-  BarChart,
-  Bar,
-  ComposedChart,
-  Legend
-} from 'recharts';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   TrendingUp, 
   TrendingDown, 
   Calendar, 
   BarChart3, 
-  Activity,
-  Users,
-  DollarSign,
+  LineChart as LineChartIcon,
   Target,
-  ArrowUp,
-  ArrowDown,
-  Minus
+  Clock
 } from 'lucide-react';
-import { useAnalyticsTracking } from '@/hooks/useAnalyticsTracking';
-import { DateRangeFilter } from '@/components/dashboard/DateRangeFilter';
-
-interface HistoricalDataPoint {
-  date: string;
-  timestamp: number;
-  revenue: number;
-  bookings: number;
-  activeUsers: number;
-  newSignups: number;
-  churnRate: number;
-  avgOrderValue: number;
-  conversionRate: number;
-  systemUptime: number;
-  errorRate: number;
-  responseTime: number;
-}
-
-interface TrendAnalysis {
-  metric: string;
-  current: number;
-  previous: number;
-  change: number;
-  trend: 'up' | 'down' | 'stable';
-  significance: 'high' | 'medium' | 'low';
-}
-
-// Generate mock historical data
-const generateHistoricalData = (days: number): HistoricalDataPoint[] => {
-  const data: HistoricalDataPoint[] = [];
-  const now = new Date();
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - i);
-    
-    // Generate realistic trending data
-    const baseRevenue = 45000 + (Math.random() * 20000);
-    const seasonalMultiplier = 1 + Math.sin((i / 30) * Math.PI) * 0.2; // Monthly seasonality
-    const weekendMultiplier = date.getDay() === 0 || date.getDay() === 6 ? 1.3 : 1.0;
-    
-    data.push({
-      date: date.toISOString().split('T')[0],
-      timestamp: date.getTime(),
-      revenue: Math.round(baseRevenue * seasonalMultiplier * weekendMultiplier),
-      bookings: Math.round(180 + (Math.random() * 100) * weekendMultiplier),
-      activeUsers: Math.round(2800 + (Math.random() * 600)),
-      newSignups: Math.round(15 + (Math.random() * 25)),
-      churnRate: 2.5 + (Math.random() * 2),
-      avgOrderValue: 35 + (Math.random() * 20),
-      conversionRate: 3.2 + (Math.random() * 1.5),
-      systemUptime: 99.5 + (Math.random() * 0.5),
-      errorRate: Math.random() * 0.5,
-      responseTime: 120 + (Math.random() * 80)
-    });
-  }
-  
-  return data;
-};
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
 
 export const HistoricalAnalysis: React.FC = () => {
-  const [timeRange, setTimeRange] = useState('30d');
-  const [metric, setMetric] = useState('revenue');
-  const [comparisonPeriod, setComparisonPeriod] = useState('previous');
-  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | null>(null);
-  
-  const { trackFeatureUsage } = useAnalyticsTracking();
+  const [timeframe, setTimeframe] = useState<string>('6-months');
+  const [metric, setMetric] = useState<string>('revenue');
 
-  useEffect(() => {
-    trackFeatureUsage('analytics', 'historical_analysis_view');
-  }, [trackFeatureUsage]);
+  // Mock historical data
+  const historicalData = {
+    revenue: [
+      { period: 'Jan', value: 45000, growth: 12.5 },
+      { period: 'Feb', value: 52000, growth: 15.6 },
+      { period: 'Mar', value: 48000, growth: -7.7 },
+      { period: 'Apr', value: 61000, growth: 27.1 },
+      { period: 'May', value: 55000, growth: -9.8 },
+      { period: 'Jun', value: 67000, growth: 21.8 },
+    ],
+    tenants: [
+      { period: 'Jan', value: 285, growth: 8.2 },
+      { period: 'Feb', value: 292, growth: 2.5 },
+      { period: 'Mar', value: 301, growth: 3.1 },
+      { period: 'Apr', value: 318, growth: 5.6 },
+      { period: 'May', value: 329, growth: 3.5 },
+      { period: 'Jun', value: 342, growth: 4.0 },
+    ],
+    bookings: [
+      { period: 'Jan', value: 8450, growth: 15.2 },
+      { period: 'Feb', value: 9120, growth: 7.9 },
+      { period: 'Mar', value: 8890, growth: -2.5 },
+      { period: 'Apr', value: 10200, growth: 14.7 },
+      { period: 'May', value: 11500, growth: 12.7 },
+      { period: 'Jun', value: 12850, growth: 11.7 },
+    ]
+  };
 
-  const historicalData = useMemo(() => {
-    const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
-    return generateHistoricalData(days);
-  }, [timeRange]);
-
-  const trendAnalysis = useMemo((): TrendAnalysis[] => {
-    if (historicalData.length < 2) return [];
-    
-    const currentPeriod = historicalData.slice(-7); // Last 7 days
-    const previousPeriod = historicalData.slice(-14, -7); // Previous 7 days
-    
-    const calculateAverage = (data: HistoricalDataPoint[], field: keyof HistoricalDataPoint) => {
-      const values = data.map(d => d[field] as number);
-      return values.reduce((sum, val) => sum + val, 0) / values.length;
-    };
-    
-    const metrics = [
-      'revenue', 'bookings', 'activeUsers', 'newSignups', 
-      'churnRate', 'avgOrderValue', 'conversionRate', 'systemUptime'
-    ];
-    
-    return metrics.map(metricName => {
-      const current = calculateAverage(currentPeriod, metricName as keyof HistoricalDataPoint);
-      const previous = calculateAverage(previousPeriod, metricName as keyof HistoricalDataPoint);
-      const change = ((current - previous) / previous) * 100;
-      
-      let trend: 'up' | 'down' | 'stable' = 'stable';
-      if (Math.abs(change) > 5) {
-        trend = change > 0 ? 'up' : 'down';
-      }
-      
-      let significance: 'high' | 'medium' | 'low' = 'low';
-      if (Math.abs(change) > 20) significance = 'high';
-      else if (Math.abs(change) > 10) significance = 'medium';
-      
-      return {
-        metric: metricName,
-        current,
-        previous,
-        change,
-        trend,
-        significance
-      };
-    });
-  }, [historicalData]);
-
-  const formatMetricValue = (value: number, metricType: string) => {
-    switch (metricType) {
-      case 'revenue':
-        return `$${value.toLocaleString()}`;
-      case 'churnRate':
-      case 'conversionRate':
-      case 'systemUptime':
-      case 'errorRate':
-        return `${value.toFixed(1)}%`;
-      case 'responseTime':
-        return `${value.toFixed(0)}ms`;
-      case 'avgOrderValue':
-        return `$${value.toFixed(2)}`;
-      default:
-        return Math.round(value).toLocaleString();
+  const performanceIndicators = [
+    {
+      title: 'Revenue Growth Rate',
+      value: '+18.5%',
+      trend: 'up',
+      description: 'Average monthly growth over period',
+      color: 'text-success'
+    },
+    {
+      title: 'Customer Acquisition',
+      value: '+12.3%',
+      trend: 'up',
+      description: 'New tenant acquisition rate',
+      color: 'text-primary'
+    },
+    {
+      title: 'Booking Volume',
+      value: '+52.1%',
+      trend: 'up',
+      description: 'Total booking growth',
+      color: 'text-accent'
+    },
+    {
+      title: 'Churn Rate',
+      value: '-2.1%',
+      trend: 'down',
+      description: 'Customer retention improvement',
+      color: 'text-warning'
     }
-  };
+  ];
 
-  const getMetricDisplayName = (metricName: string) => {
-    const names: Record<string, string> = {
-      revenue: 'Revenue',
-      bookings: 'Bookings',
-      activeUsers: 'Active Users',
-      newSignups: 'New Signups',
-      churnRate: 'Churn Rate',
-      avgOrderValue: 'Avg Order Value',
-      conversionRate: 'Conversion Rate',
-      systemUptime: 'System Uptime',
-      errorRate: 'Error Rate',
-      responseTime: 'Response Time'
-    };
-    return names[metricName] || metricName;
-  };
-
-  const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
-    switch (trend) {
-      case 'up':
-        return <ArrowUp className="h-3 w-3 text-green-600" />;
-      case 'down':
-        return <ArrowDown className="h-3 w-3 text-red-600" />;
-      default:
-        return <Minus className="h-3 w-3 text-gray-600" />;
+  const keyInsights = [
+    {
+      title: 'Peak Performance Period',
+      description: 'April showed the highest revenue growth at 27.1%',
+      impact: 'high',
+      date: 'April 2024'
+    },
+    {
+      title: 'Consistent Growth',
+      description: 'Tenant base has grown consistently for 6 months',
+      impact: 'medium',
+      date: 'Jan-Jun 2024'
+    },
+    {
+      title: 'Booking Acceleration',
+      description: 'Booking volume shows accelerating growth trend',
+      impact: 'high',
+      date: 'Recent trend'
     }
-  };
+  ];
 
-  const getSignificanceBadge = (significance: 'high' | 'medium' | 'low') => {
-    const colors = {
-      high: 'bg-red-100 text-red-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      low: 'bg-green-100 text-green-800'
-    };
-    return <Badge className={colors[significance]}>{significance}</Badge>;
-  };
-
-  // Prepare chart data based on selected metric
-  const chartData = historicalData.map(point => ({
-    date: new Date(point.timestamp).toLocaleDateString(),
-    value: point[metric as keyof HistoricalDataPoint] as number,
-    formattedDate: new Date(point.timestamp).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
-    })
-  }));
+  const currentData = historicalData[metric as keyof typeof historicalData] || historicalData.revenue;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Historical Analysis</h2>
-          <p className="text-muted-foreground">
-            Analyze trends and patterns in your data over time
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-            </SelectContent>
-          </Select>
-          <DateRangeFilter
-            value={dateRange}
-            onChange={setDateRange}
-            onRefresh={() => {}}
-          />
-        </div>
-      </div>
-
-      {/* Trend Analysis Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {trendAnalysis.slice(0, 4).map((trend) => (
-          <Card key={trend.metric}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {getMetricDisplayName(trend.metric)}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Historical Analysis
               </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="text-2xl font-bold">
-                  {formatMetricValue(trend.current, trend.metric)}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-sm">
-                    {getTrendIcon(trend.trend)}
-                    <span className={trend.change > 0 ? 'text-green-600' : trend.change < 0 ? 'text-red-600' : 'text-gray-600'}>
-                      {Math.abs(trend.change).toFixed(1)}%
-                    </span>
-                  </div>
-                  {getSignificanceBadge(trend.significance)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  vs previous period: {formatMetricValue(trend.previous, trend.metric)}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Tabs defaultValue="charts" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="charts">Time Series Charts</TabsTrigger>
-          <TabsTrigger value="comparison">Period Comparison</TabsTrigger>
-          <TabsTrigger value="trends">Trend Analysis</TabsTrigger>
-          <TabsTrigger value="correlations">Correlations</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="charts" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Historical Trends</CardTitle>
-                  <CardDescription>
-                    Time series analysis of key metrics
-                  </CardDescription>
-                </div>
-                <Select value={metric} onValueChange={setMetric}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="revenue">Revenue</SelectItem>
-                    <SelectItem value="bookings">Bookings</SelectItem>
-                    <SelectItem value="activeUsers">Active Users</SelectItem>
-                    <SelectItem value="newSignups">New Signups</SelectItem>
-                    <SelectItem value="churnRate">Churn Rate</SelectItem>
-                    <SelectItem value="conversionRate">Conversion Rate</SelectItem>
-                    <SelectItem value="systemUptime">System Uptime</SelectItem>
-                    <SelectItem value="responseTime">Response Time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="formattedDate" 
-                    fontSize={12}
-                    tick={{ fontSize: 10 }}
-                  />
-                  <YAxis 
-                    fontSize={12}
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(value) => formatMetricValue(value, metric)}
-                  />
-                  <Tooltip 
-                    formatter={(value) => [formatMetricValue(value as number, metric), getMetricDisplayName(metric)]}
-                    labelFormatter={(label) => `Date: ${label}`}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="hsl(var(--primary))" 
-                    fillOpacity={1}
-                    fill="url(#colorValue)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="comparison" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue vs Bookings</CardTitle>
-                <CardDescription>
-                  Compare revenue trends with booking volume
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <ComposedChart data={historicalData.slice(-30)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="date" 
-                      fontSize={10}
-                      tick={{ fontSize: 8 }}
-                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    />
-                    <YAxis yAxisId="left" orientation="left" />
-                    <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip />
-                    <Legend />
-                    <Bar yAxisId="left" dataKey="revenue" fill="hsl(var(--primary))" name="Revenue ($)" />
-                    <Line yAxisId="right" type="monotone" dataKey="bookings" stroke="hsl(var(--destructive))" name="Bookings" />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Performance Metrics</CardTitle>
-                <CardDescription>
-                  System performance over time
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={historicalData.slice(-30)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="date" 
-                      fontSize={10}
-                      tick={{ fontSize: 8 }}
-                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="responseTime" stroke="hsl(var(--primary))" name="Response Time (ms)" />
-                    <Line type="monotone" dataKey="errorRate" stroke="hsl(var(--destructive))" name="Error Rate (%)" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="trends" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Detailed Trend Analysis</CardTitle>
               <CardDescription>
-                Statistical analysis of metric changes over time
+                Analyze trends and patterns over time
               </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {trendAnalysis.map((trend) => (
-                  <div key={trend.metric} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        {getTrendIcon(trend.trend)}
-                        <span className="font-medium">{getMetricDisplayName(trend.metric)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={timeframe} onValueChange={setTimeframe}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3-months">Last 3 months</SelectItem>
+                  <SelectItem value="6-months">Last 6 months</SelectItem>
+                  <SelectItem value="1-year">Last year</SelectItem>
+                  <SelectItem value="2-years">Last 2 years</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={metric} onValueChange={setMetric}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="revenue">Revenue</SelectItem>
+                  <SelectItem value="tenants">Tenants</SelectItem>
+                  <SelectItem value="bookings">Bookings</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="trends" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="trends">Trends</TabsTrigger>
+              <TabsTrigger value="performance">Performance</TabsTrigger>
+              <TabsTrigger value="insights">Insights</TabsTrigger>
+              <TabsTrigger value="forecasting">Forecasting</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="trends" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Value Trend</CardTitle>
+                    <CardDescription>Historical {metric} progression</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={currentData}>
+                        <defs>
+                          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="period" />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value) => [
+                            typeof value === 'number' ? value.toLocaleString() : value, 
+                            metric.charAt(0).toUpperCase() + metric.slice(1)
+                          ]}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="value" 
+                          stroke="hsl(var(--primary))" 
+                          fillOpacity={1}
+                          fill="url(#colorValue)"
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Growth Rate</CardTitle>
+                    <CardDescription>Month-over-month growth percentage</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={currentData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="period" />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value) => [`${value}%`, 'Growth Rate']}
+                        />
+                        <Bar 
+                          dataKey="growth" 
+                          fill="hsl(var(--primary))"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="performance" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {performanceIndicators.map((indicator, index) => (
+                  <Card key={index}>
+                    <CardContent className="pt-6">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            {indicator.title}
+                          </span>
+                          {indicator.trend === 'up' ? (
+                            <TrendingUp className="h-4 w-4 text-success" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4 text-destructive" />
+                          )}
+                        </div>
+                        <div className={`text-2xl font-bold ${indicator.color}`}>
+                          {indicator.value}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {indicator.description}
+                        </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Current: {formatMetricValue(trend.current, trend.metric)}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Previous: {formatMetricValue(trend.previous, trend.metric)}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className={`font-medium ${trend.change > 0 ? 'text-green-600' : trend.change < 0 ? 'text-red-600' : 'text-gray-600'}`}>
-                        {trend.change > 0 ? '+' : ''}{trend.change.toFixed(1)}%
-                      </div>
-                      {getSignificanceBadge(trend.significance)}
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="correlations" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Metric Correlations</CardTitle>
-              <CardDescription>
-                Understand relationships between different metrics
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-4">
-                  <h4 className="font-medium">Strong Positive Correlations</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm">Revenue ↔ Bookings</span>
-                      <Badge className="bg-green-100 text-green-800">+0.89</Badge>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Period Comparison</CardTitle>
+                  <CardDescription>Compare performance across different time periods</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-primary">
+                        {currentData[0]?.value.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Starting Period ({currentData[0]?.period})
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm">Active Users ↔ New Signups</span>
-                      <Badge className="bg-green-100 text-green-800">+0.76</Badge>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-success">
+                        {currentData[currentData.length - 1]?.value.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Latest Period ({currentData[currentData.length - 1]?.period})
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm">Conversion Rate ↔ Revenue</span>
-                      <Badge className="bg-green-100 text-green-800">+0.72</Badge>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-4">
-                  <h4 className="font-medium">Negative Correlations</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                      <span className="text-sm">Response Time ↔ Conversion Rate</span>
-                      <Badge className="bg-red-100 text-red-800">-0.65</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                      <span className="text-sm">Error Rate ↔ System Uptime</span>
-                      <Badge className="bg-red-100 text-red-800">-0.82</Badge>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                      <span className="text-sm">Churn Rate ↔ User Satisfaction</span>
-                      <Badge className="bg-red-100 text-red-800">-0.71</Badge>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-accent">
+                        +{Math.round(((currentData[currentData.length - 1]?.value - currentData[0]?.value) / currentData[0]?.value) * 100)}%
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Total Growth
+                      </div>
                     </div>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="insights" className="space-y-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Key Insights</h3>
+                {keyInsights.map((insight, index) => (
+                  <Card key={index}>
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">{insight.title}</h4>
+                            <Badge 
+                              variant={insight.impact === 'high' ? 'default' : 'secondary'}
+                            >
+                              {insight.impact} impact
+                            </Badge>
+                          </div>
+                          <p className="text-muted-foreground">{insight.description}</p>
+                          <div className="text-sm text-muted-foreground">
+                            {insight.date}
+                          </div>
+                        </div>
+                        <Target className="h-5 w-5 text-primary" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+
+            <TabsContent value="forecasting" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Predictive Analysis</CardTitle>
+                  <CardDescription>
+                    Based on historical trends and current patterns
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Next 3 Months Forecast</h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                          <span>Projected Revenue</span>
+                          <span className="font-bold text-success">$185,000</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                          <span>Expected Growth</span>
+                          <span className="font-bold text-primary">+22%</span>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                          <span>New Tenants</span>
+                          <span className="font-bold text-accent">45-60</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Risk Factors</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-warning border-warning/20">
+                            Medium Risk
+                          </Badge>
+                          <span className="text-sm">Seasonal demand variation</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-success border-success/20">
+                            Low Risk
+                          </Badge>
+                          <span className="text-sm">Market competition</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-destructive border-destructive/20">
+                            High Risk
+                          </Badge>
+                          <span className="text-sm">Economic uncertainty</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

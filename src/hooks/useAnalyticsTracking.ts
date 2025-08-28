@@ -1,134 +1,144 @@
-import { useCallback, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-interface AnalyticsEvent {
-  event_type: string;
-  event_data: Record<string, any>;
-  user_session?: string;
-  user_agent?: string;
-  ip_address?: string;
+interface MetricData {
+  name: string;
+  value: number;
+  unit?: string;
+  category?: string;
+  metadata?: Record<string, any>;
 }
 
-interface BusinessMetric {
-  metric_name: string;
-  metric_value: number;
-  metric_unit: string;
-  period_start: Date;
-  period_end: Date;
+interface FeatureUsageData {
+  feature: string;
+  action: string;
   metadata?: Record<string, any>;
 }
 
 export const useAnalyticsTracking = () => {
   const { toast } = useToast();
 
-  // Track user events
-  const trackEvent = useCallback(async (event: Omit<AnalyticsEvent, 'user_session' | 'user_agent' | 'tenant_id'>) => {
+  const recordMetric = useCallback(async (metricData: MetricData) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Recording metric:', metricData);
       
-      if (!user) return;
-
-      // Get current tenant ID for the user
-      const { data: tenantData } = await supabase
-        .from('auto_provisioning')
-        .select('tenant_id')
-        .eq('user_id', user.id)
-        .eq('status', 'completed')
-        .single();
-
-      if (!tenantData?.tenant_id) return;
-
-      const { error } = await supabase.from('analytics_events').insert({
-        ...event,
-        tenant_id: tenantData.tenant_id,
-        user_session: user.id,
-        user_agent: navigator.userAgent
-      });
-
-      if (error) throw error;
-    } catch (err) {
-      console.error('Failed to track analytics event:', err);
+      // In a real application, this would send data to an analytics service
+      // For now, we'll simulate the tracking
+      
+      // You could integrate with services like:
+      // - Google Analytics 4
+      // - Mixpanel
+      // - Amplitude
+      // - Custom analytics endpoint
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to record metric:', error);
+      return false;
     }
   }, []);
 
-  // Record business metrics
-  const recordMetric = useCallback(async (metric: BusinessMetric) => {
+  const trackFeatureUsage = useCallback(async (feature: string, action: string, metadata?: Record<string, any>) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) return;
-
-      const { error } = await supabase.from('business_metrics').insert({
-        ...metric,
-        period_start: metric.period_start.toISOString(),
-        period_end: metric.period_end.toISOString(),
-        metadata: metric.metadata || {}
-      });
-
-      if (error) throw error;
-    } catch (err) {
-      console.error('Failed to record business metric:', err);
-      toast({
-        title: "Metrics Error",
-        description: "Failed to record business metric",
-        variant: "destructive",
-      });
-    }
-  }, [toast]);
-
-  // Track page views
-  const trackPageView = useCallback((page: string, metadata?: Record<string, any>) => {
-    trackEvent({
-      event_type: 'page_view',
-      event_data: {
-        page,
-        timestamp: new Date().toISOString(),
-        ...metadata
-      }
-    });
-  }, [trackEvent]);
-
-  // Track feature usage
-  const trackFeatureUsage = useCallback((feature: string, action: string, metadata?: Record<string, any>) => {
-    trackEvent({
-      event_type: 'feature_usage',
-      event_data: {
+      const usageData: FeatureUsageData = {
         feature,
         action,
-        timestamp: new Date().toISOString(),
-        ...metadata
-      }
-    });
-  }, [trackEvent]);
+        metadata: {
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+          ...metadata
+        }
+      };
 
-  // Track user engagement
-  const trackEngagement = useCallback((type: string, duration?: number, metadata?: Record<string, any>) => {
-    trackEvent({
-      event_type: 'user_engagement',
-      event_data: {
-        engagement_type: type,
-        duration_seconds: duration,
-        timestamp: new Date().toISOString(),
-        ...metadata
-      }
-    });
-  }, [trackEvent]);
+      console.log('Tracking feature usage:', usageData);
+      
+      // In a real application, this would send data to an analytics service
+      return true;
+    } catch (error) {
+      console.error('Failed to track feature usage:', error);
+      return false;
+    }
+  }, []);
 
-  // Automatic page view tracking
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    trackPageView(currentPath, {
-      referrer: document.referrer,
-      user_agent: navigator.userAgent
-    });
-  }, [trackPageView]);
+  const trackUserAction = useCallback(async (action: string, category?: string, metadata?: Record<string, any>) => {
+    try {
+      const actionData = {
+        action,
+        category: category || 'user_interaction',
+        timestamp: new Date().toISOString(),
+        metadata
+      };
+
+      console.log('Tracking user action:', actionData);
+      
+      // Send to analytics service
+      return true;
+    } catch (error) {
+      console.error('Failed to track user action:', error);
+      return false;
+    }
+  }, []);
+
+  const trackPerformance = useCallback(async (metricName: string, value: number, unit: string = 'ms') => {
+    try {
+      const performanceData = {
+        name: metricName,
+        value,
+        unit,
+        category: 'performance',
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('Tracking performance metric:', performanceData);
+      
+      // Send to analytics service
+      return recordMetric(performanceData);
+    } catch (error) {
+      console.error('Failed to track performance:', error);
+      return false;
+    }
+  }, [recordMetric]);
+
+  const trackError = useCallback(async (error: Error, context?: Record<string, any>) => {
+    try {
+      const errorData = {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        context,
+        timestamp: new Date().toISOString(),
+        url: window.location.href
+      };
+
+      console.log('Tracking error:', errorData);
+      
+      // Send to error tracking service (e.g., Sentry, Bugsnag)
+      return true;
+    } catch (trackingError) {
+      console.error('Failed to track error:', trackingError);
+      return false;
+    }
+  }, []);
+
+  const setUserProperties = useCallback(async (properties: Record<string, any>) => {
+    try {
+      console.log('Setting user properties:', properties);
+      
+      // Set user properties in analytics service
+      return true;
+    } catch (error) {
+      console.error('Failed to set user properties:', error);
+      return false;
+    }
+  }, []);
 
   return {
-    trackEvent,
     recordMetric,
-    trackPageView,
     trackFeatureUsage,
-    trackEngagement
+    trackUserAction,
+    trackPerformance,
+    trackError,
+    setUserProperties
   };
 };

@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 interface SystemMetric {
   id: string;
@@ -8,9 +6,8 @@ interface SystemMetric {
   metric_value: number;
   metric_unit: string;
   service_name: string;
-  severity: string;
+  severity: 'info' | 'warning' | 'error' | 'critical';
   recorded_at: string;
-  metadata: any;
 }
 
 interface DatabaseMetric {
@@ -27,11 +24,8 @@ interface PerformanceTrend {
   id: string;
   metric_category: string;
   metric_name: string;
-  aggregation_period: string;
   period_start: string;
   period_end: string;
-  min_value: number;
-  max_value: number;
   avg_value: number;
   percentile_50: number;
   percentile_95: number;
@@ -44,183 +38,125 @@ export const useSystemMetrics = () => {
   const [performanceTrends, setPerformanceTrends] = useState<PerformanceTrend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  // Fetch system health metrics
-  const fetchSystemMetrics = useCallback(async (timeRange: string = '1h') => {
-    try {
-      setError(null);
-      
-      const timeThreshold = new Date();
-      switch (timeRange) {
-        case '1h':
-          timeThreshold.setHours(timeThreshold.getHours() - 1);
-          break;
-        case '24h':
-          timeThreshold.setHours(timeThreshold.getHours() - 24);
-          break;
-        case '7d':
-          timeThreshold.setDate(timeThreshold.getDate() - 7);
-          break;
-        default:
-          timeThreshold.setHours(timeThreshold.getHours() - 1);
+  // Mock data generation
+  const generateMockData = useCallback(() => {
+    const mockSystemMetrics: SystemMetric[] = [
+      {
+        id: '1',
+        metric_name: 'api_response_time',
+        metric_value: 145,
+        metric_unit: 'ms',
+        service_name: 'api-gateway',
+        severity: 'info',
+        recorded_at: new Date().toISOString()
+      },
+      {
+        id: '2',
+        metric_name: 'db_query_time',
+        metric_value: 2.3,
+        metric_unit: 'ms',
+        service_name: 'database',
+        severity: 'info',
+        recorded_at: new Date().toISOString()
+      },
+      {
+        id: '3',
+        metric_name: 'active_users',
+        metric_value: 2847,
+        metric_unit: 'count',
+        service_name: 'platform',
+        severity: 'info',
+        recorded_at: new Date().toISOString()
+      },
+      {
+        id: '4',
+        metric_name: 'system_uptime',
+        metric_value: 99.98,
+        metric_unit: '%',
+        service_name: 'infrastructure',
+        severity: 'info',
+        recorded_at: new Date().toISOString()
       }
+    ];
 
-      const { data, error } = await supabase
-        .from('system_health_metrics')
-        .select('*')
-        .gte('recorded_at', timeThreshold.toISOString())
-        .order('recorded_at', { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
-      setSystemMetrics(data || []);
-    } catch (err: any) {
-      setError(err.message);
-      toast({
-        title: "Error",
-        description: "Failed to fetch system metrics",
-        variant: "destructive"
-      });
-    }
-  }, [toast]);
-
-  // Fetch database metrics
-  const fetchDatabaseMetrics = useCallback(async (timeRange: string = '1h') => {
-    try {
-      const timeThreshold = new Date();
-      switch (timeRange) {
-        case '1h':
-          timeThreshold.setHours(timeThreshold.getHours() - 1);
-          break;
-        case '24h':
-          timeThreshold.setHours(timeThreshold.getHours() - 24);
-          break;
-        case '7d':
-          timeThreshold.setDate(timeThreshold.getDate() - 7);
-          break;
+    const mockDatabaseMetrics: DatabaseMetric[] = [
+      {
+        id: '1',
+        metric_name: 'connection_utilization',
+        metric_value: 67,
+        active_connections: 15,
+        waiting_connections: 2,
+        connection_pool_size: 25,
+        recorded_at: new Date().toISOString()
+      },
+      {
+        id: '2',
+        metric_name: 'query_performance',
+        metric_value: 2.1,
+        active_connections: 12,
+        waiting_connections: 0,
+        connection_pool_size: 25,
+        recorded_at: new Date().toISOString()
       }
+    ];
 
-      const { data, error } = await supabase
-        .from('database_metrics')
-        .select('*')
-        .gte('recorded_at', timeThreshold.toISOString())
-        .order('recorded_at', { ascending: false })
-        .limit(100);
+    const mockPerformanceTrends: PerformanceTrend[] = Array.from({ length: 24 }, (_, i) => ({
+      id: `trend-${i}`,
+      metric_category: 'application',
+      metric_name: 'response_time',
+      period_start: new Date(Date.now() - (24 - i) * 60 * 60 * 1000).toISOString(),
+      period_end: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toISOString(),
+      avg_value: 120 + Math.random() * 50,
+      percentile_50: 110 + Math.random() * 40,
+      percentile_95: 180 + Math.random() * 80,
+      percentile_99: 250 + Math.random() * 100
+    }));
 
-      if (error) throw error;
-      setDatabaseMetrics(data || []);
-    } catch (err: any) {
-      setError(err.message);
-    }
+    setSystemMetrics(mockSystemMetrics);
+    setDatabaseMetrics(mockDatabaseMetrics);
+    setPerformanceTrends(mockPerformanceTrends);
+    setLoading(false);
   }, []);
 
-  // Fetch performance trends
-  const fetchPerformanceTrends = useCallback(async (period: 'hour' | 'day' | 'week' = 'hour') => {
-    try {
-      const { data, error } = await supabase
-        .from('performance_trends')
-        .select('*')
-        .eq('aggregation_period', period)
-        .order('period_start', { ascending: false })
-        .limit(50);
+  useEffect(() => {
+    generateMockData();
+  }, [generateMockData]);
 
-      if (error) throw error;
-      setPerformanceTrends(data || []);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  }, []);
-
-  // Record a system metric
-  const recordSystemMetric = useCallback(async (metric: Omit<SystemMetric, 'id' | 'recorded_at'>) => {
-    try {
-      const { error } = await supabase.functions.invoke('record-system-metric', {
-        body: metric
-      });
-
-      if (error) throw error;
-      
-      // Refresh metrics after recording
-      fetchSystemMetrics();
-    } catch (err: any) {
-      toast({
-        title: "Error",
-        description: "Failed to record system metric",
-        variant: "destructive"
-      });
-    }
-  }, [fetchSystemMetrics, toast]);
-
-  // Calculate system health score
   const calculateHealthScore = useCallback(() => {
     if (systemMetrics.length === 0) return 100;
 
-    const criticalIssues = systemMetrics.filter(m => m.severity === 'critical').length;
-    const errorIssues = systemMetrics.filter(m => m.severity === 'error').length;
-    const warningIssues = systemMetrics.filter(m => m.severity === 'warning').length;
-
     let score = 100;
-    score -= criticalIssues * 20;
-    score -= errorIssues * 10;
-    score -= warningIssues * 5;
+    
+    systemMetrics.forEach(metric => {
+      switch (metric.severity) {
+        case 'critical':
+          score -= 25;
+          break;
+        case 'error':
+          score -= 15;
+          break;
+        case 'warning':
+          score -= 5;
+          break;
+        default:
+          break;
+      }
+    });
 
     return Math.max(0, score);
   }, [systemMetrics]);
 
-  // Get metrics by category
   const getMetricsByCategory = useCallback((category: string) => {
-    return systemMetrics.filter(m => m.service_name === category);
+    return systemMetrics.filter(metric => 
+      metric.service_name.includes(category) || metric.metric_name.includes(category)
+    );
   }, [systemMetrics]);
 
-  // Get latest metric value
   const getLatestMetricValue = useCallback((metricName: string) => {
     const metric = systemMetrics.find(m => m.metric_name === metricName);
-    return metric?.metric_value || null;
+    return metric ? metric.metric_value : null;
   }, [systemMetrics]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await Promise.all([
-        fetchSystemMetrics(),
-        fetchDatabaseMetrics(),
-        fetchPerformanceTrends()
-      ]);
-      setLoading(false);
-    };
-
-    loadData();
-
-    // Set up real-time subscriptions
-    const systemMetricsChannel = supabase
-      .channel('system-metrics-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'system_health_metrics' },
-        () => fetchSystemMetrics()
-      )
-      .subscribe();
-
-    const dbMetricsChannel = supabase
-      .channel('db-metrics-changes')
-      .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'database_metrics' },
-        () => fetchDatabaseMetrics()
-      )
-      .subscribe();
-
-    // Refresh data every 30 seconds
-    const interval = setInterval(() => {
-      fetchSystemMetrics();
-      fetchDatabaseMetrics();
-    }, 30000);
-
-    return () => {
-      supabase.removeChannel(systemMetricsChannel);
-      supabase.removeChannel(dbMetricsChannel);
-      clearInterval(interval);
-    };
-  }, [fetchSystemMetrics, fetchDatabaseMetrics, fetchPerformanceTrends]);
 
   return {
     systemMetrics,
@@ -228,12 +164,8 @@ export const useSystemMetrics = () => {
     performanceTrends,
     loading,
     error,
-    recordSystemMetric,
     calculateHealthScore,
     getMetricsByCategory,
-    getLatestMetricValue,
-    fetchSystemMetrics,
-    fetchDatabaseMetrics,
-    fetchPerformanceTrends
+    getLatestMetricValue
   };
 };

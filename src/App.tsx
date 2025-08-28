@@ -28,6 +28,7 @@ import AgencyKitPage from "@/pages/AgencyKitPage";
 import ProfilePage from "@/pages/ProfilePage";
 import RoadmapPage from "@/pages/RoadmapPage";
 import { IntegrationsPage } from "@/pages/IntegrationsPage";
+import { NotificationsPage } from "@/pages/NotificationsPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ function App() {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="impersonate" element={<ImpersonationPage />} />
               <Route path="integrations" element={<IntegrationsPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
               <Route path="roadmap" element={<RoadmapPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
