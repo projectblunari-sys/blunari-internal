@@ -2501,6 +2501,249 @@ export type Database = {
           },
         ]
       }
+      support_attachments: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          file_path: string
+          file_size: number | null
+          filename: string
+          id: string
+          message_id: string | null
+          ticket_id: string
+          uploaded_by: string | null
+          uploaded_by_type: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          filename: string
+          id?: string
+          message_id?: string | null
+          ticket_id: string
+          uploaded_by?: string | null
+          uploaded_by_type?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          filename?: string
+          id?: string
+          message_id?: string | null
+          ticket_id?: string
+          uploaded_by?: string | null
+          uploaded_by_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "support_ticket_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_attachments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_categories: {
+        Row: {
+          auto_assign_team: string | null
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          priority_level: number | null
+          updated_at: string
+        }
+        Insert: {
+          auto_assign_team?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority_level?: number | null
+          updated_at?: string
+        }
+        Update: {
+          auto_assign_team?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority_level?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_ticket_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_internal: boolean | null
+          message_type: string | null
+          metadata: Json | null
+          sender_email: string | null
+          sender_id: string | null
+          sender_name: string
+          sender_type: string
+          ticket_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          message_type?: string | null
+          metadata?: Json | null
+          sender_email?: string | null
+          sender_id?: string | null
+          sender_name: string
+          sender_type: string
+          ticket_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          message_type?: string | null
+          metadata?: Json | null
+          sender_email?: string | null
+          sender_id?: string | null
+          sender_name?: string
+          sender_type?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category_id: string | null
+          closed_at: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          description: string
+          due_at: string | null
+          escalated_at: string | null
+          escalation_level: number | null
+          first_response_at: string | null
+          id: string
+          metadata: Json | null
+          priority: string
+          resolved_at: string | null
+          source: string | null
+          status: string
+          subject: string
+          tags: Json | null
+          tenant_id: string | null
+          ticket_number: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category_id?: string | null
+          closed_at?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          description: string
+          due_at?: string | null
+          escalated_at?: string | null
+          escalation_level?: number | null
+          first_response_at?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          resolved_at?: string | null
+          source?: string | null
+          status?: string
+          subject: string
+          tags?: Json | null
+          tenant_id?: string | null
+          ticket_number: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category_id?: string | null
+          closed_at?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string
+          due_at?: string | null
+          escalated_at?: string | null
+          escalation_level?: number | null
+          first_response_at?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          resolved_at?: string | null
+          source?: string | null
+          status?: string
+          subject?: string
+          tags?: Json | null
+          tenant_id?: string | null
+          ticket_number?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "support_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_health_metrics: {
         Row: {
           created_at: string
@@ -2793,6 +3036,10 @@ export type Database = {
           p_response_time: number
           p_service_id: string
         }
+        Returns: string
+      }
+      generate_ticket_number: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_current_employee: {

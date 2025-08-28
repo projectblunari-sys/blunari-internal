@@ -32,7 +32,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   Plug,
-  Rocket
+  Rocket,
+  LifeBuoy
 } from "lucide-react";
 import { useDashboardStore } from "@/stores/dashboardStore";
 
@@ -133,21 +134,21 @@ const platformNavigation: NavigationItem[] = [
     url: "/admin/integrations", 
     icon: Plug,
     badge: null,
-    description: "Third-party integrations"
+    description: "Connect external services"
   },
   {
-    title: "Impersonate",
-    url: "/admin/impersonate", 
-    icon: Shield,
+    title: "Support",
+    url: "/admin/support", 
+    icon: LifeBuoy,
     badge: null,
-    description: "User impersonation"
+    description: "Customer support tickets"
   },
   {
     title: "Roadmap",
-    url: "/admin/roadmap",
+    url: "/admin/roadmap", 
     icon: Rocket,
-    badge: "New",
-    description: "Future features"
+    badge: null,
+    description: "Feature roadmap"
   }
 ];
 
