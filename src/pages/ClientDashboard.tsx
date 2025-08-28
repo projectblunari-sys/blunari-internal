@@ -1,31 +1,22 @@
 import { useState } from "react";
+import { RestaurantLayout } from "@/components/client/RestaurantLayout";
+import { EnhancedBookingsList } from "@/components/client/EnhancedBookingsList";
+import { RestaurantAnalytics } from "@/components/client/RestaurantAnalytics";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Calendar, 
   TrendingUp, 
   Users, 
   Clock, 
-  MapPin, 
-  Settings, 
-  Bell, 
-  ChevronDown,
   Plus,
-  Filter,
-  Download,
   Eye,
   Edit,
-  MoreHorizontal,
   CheckCircle,
   XCircle,
   AlertTriangle
 } from "lucide-react";
-import { BookingsList } from "@/components/BookingsList";
-import { TableManagement } from "@/components/TableManagement";
-import { AnalyticsOverview } from "@/components/AnalyticsOverview";
 
 const ClientDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -120,66 +111,15 @@ const ClientDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <img 
-                  src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png" 
-                  alt="Blunari Logo"
-                  className="w-8 h-8 rounded-lg"
-                />
-                <span className="text-xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                  Blunari
-                </span>
-              </div>
-              <div className="hidden md:block">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-medium">{restaurant.name}</span>
-                  <Badge variant="secondary" className="ml-2">{restaurant.plan}</Badge>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm">
-                <Bell className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="w-4 h-4" />
-              </Button>
-              <div className="flex items-center gap-2">
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>SC</AvatarFallback>
-                </Avatar>
-                <div className="hidden md:block">
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{restaurant.owner}</p>
-                      <p className="text-xs text-muted-foreground">Owner</p>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-6 py-8">
+    <RestaurantLayout>
+      <div className="p-6 space-y-6">
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Good evening, {restaurant.owner.split(' ')[0]}! 👋
+            Good evening! 👋
           </h1>
           <p className="text-muted-foreground">
-            Here's what's happening at {restaurant.name} today.
+            Here's what's happening at your restaurant today.
           </p>
         </div>
 
@@ -206,45 +146,24 @@ const ClientDashboard = () => {
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="bookings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Bookings
-            </TabsTrigger>
-            <TabsTrigger value="tables" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Tables
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              Analytics
-            </TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="tables">Tables</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Today's Bookings */}
               <Card className="shadow-card">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>Today's Bookings</CardTitle>
-                    <CardDescription>
-                      Upcoming reservations for today
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      <Filter className="w-4 h-4" />
-                    </Button>
-                    <Button variant="default" size="sm">
-                      <Plus className="w-4 h-4" />
-                      Add Booking
-                    </Button>
-                  </div>
+                <CardHeader>
+                  <CardTitle>Today's Bookings</CardTitle>
+                  <CardDescription>Upcoming reservations for today</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {upcomingBookings.map((booking) => (
-                      <div key={booking.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                      <div key={booking.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                         <div className="flex items-center gap-3">
                           {getStatusIcon(booking.status)}
                           <div>
@@ -254,90 +173,39 @@ const ClientDashboard = () => {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {booking.table}
-                          </Badge>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Badge variant="outline" className="text-xs">{booking.table}</Badge>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Quick Actions */}
-              <Card className="shadow-card">
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                  <CardDescription>
-                    Common tasks and shortcuts
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start" size="lg">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add New Booking
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" size="lg">
-                    <Eye className="w-4 h-4 mr-2" />
-                    View All Bookings
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" size="lg">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Manage Tables
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" size="lg">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Reports
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" size="lg">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Restaurant Settings
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
-
-            {/* Analytics Overview */}
-            <AnalyticsOverview />
           </TabsContent>
 
           <TabsContent value="bookings" className="space-y-6">
-            <BookingsList />
+            <EnhancedBookingsList />
           </TabsContent>
 
           <TabsContent value="tables" className="space-y-6">
-            <TableManagement />
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
             <Card className="shadow-card">
               <CardHeader>
-                <CardTitle>Analytics & Reports</CardTitle>
-                <CardDescription>
-                  Detailed insights and performance metrics
-                </CardDescription>
+                <CardTitle>Table Management</CardTitle>
+                <CardDescription>Manage your restaurant's seating layout</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-12">
-                  <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Get detailed insights into your restaurant's performance, customer behavior, and booking trends.
-                  </p>
-                  <Button variant="default">
-                    View Analytics
-                  </Button>
+                  <p className="text-muted-foreground">Interactive table management coming soon...</p>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <RestaurantAnalytics />
+          </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </RestaurantLayout>
   );
 };
 
