@@ -2,7 +2,6 @@ import { useState } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { TenantMetrics } from "@/components/advanced/TenantMetrics";
 import { EnhancedTenantsList } from "@/components/advanced/EnhancedTenantsList";
-import { WidgetIntegration } from "@/components/admin/WidgetIntegration";
 import { TenantProvisioningWizard } from "@/components/TenantProvisioningWizard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -110,10 +109,9 @@ const Dashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
+          <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="tenants">Tenants</TabsTrigger>
-            <TabsTrigger value="widgets">Widgets</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="system">System</TabsTrigger>
           </TabsList>
@@ -201,10 +199,6 @@ const Dashboard = () => {
 
           <TabsContent value="tenants" className="space-y-6">
             <EnhancedTenantsList />
-          </TabsContent>
-
-          <TabsContent value="widgets" className="space-y-6">
-            <WidgetIntegration />
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">

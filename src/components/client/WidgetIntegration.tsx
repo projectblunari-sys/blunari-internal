@@ -54,7 +54,14 @@ interface WidgetConfig {
 }
 
 export const WidgetIntegration = () => {
-  const [selectedTenant, setSelectedTenant] = useState("bella-vista");
+  // Mock current restaurant data - in real app this would come from auth context
+  const currentRestaurant = {
+    id: "bella-vista", 
+    name: "Bella Vista Restaurant", 
+    domain: "bellavista.com",
+    slug: "bella-vista"
+  };
+  
   const [activeTab, setActiveTab] = useState("configure");
   const [previewDevice, setPreviewDevice] = useState("desktop");
   const { toast } = useToast();
@@ -80,16 +87,9 @@ export const WidgetIntegration = () => {
     timezone: 'America/New_York'
   });
 
-  // Mock tenant data
-  const tenants = [
-    { id: "bella-vista", name: "Bella Vista Restaurant", domain: "bellavista.com" },
-    { id: "ocean-breeze", name: "Ocean Breeze Bistro", domain: "oceanbreeze.com" },
-    { id: "mountain-view", name: "Mountain View Cafe", domain: "mountainview.com" }
-  ];
-
   const generateEmbedCode = () => {
     const baseUrl = "https://widgets.blunari.com";
-    const tenantSlug = selectedTenant;
+    const tenantSlug = currentRestaurant.slug;
     
     return `<!-- Blunari Booking Widget -->
 <div id="blunari-widget" data-tenant="${tenantSlug}"></div>
@@ -119,7 +119,7 @@ export const WidgetIntegration = () => {
       .join(',');
 
     return `[blunari_booking 
-  tenant="${selectedTenant}"
+  tenant="${currentRestaurant.slug}"
   theme="${config.theme}"
   color="${config.primaryColor.replace('#', '')}"
   size="${config.size}"
@@ -139,7 +139,7 @@ function MyBookingPage() {
     <div className="booking-section">
       <h2>Make a Reservation</h2>
       <BlunariWidget
-        tenant="${selectedTenant}"
+        tenant="${currentRestaurant.slug}"
         config={widgetConfig}
         onBookingComplete={(booking) => {
           console.log('Booking completed:', booking);
@@ -181,9 +181,9 @@ export default MyBookingPage;`;
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Widget Integration</h2>
+          <h2 className="text-2xl font-bold text-foreground">Website Integration</h2>
           <p className="text-muted-foreground">
-            Create embeddable booking widgets for restaurant websites
+            Create and customize booking widgets for your website
           </p>
         </div>
         <div className="flex gap-3">
@@ -198,35 +198,27 @@ export default MyBookingPage;`;
         </div>
       </div>
 
-      {/* Tenant Selection */}
+      {/* Restaurant Info */}
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="w-5 h-5" />
-            Select Restaurant
+            Your Restaurant Widget
           </CardTitle>
           <CardDescription>
-            Choose which restaurant to create a widget for
+            Customize and embed booking widgets for {currentRestaurant.name}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value={selectedTenant} onValueChange={setSelectedTenant}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {tenants.map((tenant) => (
-                <SelectItem key={tenant.id} value={tenant.id}>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{tenant.name}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {tenant.domain}
-                    </Badge>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <p className="font-medium">{currentRestaurant.name}</p>
+              <p className="text-sm text-muted-foreground">{currentRestaurant.domain}</p>
+            </div>
+            <Badge variant="secondary">
+              {currentRestaurant.slug}.blunari.com
+            </Badge>
+          </div>
         </CardContent>
       </Card>
 

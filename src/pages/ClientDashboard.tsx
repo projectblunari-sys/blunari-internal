@@ -2,6 +2,7 @@ import { useState } from "react";
 import { RestaurantLayout } from "@/components/client/RestaurantLayout";
 import { EnhancedBookingsList } from "@/components/client/EnhancedBookingsList";
 import { RestaurantAnalytics } from "@/components/client/RestaurantAnalytics";
+import { WidgetIntegration } from "@/components/client/WidgetIntegration";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -145,9 +146,10 @@ const ClientDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+          <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="widgets">Widgets</TabsTrigger>
             <TabsTrigger value="tables">Tables</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
@@ -184,6 +186,10 @@ const ClientDashboard = () => {
 
           <TabsContent value="bookings" className="space-y-6">
             <EnhancedBookingsList />
+          </TabsContent>
+
+          <TabsContent value="widgets" className="space-y-6">
+            <WidgetIntegration />
           </TabsContent>
 
           <TabsContent value="tables" className="space-y-6">
