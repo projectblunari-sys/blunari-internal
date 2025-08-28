@@ -5,29 +5,34 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative overflow-hidden",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-glow shadow-elegant hover:shadow-glow",
+        default: "bg-gradient-primary text-primary-foreground hover:shadow-glow active:scale-95 shadow-elegant",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-md hover:shadow-lg",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-card hover:shadow-elegant active:scale-95",
         outline:
-          "border-2 border-primary bg-background text-primary hover:bg-primary hover:text-primary-foreground shadow-md hover:shadow-elegant",
+          "border-2 border-primary/20 bg-background text-primary hover:bg-primary hover:text-primary-foreground shadow-subtle hover:shadow-card active:scale-95",
         secondary:
-          "bg-gradient-secondary text-secondary-foreground hover:scale-105 shadow-md hover:shadow-lg",
-        ghost: "hover:bg-accent/10 hover:text-accent transition-all duration-200",
-        link: "text-primary underline-offset-4 hover:underline hover:text-primary-glow",
-        hero: "bg-gradient-hero text-white hover:scale-105 shadow-glow hover:shadow-xl border-0 font-semibold",
-        premium: "bg-gradient-primary text-primary-foreground hover:scale-105 shadow-elegant hover:shadow-glow border border-primary-light/20",
-        success: "bg-success text-success-foreground hover:bg-success/90 shadow-md hover:shadow-lg",
-        warning: "bg-warning text-warning-foreground hover:bg-warning/90 shadow-md hover:shadow-lg",
+          "bg-secondary text-secondary-foreground hover:bg-secondary-dark shadow-subtle hover:shadow-card active:scale-95",
+        ghost: "hover:bg-accent/10 hover:text-accent transition-all duration-200 active:scale-95",
+        link: "text-primary underline-offset-4 hover:underline hover:text-primary-glow transition-colors duration-200",
+        hero: "bg-gradient-hero text-white hover:scale-105 shadow-glow hover:shadow-premium border-0 font-semibold text-base",
+        premium: "bg-gradient-primary text-primary-foreground hover:scale-[1.02] shadow-elegant hover:shadow-glow border border-primary-light/20 font-semibold",
+        success: "bg-success text-success-foreground hover:bg-success/90 shadow-card hover:shadow-elegant active:scale-95",
+        warning: "bg-warning text-warning-foreground hover:bg-warning/90 shadow-card hover:shadow-elegant active:scale-95",
+        glass: "bg-white/10 backdrop-blur-md border border-white/20 text-foreground hover:bg-white/20 shadow-card hover:shadow-elegant active:scale-95",
+        gradient: "bg-gradient-secondary text-secondary-foreground hover:scale-[1.02] shadow-card hover:shadow-glow active:scale-95",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-12 rounded-lg px-8 text-base font-semibold",
+        xl: "h-14 rounded-xl px-10 text-lg font-semibold",
         icon: "h-10 w-10",
+        "icon-sm": "h-8 w-8",
+        "icon-lg": "h-12 w-12",
       },
     },
     defaultVariants: {

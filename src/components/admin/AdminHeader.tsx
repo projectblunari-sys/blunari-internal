@@ -25,28 +25,26 @@ export function AdminHeader() {
     : user?.email?.[0]?.toUpperCase() || "A"
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 shadow-subtle">
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-4">
-          <SidebarTrigger className="h-8 w-8" />
+          <SidebarTrigger className="h-8 w-8 hover:bg-accent/10 transition-colors duration-200" />
           
           {/* Search */}
           <div className="relative hidden md:block">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search..."
-              className="w-64 pl-9"
+              placeholder="Search anything..."
+              className="w-64 pl-9 bg-muted/50 border-border/50 focus:bg-background focus:border-primary/30 transition-all duration-200"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* Quick Actions - Removed New Tenant button as it belongs in tenant section */}
-
+        <div className="flex items-center gap-3">
           {/* Notifications */}
-          <Button variant="outline" size="icon" className="relative hover:bg-accent/10">
+          <Button variant="ghost" size="icon" className="relative hover:bg-accent/10 hover:scale-105 transition-all duration-200">
             <Bell className="h-4 w-4" />
-            <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs bg-primary text-primary-foreground">
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-gradient-primary text-primary-foreground border-2 border-background animate-pulse">
               3
             </Badge>
           </Button>
@@ -57,14 +55,14 @@ export function AdminHeader() {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                <Avatar className="h-10 w-10">
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:scale-105 transition-all duration-200 ring-2 ring-transparent hover:ring-primary/20">
+                <Avatar className="h-10 w-10 border-2 border-primary/20">
                   <AvatarImage src={profile?.avatar_url || ""} alt="Profile" />
-                  <AvatarFallback>{initials}</AvatarFallback>
+                  <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">{initials}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 bg-background border-border shadow-lg" align="end" forceMount>
+            <DropdownMenuContent className="w-56 bg-background/95 backdrop-blur-xl border-border/50 shadow-premium animate-scale-in-center" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">

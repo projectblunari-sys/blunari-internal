@@ -140,11 +140,16 @@ const Auth = () => {
 
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-lg">
+    <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+      <div className="absolute top-1/4 -left-48 w-96 h-96 bg-gradient-primary rounded-full opacity-10 blur-3xl" />
+      <div className="absolute bottom-1/4 -right-48 w-96 h-96 bg-gradient-secondary rounded-full opacity-10 blur-3xl" />
+      
+      <div className="w-full max-w-md relative z-10">
+        <Card className="shadow-premium border-border/50 bg-background/80 backdrop-blur-xl animate-scale-in-center">
           <CardHeader className="text-center pb-6">
-            <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="flex items-center justify-center gap-3 mb-6 animate-fade-in-down">
               <img 
                 src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png" 
                 alt="Blunari Logo"
