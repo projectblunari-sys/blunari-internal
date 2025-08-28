@@ -9,31 +9,31 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Brand Colors - Sophisticated hospitality palette */
+    /* Brand Colors - Blunari Logo Inspired Palette */
     --background: 0 0% 100%;
-    --foreground: 220 13% 18%;
+    --foreground: 215 25% 27%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 13% 18%;
+    --card-foreground: 215 25% 27%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 18%;
+    --popover-foreground: 215 25% 27%;
 
-    /* Primary Brand - Deep teal for trust and sophistication */
-    --primary: 184 91% 17%;
-    --primary-foreground: 0 0% 98%;
-    --primary-glow: 184 91% 25%;
-    --primary-light: 184 48% 88%;
+    /* Primary Brand - Vibrant Blue from logo */
+    --primary: 210 100% 56%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 195 100% 70%;
+    --primary-light: 210 100% 95%;
 
-    /* Secondary - Warm gold for premium feel */
-    --secondary: 35 84% 62%;
-    --secondary-foreground: 220 13% 18%;
-    --secondary-light: 35 84% 95%;
+    /* Secondary - Elegant Silver/Gray from logo */
+    --secondary: 220 9% 46%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-light: 220 14% 96%;
 
-    /* Accent - Fresh mint for status indicators */
-    --accent: 142 76% 36%;
-    --accent-foreground: 0 0% 98%;
-    --accent-light: 142 76% 92%;
+    /* Accent - Bright Cyan for highlights */
+    --accent: 195 100% 70%;
+    --accent-foreground: 215 25% 27%;
+    --accent-light: 195 100% 95%;
 
     /* Neutral palette */
     --muted: 220 13% 96%;
@@ -48,20 +48,20 @@ All colors MUST be HSL.
     --destructive-foreground: 0 0% 98%;
 
     /* UI Elements */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 184 91% 17%;
+    --border: 220 14% 91%;
+    --input: 220 14% 91%;
+    --ring: 210 100% 56%;
 
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(184 91% 17%), hsl(184 91% 25%));
-    --gradient-secondary: linear-gradient(135deg, hsl(35 84% 62%), hsl(35 84% 72%));
-    --gradient-hero: linear-gradient(135deg, hsl(184 91% 17%) 0%, hsl(184 91% 25%) 50%, hsl(35 84% 62%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 13% 98%) 100%);
+    /* Gradients - Matching logo's blue gradient */
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 56%), hsl(195 100% 70%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220 9% 46%), hsl(220 9% 60%));
+    --gradient-hero: linear-gradient(135deg, hsl(210 100% 56%) 0%, hsl(195 100% 70%) 50%, hsl(220 9% 46%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 14% 98%) 100%);
 
-    /* Shadows */
-    --shadow-elegant: 0 10px 30px -10px hsl(184 91% 17% / 0.3);
-    --shadow-glow: 0 0 40px hsl(184 91% 25% / 0.4);
-    --shadow-card: 0 4px 20px -2px hsl(220 13% 18% / 0.1);
+    /* Shadows - Blue-tinted matching logo */
+    --shadow-elegant: 0 10px 30px -10px hsl(210 100% 56% / 0.3);
+    --shadow-glow: 0 0 40px hsl(195 100% 70% / 0.4);
+    --shadow-card: 0 4px 20px -2px hsl(215 25% 27% / 0.1);
 
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
