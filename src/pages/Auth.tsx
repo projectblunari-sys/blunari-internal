@@ -255,12 +255,14 @@ const Auth = () => {
 
                   <Button 
                     type="submit" 
-                    className="w-full py-3 text-base font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300 group" 
+                    variant="premium"
+                    size="lg"
+                    className="w-full" 
                     disabled={loading}
                   >
                     {loading ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin"></div>
                         Signing In...
                       </div>
                     ) : (
@@ -453,12 +455,14 @@ const Auth = () => {
 
                   <Button 
                     type="submit" 
-                    className="w-full py-3 text-base font-medium bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-lg hover:shadow-xl transition-all duration-300 group" 
+                    variant="premium"
+                    size="lg"
+                    className="w-full" 
                     disabled={loading || signUpForm.password !== signUpForm.confirmPassword}
                   >
                     {loading ? (
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-background/30 border-t-background rounded-full animate-spin"></div>
                         Creating Account...
                       </div>
                     ) : (

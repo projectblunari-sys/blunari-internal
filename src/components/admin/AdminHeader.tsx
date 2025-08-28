@@ -44,9 +44,9 @@ export function AdminHeader() {
           {/* Quick Actions - Removed New Tenant button as it belongs in tenant section */}
 
           {/* Notifications */}
-          <Button variant="outline" size="icon" className="relative">
+          <Button variant="outline" size="icon" className="relative hover:bg-accent/10">
             <Bell className="h-4 w-4" />
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+            <Badge className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center p-0 text-xs bg-primary text-primary-foreground">
               3
             </Badge>
           </Button>
@@ -64,7 +64,7 @@ export function AdminHeader() {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuContent className="w-56 bg-background border-border shadow-lg" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">

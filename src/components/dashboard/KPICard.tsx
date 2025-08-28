@@ -64,11 +64,11 @@ export const KPICard: React.FC<KPICardProps> = ({
   const getTrendColor = () => {
     switch (trend?.direction) {
       case 'up':
-        return 'text-green-600 bg-green-50 border-green-200';
+        return 'text-success bg-success/10 border-success/20';
       case 'down':
-        return 'text-red-600 bg-red-50 border-red-200';
+        return 'text-destructive bg-destructive/10 border-destructive/20';
       default:
-        return 'text-muted-foreground bg-muted border-muted';
+        return 'text-muted-foreground bg-muted/50 border-muted/20';
     }
   };
 

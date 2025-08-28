@@ -249,12 +249,12 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold">Platform Administration</h1>
             <div className="flex items-center gap-2">
               {isConnected ? (
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
                   <Wifi className="h-3 w-3 mr-1" />
                   Live
                 </Badge>
               ) : (
-                <Badge variant="destructive">
+                <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">
                   <WifiOff className="h-3 w-3 mr-1" />
                   Offline
                 </Badge>
