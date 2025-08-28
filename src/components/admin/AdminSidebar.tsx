@@ -12,7 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   CreditCard,
-  Activity
+  Activity,
+  Shield
 } from "lucide-react"
 
 import {
@@ -58,6 +59,12 @@ const navigation = [
     title: "Observability",
     url: "/admin/observability", 
     icon: Activity,
+    badge: null
+  },
+  {
+    title: "System Health",
+    url: "/admin/system-health", 
+    icon: Shield,
     badge: null
   },
   {

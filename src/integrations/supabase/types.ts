@@ -555,6 +555,51 @@ export type Database = {
           },
         ]
       }
+      diagnostic_results: {
+        Row: {
+          created_at: string
+          diagnostic_type: string
+          error_message: string | null
+          executed_at: string
+          executed_by: string | null
+          execution_time_ms: number | null
+          id: string
+          recommendations: string[] | null
+          result_data: Json
+          service_name: string | null
+          status: string
+          test_name: string
+        }
+        Insert: {
+          created_at?: string
+          diagnostic_type: string
+          error_message?: string | null
+          executed_at?: string
+          executed_by?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          recommendations?: string[] | null
+          result_data: Json
+          service_name?: string | null
+          status: string
+          test_name: string
+        }
+        Update: {
+          created_at?: string
+          diagnostic_type?: string
+          error_message?: string | null
+          executed_at?: string
+          executed_by?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          recommendations?: string[] | null
+          result_data?: Json
+          service_name?: string | null
+          status?: string
+          test_name?: string
+        }
+        Relationships: []
+      }
       domains: {
         Row: {
           created_at: string
@@ -834,6 +879,164 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      incident_updates: {
+        Row: {
+          author_id: string | null
+          created_at: string
+          id: string
+          incident_id: string | null
+          message: string
+          new_status: string | null
+          old_status: string | null
+          public_facing: boolean | null
+          update_type: string
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string
+          id?: string
+          incident_id?: string | null
+          message: string
+          new_status?: string | null
+          old_status?: string | null
+          public_facing?: boolean | null
+          update_type: string
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string
+          id?: string
+          incident_id?: string | null
+          message?: string
+          new_status?: string | null
+          old_status?: string | null
+          public_facing?: boolean | null
+          update_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incident_updates_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      incidents: {
+        Row: {
+          acknowledged_at: string | null
+          affected_services: string[] | null
+          assignee_id: string | null
+          created_at: string
+          description: string | null
+          detected_at: string
+          id: string
+          impact: string
+          incident_number: string
+          reporter_id: string | null
+          resolution: string | null
+          resolved_at: string | null
+          root_cause: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          affected_services?: string[] | null
+          assignee_id?: string | null
+          created_at?: string
+          description?: string | null
+          detected_at?: string
+          id?: string
+          impact: string
+          incident_number: string
+          reporter_id?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          root_cause?: string | null
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          affected_services?: string[] | null
+          assignee_id?: string | null
+          created_at?: string
+          description?: string | null
+          detected_at?: string
+          id?: string
+          impact?: string
+          incident_number?: string
+          reporter_id?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          root_cause?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      maintenance_windows: {
+        Row: {
+          actual_end: string | null
+          actual_start: string | null
+          affected_services: string[]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          impact_level: string
+          maintenance_type: string
+          notification_sent: boolean | null
+          scheduled_end: string
+          scheduled_start: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual_end?: string | null
+          actual_start?: string | null
+          affected_services: string[]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          impact_level: string
+          maintenance_type: string
+          notification_sent?: boolean | null
+          scheduled_end: string
+          scheduled_start: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual_end?: string | null
+          actual_start?: string | null
+          affected_services?: string[]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          impact_level?: string
+          maintenance_type?: string
+          notification_sent?: boolean | null
+          scheduled_end?: string
+          scheduled_start?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       party_size_configs: {
         Row: {
@@ -1175,6 +1378,51 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_usage: {
+        Row: {
+          created_at: string
+          current_value: number
+          hostname: string | null
+          id: string
+          max_value: number | null
+          metadata: Json | null
+          recorded_at: string
+          resource_type: string
+          service_name: string
+          threshold_critical: number | null
+          threshold_warning: number | null
+          unit: string
+        }
+        Insert: {
+          created_at?: string
+          current_value: number
+          hostname?: string | null
+          id?: string
+          max_value?: number | null
+          metadata?: Json | null
+          recorded_at?: string
+          resource_type: string
+          service_name: string
+          threshold_critical?: number | null
+          threshold_warning?: number | null
+          unit: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number
+          hostname?: string | null
+          id?: string
+          max_value?: number | null
+          metadata?: Json | null
+          recorded_at?: string
+          resource_type?: string
+          service_name?: string
+          threshold_critical?: number | null
+          threshold_warning?: number | null
+          unit?: string
+        }
+        Relationships: []
+      }
       restaurant_tables: {
         Row: {
           active: boolean
@@ -1218,6 +1466,157 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_health_status: {
+        Row: {
+          checked_at: string
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          response_time_ms: number | null
+          service_id: string | null
+          status: string
+          status_code: number | null
+        }
+        Insert: {
+          checked_at?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          response_time_ms?: number | null
+          service_id?: string | null
+          status: string
+          status_code?: number | null
+        }
+        Update: {
+          checked_at?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          response_time_ms?: number | null
+          service_id?: string | null
+          status?: string
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_health_status_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          created_at: string
+          critical: boolean | null
+          description: string | null
+          enabled: boolean | null
+          environment: string
+          expected_response_time_ms: number | null
+          health_check_endpoint: string | null
+          health_check_interval_seconds: number | null
+          id: string
+          metadata: Json | null
+          service_name: string
+          service_type: string
+          service_url: string | null
+          sla_uptime_target: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          critical?: boolean | null
+          description?: string | null
+          enabled?: boolean | null
+          environment?: string
+          expected_response_time_ms?: number | null
+          health_check_endpoint?: string | null
+          health_check_interval_seconds?: number | null
+          id?: string
+          metadata?: Json | null
+          service_name: string
+          service_type: string
+          service_url?: string | null
+          sla_uptime_target?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          critical?: boolean | null
+          description?: string | null
+          enabled?: boolean | null
+          environment?: string
+          expected_response_time_ms?: number | null
+          health_check_endpoint?: string | null
+          health_check_interval_seconds?: number | null
+          id?: string
+          metadata?: Json | null
+          service_name?: string
+          service_type?: string
+          service_url?: string | null
+          sla_uptime_target?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sla_metrics: {
+        Row: {
+          avg_response_time_ms: number | null
+          created_at: string
+          downtime_minutes: number
+          id: string
+          incidents_count: number | null
+          period_end: string
+          period_start: string
+          service_id: string | null
+          sla_breach: boolean | null
+          successful_checks: number
+          total_checks: number
+          uptime_percentage: number
+        }
+        Insert: {
+          avg_response_time_ms?: number | null
+          created_at?: string
+          downtime_minutes?: number
+          id?: string
+          incidents_count?: number | null
+          period_end: string
+          period_start: string
+          service_id?: string | null
+          sla_breach?: boolean | null
+          successful_checks?: number
+          total_checks?: number
+          uptime_percentage: number
+        }
+        Update: {
+          avg_response_time_ms?: number | null
+          created_at?: string
+          downtime_minutes?: number
+          id?: string
+          incidents_count?: number | null
+          period_end?: string
+          period_start?: string
+          service_id?: string | null
+          sla_breach?: boolean | null
+          successful_checks?: number
+          total_checks?: number
+          uptime_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_metrics_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
@@ -1483,9 +1882,29 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      calculate_sla_metrics: {
+        Args: {
+          p_period_end: string
+          p_period_start: string
+          p_service_id: string
+        }
+        Returns: Json
+      }
       check_alert_conditions: {
         Args: { p_metric_name: string; p_metric_value: number }
         Returns: undefined
+      }
+      check_service_health: {
+        Args: { p_service_id: string }
+        Returns: Json
+      }
+      create_health_incident: {
+        Args: {
+          p_health_status: string
+          p_response_time: number
+          p_service_id: string
+        }
+        Returns: string
       }
       get_current_employee: {
         Args: Record<PropertyKey, never>

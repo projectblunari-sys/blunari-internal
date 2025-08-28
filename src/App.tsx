@@ -19,6 +19,7 @@ import { EmployeesPage } from "@/pages/EmployeesPage";
 import SettingsPage from "@/pages/SettingsPage";
 import BillingPage from "@/pages/BillingPage";
 import ObservabilityPage from "@/pages/ObservabilityPage";
+import SystemHealthPage from "@/pages/SystemHealthPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ function App() {
                   <Route path="employees" element={<EmployeesPage />} />
                   <Route path="billing" element={<BillingPage />} />
                   <Route path="observability" element={<ObservabilityPage />} />
+                  <Route path="system-health" element={<SystemHealthPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
                 
