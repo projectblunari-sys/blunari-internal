@@ -220,6 +220,63 @@ export type Database = {
           },
         ]
       }
+      business_hours: {
+        Row: {
+          close_time: string | null
+          created_at: string
+          day_of_week: number
+          id: string
+          is_open: boolean
+          open_time: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          close_time?: string | null
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_open?: boolean
+          open_time?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          close_time?: string | null
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_open?: boolean
+          open_time?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cuisine_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       domains: {
         Row: {
           created_at: string
@@ -313,6 +370,99 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      party_size_configs: {
+        Row: {
+          allow_large_parties: boolean
+          created_at: string
+          default_party_size: number
+          id: string
+          large_party_threshold: number
+          max_party_size: number
+          min_party_size: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          allow_large_parties?: boolean
+          created_at?: string
+          default_party_size?: number
+          id?: string
+          large_party_threshold?: number
+          max_party_size?: number
+          min_party_size?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          allow_large_parties?: boolean
+          created_at?: string
+          default_party_size?: number
+          id?: string
+          large_party_threshold?: number
+          max_party_size?: number
+          min_party_size?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pricing_plans: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: Json
+          id: string
+          is_active: boolean
+          is_popular: boolean
+          max_bookings_per_month: number | null
+          max_staff_accounts: number | null
+          max_tables: number | null
+          monthly_price: number
+          name: string
+          slug: string
+          stripe_price_id: string | null
+          stripe_yearly_price_id: string | null
+          updated_at: string
+          yearly_price: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          max_bookings_per_month?: number | null
+          max_staff_accounts?: number | null
+          max_tables?: number | null
+          monthly_price: number
+          name: string
+          slug: string
+          stripe_price_id?: string | null
+          stripe_yearly_price_id?: string | null
+          updated_at?: string
+          yearly_price?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          max_bookings_per_month?: number | null
+          max_staff_accounts?: number | null
+          max_tables?: number | null
+          monthly_price?: number
+          name?: string
+          slug?: string
+          stripe_price_id?: string | null
+          stripe_yearly_price_id?: string | null
+          updated_at?: string
+          yearly_price?: number | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -488,6 +638,56 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_features: {
         Row: {
           created_at: string
@@ -555,36 +755,68 @@ export type Database = {
       }
       tenants: {
         Row: {
+          address: Json | null
+          cover_image_url: string | null
           created_at: string
+          cuisine_type_id: string | null
           currency: string
+          description: string | null
+          email: string | null
           id: string
+          logo_url: string | null
           name: string
+          phone: string | null
           slug: string
           status: string
           timezone: string
           updated_at: string
+          website: string | null
         }
         Insert: {
+          address?: Json | null
+          cover_image_url?: string | null
           created_at?: string
+          cuisine_type_id?: string | null
           currency?: string
+          description?: string | null
+          email?: string | null
           id?: string
+          logo_url?: string | null
           name: string
+          phone?: string | null
           slug: string
           status?: string
           timezone?: string
           updated_at?: string
+          website?: string | null
         }
         Update: {
+          address?: Json | null
+          cover_image_url?: string | null
           created_at?: string
+          cuisine_type_id?: string | null
           currency?: string
+          description?: string | null
+          email?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
+          phone?: string | null
           slug?: string
           status?: string
           timezone?: string
           updated_at?: string
+          website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tenants_cuisine_type_id_fkey"
+            columns: ["cuisine_type_id"]
+            isOneToOne: false
+            referencedRelation: "cuisine_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       widget_configs: {
         Row: {
