@@ -16,7 +16,6 @@ import TenantsPage from "@/pages/TenantsPage";
 import TenantDetailPage from "@/pages/TenantDetailPage";
 import NewTenantPage from "@/pages/NewTenantPage";
 import SettingsPage from "@/pages/SettingsPage";
-import ProvisioningWizardPage from "@/pages/ProvisioningWizardPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,7 +33,6 @@ function App() {
               <Routes>
                 {/* Auth Routes */}
                 <Route path="/" element={<Auth />} />
-                <Route path="/provision" element={<ProvisioningWizardPage />} />
                 
                 {/* Protected Admin Routes */}
                 <Route path="/admin" element={
