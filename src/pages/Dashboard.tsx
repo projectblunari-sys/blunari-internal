@@ -47,13 +47,20 @@ const Dashboard = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-              Blunari Admin
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Multi-tenant restaurant booking platform
-            </p>
+          <div className="flex items-center gap-4">
+            <img 
+              src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png" 
+              alt="Blunari Logo"
+              className="w-12 h-12 rounded-lg"
+            />
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-hero bg-clip-text text-transparent">
+                Blunari Admin
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Multi-tenant restaurant booking platform
+              </p>
+            </div>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" size="sm">

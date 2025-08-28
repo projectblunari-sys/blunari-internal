@@ -72,10 +72,12 @@ const Index = () => {
       {/* Navigation */}
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">B</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <img 
+              src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png" 
+              alt="Blunari Logo"
+              className="w-10 h-10 rounded-lg"
+            />
             <span className="text-2xl font-bold bg-gradient-hero bg-clip-text text-transparent">
               Blunari
             </span>
