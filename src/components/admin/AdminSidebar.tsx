@@ -16,7 +16,8 @@ import {
   Activity,
   Shield,
   Utensils,
-  Globe
+  Globe,
+  User
 } from "lucide-react"
 
 import {
@@ -97,6 +98,12 @@ const navigation = [
 ]
 
 const bottomNavigation = [
+  {
+    title: "Profile",
+    url: "/admin/profile",
+    icon: User,
+    badge: null
+  },
   {
     title: "Notifications",
     url: "/admin/notifications",
