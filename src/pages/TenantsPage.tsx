@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { EmptyState, LoadingState, ErrorState } from "@/components/ui/states";
 import { useToast } from "@/hooks/use-toast";
 
 interface Tenant {
@@ -128,9 +129,8 @@ const TenantsPage = () => {
     }
   };
 
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
-
-  const stats = [
+  // Memoized stats for performance
+  const stats = useMemo(() => [
     {
       title: "Total Tenants",
       value: totalCount.toString(),
@@ -159,23 +159,29 @@ const TenantsPage = () => {
       icon: TrendingUp,
       color: "from-orange-500 to-orange-600"
     }
-  ];
+  ], [tenants, totalCount]);
+
+  if (loading) {
+    return <LoadingState title="Loading Tenants" description="Fetching tenant directory and statistics" rows={8} />;
+  }
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 animate-slide-in-left">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-foreground">
+          <h1 className="text-4xl font-heading font-bold text-foreground">
             Tenant Management
           </h1>
-          <p className="text-muted-foreground">
-            Manage all restaurant tenants and their configurations
+          <p className="text-muted-foreground mt-2">
+            Comprehensive multi-tenant restaurant platform administration
           </p>
         </div>
         <Button 
           onClick={() => navigate('/admin/tenants/new')}
-          className="bg-primary hover:bg-primary/90"
+          className="bg-primary hover:bg-primary/90 transition-all duration-200 hover:scale-105 animate-slide-in-right"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add New Tenant
@@ -185,7 +191,11 @@ const TenantsPage = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <Card key={stat.title} className="border-0 shadow-sm">
+          <Card 
+            key={stat.title} 
+            className="border-0 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] animate-scale-in" 
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -293,17 +303,31 @@ const TenantsPage = () => {
                   ))
                 ) : tenants.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
-                      <div className="text-muted-foreground">
-                        {searchTerm || statusFilter !== 'all' 
+                    <TableCell colSpan={6} className="p-0">
+                      <EmptyState
+                        icon={<Building2 className="h-8 w-8 text-muted-foreground" />}
+                        title={searchTerm || statusFilter !== 'all' 
                           ? 'No tenants match your filters' 
                           : 'No tenants found'}
-                      </div>
+                        description={searchTerm || statusFilter !== 'all'
+                          ? 'Try adjusting your search criteria or filters to find tenants.'
+                          : 'Get started by creating your first tenant to manage restaurant operations.'}
+                        action={{
+                          label: 'Add New Tenant',
+                          onClick: () => navigate('/admin/tenants/new')
+                        }}
+                        className="m-6"
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (
-                  tenants.map((tenant) => (
-                    <TableRow key={tenant.id}>
+                  tenants.map((tenant, index) => (
+                    <TableRow 
+                      key={tenant.id} 
+                      className="hover:bg-muted/50 transition-colors animate-fade-in-up cursor-pointer"
+                      style={{ animationDelay: `${index * 0.05}s` }}
+                      onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
+                    >
                       <TableCell>
                         <div>
                           <div className="font-medium text-foreground">{tenant.name}</div>
