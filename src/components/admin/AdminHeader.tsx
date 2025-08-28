@@ -261,14 +261,9 @@ export function AdminHeader() {
               <Button 
                 variant="ghost" 
                 size="icon"
-                className="h-8 w-8 rounded-full text-white hover:bg-slate-800"
+                className="h-8 w-8 rounded-full text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
               >
-                <Avatar className="h-7 w-7">
-                  <AvatarImage src={profile?.avatar_url || ""} alt="Profile" />
-                  <AvatarFallback className="bg-slate-700 text-white text-xs font-semibold">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
+                <User className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
