@@ -600,49 +600,295 @@ export type Database = {
         }
         Relationships: []
       }
-      domains: {
+      dns_records: {
         Row: {
+          cloudflare_record_id: string | null
           created_at: string
-          domain: string
-          domain_type: string
+          domain_id: string
           id: string
-          ssl_status: string
-          status: string
+          managed: boolean | null
+          name: string
+          priority: number | null
+          record_type: string
+          status: string | null
           tenant_id: string
+          ttl: number | null
           updated_at: string
-          verification_record: string | null
+          value: string
         }
         Insert: {
+          cloudflare_record_id?: string | null
           created_at?: string
-          domain: string
-          domain_type: string
+          domain_id: string
           id?: string
-          ssl_status?: string
-          status?: string
+          managed?: boolean | null
+          name: string
+          priority?: number | null
+          record_type: string
+          status?: string | null
           tenant_id: string
+          ttl?: number | null
           updated_at?: string
-          verification_record?: string | null
+          value: string
         }
         Update: {
+          cloudflare_record_id?: string | null
           created_at?: string
-          domain?: string
-          domain_type?: string
+          domain_id?: string
           id?: string
-          ssl_status?: string
-          status?: string
+          managed?: boolean | null
+          name?: string
+          priority?: number | null
+          record_type?: string
+          status?: string | null
           tenant_id?: string
+          ttl?: number | null
           updated_at?: string
-          verification_record?: string | null
+          value?: string
         }
         Relationships: [
           {
-            foreignKeyName: "domains_tenant_id_fkey"
-            columns: ["tenant_id"]
+            foreignKeyName: "dns_records_domain_id_fkey"
+            columns: ["domain_id"]
             isOneToOne: false
-            referencedRelation: "tenants"
+            referencedRelation: "domains"
             referencedColumns: ["id"]
           },
         ]
+      }
+      dns_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          records: Json
+          template_type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          records?: Json
+          template_type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          records?: Json
+          template_type?: string
+        }
+        Relationships: []
+      }
+      domain_analytics: {
+        Row: {
+          avg_response_time_ms: number | null
+          bandwidth_bytes: number | null
+          cache_hit_rate: number | null
+          countries: Json | null
+          created_at: string
+          date: string
+          domain_id: string
+          error_rate: number | null
+          id: string
+          requests_count: number | null
+          tenant_id: string
+          top_pages: Json | null
+          unique_visitors: number | null
+        }
+        Insert: {
+          avg_response_time_ms?: number | null
+          bandwidth_bytes?: number | null
+          cache_hit_rate?: number | null
+          countries?: Json | null
+          created_at?: string
+          date: string
+          domain_id: string
+          error_rate?: number | null
+          id?: string
+          requests_count?: number | null
+          tenant_id: string
+          top_pages?: Json | null
+          unique_visitors?: number | null
+        }
+        Update: {
+          avg_response_time_ms?: number | null
+          bandwidth_bytes?: number | null
+          cache_hit_rate?: number | null
+          countries?: Json | null
+          created_at?: string
+          date?: string
+          domain_id?: string
+          error_rate?: number | null
+          id?: string
+          requests_count?: number | null
+          tenant_id?: string
+          top_pages?: Json | null
+          unique_visitors?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_analytics_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      domain_events: {
+        Row: {
+          created_at: string
+          domain_id: string
+          event_data: Json
+          event_type: string
+          id: string
+          tenant_id: string
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain_id: string
+          event_data?: Json
+          event_type: string
+          id?: string
+          tenant_id: string
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain_id?: string
+          event_data?: Json
+          event_type?: string
+          id?: string
+          tenant_id?: string
+          triggered_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_events_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      domain_health_checks: {
+        Row: {
+          check_data: Json | null
+          check_type: string
+          created_at: string
+          domain_id: string
+          error_message: string | null
+          id: string
+          response_time_ms: number | null
+          ssl_days_remaining: number | null
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          check_data?: Json | null
+          check_type: string
+          created_at?: string
+          domain_id: string
+          error_message?: string | null
+          id?: string
+          response_time_ms?: number | null
+          ssl_days_remaining?: number | null
+          status: string
+          tenant_id: string
+        }
+        Update: {
+          check_data?: Json | null
+          check_type?: string
+          created_at?: string
+          domain_id?: string
+          error_message?: string | null
+          id?: string
+          response_time_ms?: number | null
+          ssl_days_remaining?: number | null
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "domain_health_checks_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      domains: {
+        Row: {
+          cloudflare_hostname_id: string | null
+          cloudflare_zone_id: string | null
+          created_at: string
+          dns_records: Json | null
+          domain: string
+          domain_type: Database["public"]["Enums"]["domain_type"]
+          id: string
+          is_primary: boolean | null
+          metadata: Json | null
+          redirect_to: string | null
+          ssl_cert_id: string | null
+          ssl_expires_at: string | null
+          ssl_status: Database["public"]["Enums"]["ssl_status"]
+          status: Database["public"]["Enums"]["domain_status"]
+          tenant_id: string
+          updated_at: string
+          verification_record: string | null
+          verification_status: string | null
+        }
+        Insert: {
+          cloudflare_hostname_id?: string | null
+          cloudflare_zone_id?: string | null
+          created_at?: string
+          dns_records?: Json | null
+          domain: string
+          domain_type?: Database["public"]["Enums"]["domain_type"]
+          id?: string
+          is_primary?: boolean | null
+          metadata?: Json | null
+          redirect_to?: string | null
+          ssl_cert_id?: string | null
+          ssl_expires_at?: string | null
+          ssl_status?: Database["public"]["Enums"]["ssl_status"]
+          status?: Database["public"]["Enums"]["domain_status"]
+          tenant_id: string
+          updated_at?: string
+          verification_record?: string | null
+          verification_status?: string | null
+        }
+        Update: {
+          cloudflare_hostname_id?: string | null
+          cloudflare_zone_id?: string | null
+          created_at?: string
+          dns_records?: Json | null
+          domain?: string
+          domain_type?: Database["public"]["Enums"]["domain_type"]
+          id?: string
+          is_primary?: boolean | null
+          metadata?: Json | null
+          redirect_to?: string | null
+          ssl_cert_id?: string | null
+          ssl_expires_at?: string | null
+          ssl_status?: Database["public"]["Enums"]["ssl_status"]
+          status?: Database["public"]["Enums"]["domain_status"]
+          tenant_id?: string
+          updated_at?: string
+          verification_record?: string | null
+          verification_status?: string | null
+        }
+        Relationships: []
       }
       employee_invitations: {
         Row: {
@@ -2017,6 +2263,74 @@ export type Database = {
           },
         ]
       }
+      ssl_certificates: {
+        Row: {
+          auto_renew: boolean | null
+          certificate_authority: string | null
+          certificate_data: string | null
+          chain_data: string | null
+          created_at: string
+          domain_id: string
+          expires_at: string | null
+          id: string
+          issued_at: string | null
+          last_renewal_attempt: string | null
+          metadata: Json | null
+          private_key_data: string | null
+          renewal_error: string | null
+          status: Database["public"]["Enums"]["ssl_status"]
+          subject_alt_names: string[] | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          auto_renew?: boolean | null
+          certificate_authority?: string | null
+          certificate_data?: string | null
+          chain_data?: string | null
+          created_at?: string
+          domain_id: string
+          expires_at?: string | null
+          id?: string
+          issued_at?: string | null
+          last_renewal_attempt?: string | null
+          metadata?: Json | null
+          private_key_data?: string | null
+          renewal_error?: string | null
+          status?: Database["public"]["Enums"]["ssl_status"]
+          subject_alt_names?: string[] | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          auto_renew?: boolean | null
+          certificate_authority?: string | null
+          certificate_data?: string | null
+          chain_data?: string | null
+          created_at?: string
+          domain_id?: string
+          expires_at?: string | null
+          id?: string
+          issued_at?: string | null
+          last_renewal_attempt?: string | null
+          metadata?: Json | null
+          private_key_data?: string | null
+          renewal_error?: string | null
+          status?: Database["public"]["Enums"]["ssl_status"]
+          subject_alt_names?: string[] | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ssl_certificates_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -2274,6 +2588,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_domain: {
+        Args: {
+          p_domain: string
+          p_domain_type?: Database["public"]["Enums"]["domain_type"]
+          p_tenant_id: string
+        }
+        Returns: string
+      }
       aggregate_performance_trends: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2293,6 +2615,14 @@ export type Database = {
       check_service_health: {
         Args: { p_service_id: string }
         Returns: Json
+      }
+      check_ssl_expiration: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          days_remaining: number
+          domain_id: string
+          domain_name: string
+        }[]
       }
       create_health_incident: {
         Args: {
@@ -2395,14 +2725,30 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_ssl_certificate: {
+        Args: {
+          p_certificate_data: string
+          p_domain_id: string
+          p_expires_at: string
+          p_status: Database["public"]["Enums"]["ssl_status"]
+        }
+        Returns: string
+      }
       user_has_tenant_access: {
         Args: { target_tenant_id: string }
         Returns: boolean
       }
+      verify_domain: {
+        Args: { p_domain_id: string; p_verification_success: boolean }
+        Returns: undefined
+      }
     }
     Enums: {
+      domain_status: "pending" | "active" | "error" | "expired" | "suspended"
+      domain_type: "custom" | "subdomain" | "wildcard"
       employee_role: "SUPER_ADMIN" | "ADMIN" | "SUPPORT" | "OPS" | "VIEWER"
       employee_status: "ACTIVE" | "INACTIVE" | "PENDING" | "SUSPENDED"
+      ssl_status: "pending" | "active" | "error" | "expired" | "renewing"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2530,8 +2876,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      domain_status: ["pending", "active", "error", "expired", "suspended"],
+      domain_type: ["custom", "subdomain", "wildcard"],
       employee_role: ["SUPER_ADMIN", "ADMIN", "SUPPORT", "OPS", "VIEWER"],
       employee_status: ["ACTIVE", "INACTIVE", "PENDING", "SUSPENDED"],
+      ssl_status: ["pending", "active", "error", "expired", "renewing"],
     },
   },
 } as const
