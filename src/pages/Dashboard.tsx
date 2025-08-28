@@ -28,6 +28,9 @@ import { useRealtimeData } from "@/hooks/useRealtimeData"
 import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter"
 import { KPICard } from "@/components/dashboard/KPICard"
 import { ExportControls } from "@/components/dashboard/ExportControls"
+import { MetricsCollector } from "@/components/analytics/MetricsCollector"
+import { ReportsManager } from "@/components/analytics/ReportsManager"
+import { HistoricalAnalysis } from "@/components/analytics/HistoricalAnalysis"
 import { useToast } from "@/hooks/use-toast"
 
 // Enhanced mock data for comprehensive analytics
@@ -293,12 +296,15 @@ const Dashboard = () => {
 
         {/* Main Analytics Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="revenue">Revenue</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="metrics">Live Metrics</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="historical">Historical</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -678,6 +684,18 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="metrics" className="space-y-4">
+            <MetricsCollector />
+          </TabsContent>
+
+          <TabsContent value="reports" className="space-y-4">
+            <ReportsManager />
+          </TabsContent>
+
+          <TabsContent value="historical" className="space-y-4">
+            <HistoricalAnalysis />
           </TabsContent>
         </Tabs>
       </div>
