@@ -106,6 +106,12 @@ const navigation = [
     url: "/admin/analytics",
     icon: BarChart3,
     badge: null
+  },
+  {
+    title: "Roadmap",
+    url: "/admin/roadmap",
+    icon: BarChart3,
+    badge: null
   }
 ]
 

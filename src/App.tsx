@@ -26,6 +26,7 @@ import POSSystemsPage from "@/pages/POSSystemsPage";
 import DomainsPage from "@/pages/DomainsPage";
 import AgencyKitPage from "@/pages/AgencyKitPage";
 import ProfilePage from "@/pages/ProfilePage";
+import RoadmapPage from "@/pages/RoadmapPage";
 import { IntegrationsPage } from "@/pages/IntegrationsPage";
 import NotFound from "@/pages/NotFound";
 
@@ -67,6 +68,7 @@ function App() {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="impersonate" element={<ImpersonationPage />} />
               <Route path="integrations" element={<IntegrationsPage />} />
+              <Route path="roadmap" element={<RoadmapPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
                 
