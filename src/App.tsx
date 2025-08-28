@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import TenantsPage from "./pages/TenantsPage";
 import SettingsPage from "./pages/SettingsPage";
-import AdminLanding from "./pages/AdminLanding";
+
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
@@ -25,8 +25,8 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Admin Landing Page */}
-              <Route path="/" element={<AdminLanding />} />
+              {/* Login Page */}
+              <Route path="/" element={<Auth />} />
               
               {/* Redirect /admin to dashboard if authenticated, otherwise to landing */}
               <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
