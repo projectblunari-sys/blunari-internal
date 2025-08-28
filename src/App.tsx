@@ -25,7 +25,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Login Page */}
+              {/* Login-Only Root Page */}
               <Route path="/" element={<Auth />} />
               
               {/* Redirect /admin to dashboard if authenticated, otherwise to landing */}
