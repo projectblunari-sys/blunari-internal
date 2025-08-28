@@ -93,10 +93,12 @@ const Index = () => {
             <Link to="/about">
               <Button variant="ghost">About</Button>
             </Link>
-            <Link to="/dashboard">
-              <Button variant="outline">Dashboard</Button>
+            <Link to="/auth">
+              <Button variant="outline">Sign In</Button>
             </Link>
-            <Button variant="default">Get Started</Button>
+            <Link to="/auth">
+              <Button variant="default">Get Started</Button>
+            </Link>
           </div>
         </div>
       </nav>

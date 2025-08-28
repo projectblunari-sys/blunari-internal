@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      auto_provisioning: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          currency: string
+          error_message: string | null
+          id: string
+          restaurant_name: string
+          restaurant_slug: string
+          status: string
+          tenant_id: string | null
+          timezone: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          restaurant_name: string
+          restaurant_slug: string
+          status?: string
+          tenant_id?: string | null
+          timezone?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          error_message?: string | null
+          id?: string
+          restaurant_name?: string
+          restaurant_slug?: string
+          status?: string
+          tenant_id?: string | null
+          timezone?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_provisioning_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_holds: {
         Row: {
           booking_time: string
@@ -231,6 +281,45 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          onboarding_completed: boolean
+          phone: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          onboarding_completed?: boolean
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          onboarding_completed?: boolean
+          phone?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       provisioning_runs: {
         Row: {
           created_at: string
@@ -442,7 +531,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_tenant: {
+        Args: { p_user_id: string }
+        Returns: {
+          provisioning_status: string
+          tenant_id: string
+          tenant_name: string
+          tenant_slug: string
+          tenant_status: string
+        }[]
+      }
+      provision_tenant: {
+        Args: {
+          p_currency?: string
+          p_restaurant_name: string
+          p_restaurant_slug: string
+          p_timezone?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

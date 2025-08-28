@@ -6,6 +6,7 @@ import { WidgetIntegration } from "@/components/client/WidgetIntegration";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Calendar, 
   TrendingUp, 
@@ -21,16 +22,15 @@ import {
 
 const ClientDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const { user, profile, tenant } = useAuth();
 
-  // Mock restaurant data - in real app this would come from API based on auth
+  // Use actual user and tenant data
   const restaurant = {
-    name: "Bella Vista Restaurant",
-    slug: "bella-vista", 
+    name: tenant?.tenant_name || "Your Restaurant",
+    slug: tenant?.tenant_slug || "restaurant", 
     plan: "Professional",
-    owner: "Sarah Chen",
-    email: "sarah@bellavista.com",
-    timezone: "America/New_York",
-    currency: "USD"
+    owner: `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() || "Restaurant Owner",
+    email: profile?.email || user?.email || ""
   };
 
   const todayStats = [
@@ -117,10 +117,10 @@ const ClientDashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Good evening! 👋
+            Welcome back, {profile?.first_name || "there"}! 👋
           </h1>
           <p className="text-muted-foreground">
-            Here's what's happening at your restaurant today.
+            Here's what's happening at {restaurant.name} today.
           </p>
         </div>
 
