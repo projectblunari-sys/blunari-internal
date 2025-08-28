@@ -22,6 +22,7 @@ import ObservabilityPage from "@/pages/ObservabilityPage";
 import SystemHealthPage from "@/pages/SystemHealthPage";
 import POSSystemsPage from "@/pages/POSSystemsPage";
 import DomainsPage from "@/pages/DomainsPage";
+import AgencyKitPage from "@/pages/AgencyKitPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ function App() {
             <Route path="system-health" element={<SystemHealthPage />} />
             <Route path="pos-systems" element={<POSSystemsPage />} />
             <Route path="domains" element={<DomainsPage />} />
+            <Route path="agency-kit" element={<AgencyKitPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
                 

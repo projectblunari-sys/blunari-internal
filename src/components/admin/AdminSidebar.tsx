@@ -8,6 +8,7 @@ import {
   BarChart3, 
   TableProperties,
   Building,
+  Building2,
   Bell,
   ChevronLeft,
   ChevronRight,
@@ -79,6 +80,12 @@ const navigation = [
     title: "Domains",
     url: "/admin/domains", 
     icon: Globe,
+    badge: null
+  },
+  {
+    title: "Agency Kit",
+    url: "/admin/agency-kit", 
+    icon: Building2,
     badge: null
   },
   {
