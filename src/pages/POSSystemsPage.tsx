@@ -282,18 +282,19 @@ export default function POSSystemsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8">
-      {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 space-y-8">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">POS Systems</h1>
             <p className="text-muted-foreground">
               Manage point-of-sale integrations across all tenants
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center space-x-2">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => runHealthCheck()}
               disabled={healthChecking}
             >
@@ -304,7 +305,7 @@ export default function POSSystemsPage() {
               )}
               Check All Health
             </Button>
-            <Button onClick={() => setShowAddIntegration(true)}>
+            <Button variant="default" onClick={() => setShowAddIntegration(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Integration
             </Button>
@@ -312,7 +313,7 @@ export default function POSSystemsPage() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid gap-4 md:grid-cols-4 mb-8">
+        <div className="grid gap-6 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Integrations</CardTitle>
@@ -607,6 +608,7 @@ export default function POSSystemsPage() {
             </div>
           </TabsContent>
         </Tabs>
+      </div>
     </div>
   );
 }

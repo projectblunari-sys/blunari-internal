@@ -400,15 +400,16 @@ export default function SystemHealthPage() {
     : 0;
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 space-y-8">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">System Health</h1>
+            <h1 className="text-3xl font-bold">System Health</h1>
             <p className="text-muted-foreground">
               Real-time infrastructure monitoring and diagnostics
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center space-x-2">
             <Button
               variant="outline"
               size="sm"
@@ -417,11 +418,11 @@ export default function SystemHealthPage() {
               {autoRefresh ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
               Auto Refresh {autoRefresh ? 'On' : 'Off'}
             </Button>
-            <Button onClick={runHealthCheck} disabled={runningHealthCheck}>
+            <Button variant="default" onClick={runHealthCheck} disabled={runningHealthCheck}>
               <RefreshCw className={`w-4 h-4 mr-2 ${runningHealthCheck ? 'animate-spin' : ''}`} />
               Health Check
             </Button>
-            <Button onClick={runDiagnostics} disabled={runningDiagnostics}>
+            <Button variant="default" onClick={runDiagnostics} disabled={runningDiagnostics}>
               <Wrench className={`w-4 h-4 mr-2 ${runningDiagnostics ? 'animate-spin' : ''}`} />
               Run Diagnostics
             </Button>
@@ -792,6 +793,7 @@ export default function SystemHealthPage() {
             </Card>
           </TabsContent>
         </Tabs>
+      </div>
     </div>
   );
 }

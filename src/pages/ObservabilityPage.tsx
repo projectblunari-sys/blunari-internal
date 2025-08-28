@@ -336,15 +336,16 @@ export default function ObservabilityPage() {
   }
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 space-y-8">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Observability Dashboard</h1>
+            <h1 className="text-3xl font-bold">Observability</h1>
             <p className="text-muted-foreground">
               Real-time system monitoring and performance analysis
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center space-x-2">
             <Button
               variant="outline"
               size="sm"
@@ -353,7 +354,7 @@ export default function ObservabilityPage() {
               {autoRefresh ? <Eye className="w-4 h-4 mr-2" /> : <EyeOff className="w-4 h-4 mr-2" />}
               Auto Refresh {autoRefresh ? 'On' : 'Off'}
             </Button>
-            <Button onClick={triggerMonitoring} disabled={loading}>
+            <Button variant="default" onClick={triggerMonitoring} disabled={loading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               Collect Metrics
             </Button>
@@ -640,6 +641,7 @@ export default function ObservabilityPage() {
             </Card>
           </TabsContent>
         </Tabs>
+      </div>
     </div>
   );
 }
