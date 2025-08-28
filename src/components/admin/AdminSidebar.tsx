@@ -8,7 +8,9 @@ import {
   SidebarMenu, 
   SidebarMenuButton, 
   SidebarMenuItem, 
-  useSidebar 
+  useSidebar,
+  SidebarHeader,
+  SidebarFooter
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -141,13 +143,6 @@ const platformNavigation: NavigationItem[] = [
     description: "User impersonation"
   },
   {
-    title: "Analytics",
-    url: "/admin/analytics",
-    icon: BarChart3,
-    badge: null,
-    description: "Data and insights"
-  },
-  {
     title: "Roadmap",
     url: "/admin/roadmap",
     icon: Rocket,
@@ -259,34 +254,27 @@ export const AdminSidebar = memo(() => {
   }, [isActive]);
 
   return (
-    <Sidebar className={`${!open ? "w-16" : "w-64"} border-r transition-all duration-300 bg-card`}>
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-card/50">
-        {open && (
-          <div className="flex items-center gap-2">
-            <img
-              src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png" 
-              alt="Blunari Admin"
-              className="w-8 h-8 rounded object-cover"
-              loading="lazy"
-            />
-            <span className="text-lg font-semibold text-foreground">Blunari Admin</span>
-          </div>
-        )}
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={toggleSidebar}
-          className="h-8 w-8 hover:bg-accent"
-          aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
-        >
-          {!open ? (
-            <ChevronRight className="h-4 w-4" />
-          ) : (
-            <ChevronLeft className="h-4 w-4" />
+    <Sidebar className={`${!open ? "w-16" : "w-64"} border-r border-border/40 transition-all duration-300 bg-sidebar shadow-card`}>
+      <SidebarHeader className="border-b border-border/40 bg-gradient-glass">
+        <div className="flex items-center justify-between p-4">
+          {open && (
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-elegant">
+                <Building className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <div>
+                <span className="text-lg font-bold text-sidebar-foreground">Blunari</span>
+                <p className="text-xs text-sidebar-foreground/70">Admin Portal</p>
+              </div>
+            </div>
           )}
-        </Button>
-      </div>
+          {!open && (
+            <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-elegant mx-auto">
+              <Building className="h-4 w-4 text-primary-foreground" />
+            </div>
+          )}
+        </div>
+      </SidebarHeader>
 
       <SidebarContent className="flex flex-col justify-between">
         {/* Main Navigation */}
@@ -317,7 +305,7 @@ export const AdminSidebar = memo(() => {
         </div>
 
         {/* Bottom Navigation */}
-        <div className="border-t p-4 bg-card/50">
+        <SidebarFooter className="border-t border-border/40 bg-gradient-glass p-2">
           <NavigationSection
             title="Account"
             items={bottomNavigation}
@@ -325,7 +313,15 @@ export const AdminSidebar = memo(() => {
             getNavClassName={getNavClassName}
             showTooltips={!open}
           />
-        </div>
+          {open && (
+            <div className="mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="flex items-center gap-2 text-xs text-sidebar-foreground/70">
+                <Shield className="h-3 w-3" />
+                <span>v2.1.0 • Secure</span>
+              </div>
+            </div>
+          )}
+        </SidebarFooter>
       </SidebarContent>
     </Sidebar>
   );

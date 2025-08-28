@@ -13,14 +13,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <SidebarProvider defaultOpen={sidebarOpen}>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-gradient-subtle">
         <AdminSidebar />
         
         <div className="flex flex-1 flex-col overflow-hidden">
           <AdminHeader />
           
-          <main className="flex-1 overflow-auto p-6">
-            {children || <Outlet />}
+          <main className="flex-1 overflow-auto bg-background/50 backdrop-blur-sm">
+            <div className="container mx-auto p-6 space-y-6">
+              {children || <Outlet />}
+            </div>
           </main>
         </div>
       </div>

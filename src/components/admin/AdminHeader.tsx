@@ -10,41 +10,142 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Bell, Search, Plus, User, Settings, HelpCircle, LogOut } from "lucide-react"
+import { 
+  Bell, 
+  Search, 
+  Plus, 
+  User, 
+  Settings, 
+  HelpCircle, 
+  LogOut, 
+  Command,
+  Briefcase
+} from "lucide-react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { Input } from "@/components/ui/input"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Link, useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
+import { useState, useCallback } from "react"
 
 export function AdminHeader() {
   const { user, profile, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchQuery, setSearchQuery] = useState("")
 
   const initials = profile?.first_name && profile?.last_name 
     ? `${profile.first_name[0]}${profile.last_name[0]}` 
     : user?.email?.[0]?.toUpperCase() || "A"
 
+  const displayName = profile?.first_name && profile?.last_name
+    ? `${profile.first_name} ${profile.last_name}`
+    : user?.email?.split('@')[0] || "Admin"
+
+  const handleSearchKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      // Implement global search functionality
+      console.log('Searching for:', searchQuery)
+    }
+  }, [searchQuery])
+
+  const handleNotificationClick = useCallback(() => {
+    navigate('/admin/notifications')
+  }, [navigate])
+
+  const handleQuickAction = useCallback(() => {
+    navigate('/admin/tenants/new')
+  }, [navigate])
+
+  const getPageTitle = () => {
+    const path = location.pathname
+    if (path.includes('/dashboard')) return 'Dashboard'
+    if (path.includes('/tenants')) return 'Tenants'
+    if (path.includes('/employees')) return 'Employees'
+    if (path.includes('/billing')) return 'Billing'
+    if (path.includes('/operations')) return 'Operations'
+    if (path.includes('/analytics')) return 'Analytics'
+    if (path.includes('/observability')) return 'Observability'
+    if (path.includes('/system-health')) return 'System Health'
+    if (path.includes('/pos-systems')) return 'POS Systems'
+    if (path.includes('/domains')) return 'Domains'
+    if (path.includes('/agency-kit')) return 'Agency Kit'
+    if (path.includes('/profile')) return 'Profile'
+    if (path.includes('/impersonate')) return 'Impersonation'
+    if (path.includes('/integrations')) return 'Integrations'
+    if (path.includes('/notifications')) return 'Notifications'
+    if (path.includes('/roadmap')) return 'Roadmap'
+    if (path.includes('/settings')) return 'Settings'
+    return 'Blunari Admin'
+  }
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 shadow-subtle">
-      <div className="container flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger className="h-8 w-8 hover:bg-accent/10 transition-colors duration-200" />
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-gradient-glass backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
+      <div className="flex h-16 items-center justify-between px-6">
+        {/* Left Section */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <SidebarTrigger className="h-9 w-9 rounded-md hover:bg-accent/50 transition-colors duration-200" />
+            
+            {/* Brand & Page Title */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-elegant">
+                  <Briefcase className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <div className="hidden sm:block">
+                  <h1 className="text-lg font-semibold text-foreground">{getPageTitle()}</h1>
+                  <p className="text-xs text-muted-foreground">Blunari Admin</p>
+                </div>
+              </div>
+            </div>
+          </div>
           
-          {/* Search */}
-          <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search anything..."
-              className="w-64 pl-9 bg-muted/50 border-border/50 focus:bg-background focus:border-primary/30 transition-all duration-200"
-            />
+          {/* Enhanced Search */}
+          <div className="relative hidden lg:block">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors" />
+              <Command className="absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search tenants, employees, orders..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleSearchKeyPress}
+                className="w-80 pl-10 pr-10 bg-muted/30 border-border/30 focus:bg-background focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-300 placeholder:text-muted-foreground/70"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Right Section */}
+        <div className="flex items-center gap-2">
+          {/* Quick Action */}
+          <Button 
+            size="sm" 
+            onClick={handleQuickAction}
+            className="hidden md:flex bg-gradient-primary hover:shadow-glow transition-all duration-300 hover:scale-105"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Tenant
+          </Button>
+
+          {/* Mobile Search */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="lg:hidden hover:bg-accent/50 transition-colors duration-200"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative hover:bg-accent/10 hover:scale-105 transition-all duration-200">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleNotificationClick}
+            className="relative hover:bg-accent/50 hover:scale-105 transition-all duration-200"
+          >
             <Bell className="h-4 w-4" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-gradient-primary text-primary-foreground border-2 border-background animate-pulse">
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-gradient-primary text-primary-foreground border-2 border-background animate-pulse shadow-glow">
               3
             </Badge>
           </Button>
@@ -55,41 +156,88 @@ export function AdminHeader() {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:scale-105 transition-all duration-200 ring-2 ring-transparent hover:ring-primary/20">
-                <Avatar className="h-10 w-10 border-2 border-primary/20">
-                  <AvatarImage src={profile?.avatar_url || ""} alt="Profile" />
-                  <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">{initials}</AvatarFallback>
-                </Avatar>
+              <Button 
+                variant="ghost" 
+                className="relative h-10 w-auto pl-2 pr-3 rounded-full hover:scale-105 transition-all duration-200 ring-2 ring-transparent hover:ring-primary/20 hover:shadow-glow"
+              >
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-8 w-8 border-2 border-primary/20">
+                    <AvatarImage src={profile?.avatar_url || ""} alt="Profile" />
+                    <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold text-sm">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="hidden md:block text-left">
+                    <p className="text-sm font-medium leading-none text-foreground">
+                      {displayName}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      Administrator
+                    </p>
+                  </div>
+                </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 bg-background/95 backdrop-blur-xl border-border/50 shadow-premium animate-scale-in-center" align="end" forceMount>
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {profile?.first_name} {profile?.last_name}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email}
-                  </p>
+            <DropdownMenuContent 
+              className="w-64 bg-background/95 backdrop-blur-xl border-border/50 shadow-premium animate-scale-in-center" 
+              align="end" 
+              sideOffset={8}
+              forceMount
+            >
+              <DropdownMenuLabel className="font-normal p-4">
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border-2 border-primary/20">
+                      <AvatarImage src={profile?.avatar_url || ""} alt="Profile" />
+                      <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-medium leading-none text-foreground">
+                        {displayName}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground mt-1">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Badge variant="secondary" className="text-xs">
+                      Administrator
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Online
+                    </Badge>
+                  </div>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/admin/profile')}>
+              <DropdownMenuItem 
+                onClick={() => navigate('/admin/profile')}
+                className="cursor-pointer hover:bg-accent/50 transition-colors"
+              >
                 <User className="mr-2 h-4 w-4" />
-                Profile
+                Profile Settings
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/admin/settings')}>
+              <DropdownMenuItem 
+                onClick={() => navigate('/admin/settings')}
+                className="cursor-pointer hover:bg-accent/50 transition-colors"
+              >
                 <Settings className="mr-2 h-4 w-4" />
-                Settings
+                Account Settings
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer hover:bg-accent/50 transition-colors">
                 <HelpCircle className="mr-2 h-4 w-4" />
-                Support
+                Help & Support
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut}>
+              <DropdownMenuItem 
+                onClick={signOut}
+                className="cursor-pointer hover:bg-destructive/10 hover:text-destructive transition-colors"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
-                Log out
+                Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
