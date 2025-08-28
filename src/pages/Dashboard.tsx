@@ -239,27 +239,33 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6" role="main" aria-label="Platform Administration Dashboard">
-      {/* Connection Status and Last Updated Info */}
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            {isConnected ? (
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
-                <Wifi className="h-3 w-3 mr-1" />
-                Live
-              </Badge>
-            ) : (
-              <Badge variant="destructive">
-                <WifiOff className="h-3 w-3 mr-1" />
-                Offline
-              </Badge>
-            )}
-            {lastUpdated && (
-              <span className="text-xs text-muted-foreground">
-                Updated: {lastUpdated.toLocaleTimeString()}
-              </span>
-            )}
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Platform Administration</h1>
+            <div className="flex items-center gap-2">
+              {isConnected ? (
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  <Wifi className="h-3 w-3 mr-1" />
+                  Live
+                </Badge>
+              ) : (
+                <Badge variant="destructive">
+                  <WifiOff className="h-3 w-3 mr-1" />
+                  Offline
+                </Badge>
+              )}
+              {lastUpdated && (
+                <span className="text-xs text-muted-foreground">
+                  Updated: {lastUpdated.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
           </div>
+          <p className="text-muted-foreground">
+            Internal staff dashboard for platform management and analytics
+          </p>
         </div>
         
         <div className="flex items-center gap-3">
