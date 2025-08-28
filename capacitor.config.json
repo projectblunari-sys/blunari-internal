@@ -1,10 +1,10 @@
 {
-  "appId": "app.lovable.121a72ff1baf491b90a6b737d6b29353",
+  "appId": "ai.blunari.admin",
   "appName": "blunari-table-master",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
-    "url": "https://121a72ff-1baf-491b-90a6-b737d6b29353.lovableproject.com?forceHideBadge=true",
+    "url": "https://admin.blunari.ai",
     "cleartext": true
   },
   "plugins": {

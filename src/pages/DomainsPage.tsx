@@ -747,7 +747,7 @@ function DNSManagement({ selectedDomain, onSelectDomain, domains }: any) {
                 DNS management interface coming soon. For now, please configure DNS records manually:
               </p>
               <div className="mt-4 space-y-2 font-mono text-sm bg-muted p-4 rounded-md">
-                <div>CNAME: {selectedDomain.domain} → your-app.lovable.app</div>
+                <div>CNAME: {selectedDomain.domain} → your-app.blunari.ai</div>
                 <div>TXT: _blunari-verification → {selectedDomain.verification_record}</div>
               </div>
             </CardContent>

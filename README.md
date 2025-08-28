@@ -1,22 +1,16 @@
-# Welcome to your Lovable project
+# Blunari Admin Platform
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/121a72ff-1baf-491b-90a6-b737d6b29353
+**Company**: Blunari - Advanced Restaurant Technology Solutions
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/121a72ff-1baf-491b-90a6-b737d6b29353) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+You can clone this repo and push changes to deploy updates to the platform.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -59,15 +53,20 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (Backend & Database)
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/121a72ff-1baf-491b-90a6-b737d6b29353) and click on Share -> Publish.
+The application is automatically deployed through CI/CD pipeline when changes are pushed to the main branch.
 
-## Can I connect a custom domain to my Lovable project?
+## Architecture
 
-Yes, you can!
+This is the admin dashboard for the Blunari restaurant platform, providing:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- Real-time analytics and metrics
+- Tenant management and onboarding
+- System health monitoring
+- Support ticket management
+- Domain and infrastructure management
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Built with enterprise-grade security and scalability in mind.
