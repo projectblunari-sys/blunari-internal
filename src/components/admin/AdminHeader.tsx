@@ -59,15 +59,9 @@ export function AdminHeader() {
   return (
     <header className="sticky top-0 z-50 w-full bg-slate-900 border-b border-slate-800 text-white">
       <div className="flex h-14 items-center justify-between px-4">
-        {/* Left Section - Account */}
+        {/* Left Section */}
         <div className="flex items-center gap-6">
           <SidebarTrigger className="h-8 w-8 rounded-md hover:bg-slate-800 transition-colors duration-200 text-white" />
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-300">
-              {user?.email?.split('@')[0] || 'admin'}'s Account
-            </span>
-          </div>
         </div>
 
         {/* Center Section - Search */}
