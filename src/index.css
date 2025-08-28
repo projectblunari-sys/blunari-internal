@@ -93,33 +93,77 @@ All colors MUST be HSL. Professional-grade visual hierarchy.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    /* Dark Theme - Enhanced Professional Colors */
+    --background: 220 13% 8%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+
+    --card: 220 13% 9%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+
+    --popover: 220 13% 8%;
     --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+
+    /* Primary - Brighter in dark mode */
+    --primary: 210 100% 65%;
+    --primary-foreground: 220 13% 8%;
+    --primary-glow: 195 100% 75%;
+    --primary-light: 210 100% 95%;
+    --primary-dark: 210 100% 45%;
+
+    /* Secondary - Enhanced contrast */
+    --secondary: 220 9% 18%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --secondary-light: 220 14% 96%;
+    --secondary-dark: 220 15% 12%;
+
+    /* Accent - Bright cyan */
+    --accent: 195 100% 75%;
+    --accent-foreground: 220 13% 8%;
+    --accent-light: 195 100% 95%;
+
+    /* Muted - Better contrast */
+    --muted: 220 13% 15%;
+    --muted-foreground: 220 13% 65%;
+
+    /* Status Colors - Enhanced for dark mode */
+    --success: 142 76% 45%;
+    --success-foreground: 220 13% 8%;
+    --success-light: 142 76% 90%;
+    --warning: 35 84% 70%;
+    --warning-foreground: 220 13% 8%;
+    --warning-light: 35 84% 90%;
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 220 13% 8%;
+    --destructive-light: 0 84% 90%;
+
+    /* UI Elements */
+    --border: 220 13% 18%;
+    --input: 220 13% 15%;
+    --ring: 210 100% 65%;
+
+    /* Enhanced Gradients for Dark Mode */
+    --gradient-primary: linear-gradient(135deg, hsl(210 100% 65%), hsl(195 100% 75%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220 9% 18%), hsl(220 9% 25%));
+    --gradient-hero: linear-gradient(135deg, hsl(210 100% 65%) 0%, hsl(195 100% 75%) 50%, hsl(220 9% 18%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(220 13% 8%) 0%, hsl(220 13% 10%) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(220 13% 8% / 0.8), hsl(220 13% 15% / 0.4));
+
+    /* Enhanced Shadows for Dark Mode */
+    --shadow-elegant: 0 10px 30px -10px hsl(210 100% 65% / 0.4);
+    --shadow-glow: 0 0 40px hsl(195 100% 75% / 0.5);
+    --shadow-card: 0 4px 20px -2px hsl(220 13% 4% / 0.5);
+    --shadow-premium: 0 25px 50px -12px hsl(220 13% 4% / 0.8);
+    --shadow-subtle: 0 1px 3px 0 hsl(220 13% 4% / 0.3);
+
+    /* Sidebar Variables - Dark Mode */
+    --sidebar-background: 220 13% 6%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 100% 65%;
+    --sidebar-primary-foreground: 220 13% 6%;
+    --sidebar-accent: 220 13% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 13% 18%;
+    --sidebar-ring: 210 100% 65%;
   }
 }
 
