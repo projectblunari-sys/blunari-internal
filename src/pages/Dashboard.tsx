@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from "recharts"
 import { useRealtimeData } from "@/hooks/useRealtimeData"
+import { useDashboardCharts } from "@/hooks/useDashboardCharts"
 import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter"
 import { KPICard } from "@/components/dashboard/KPICard"
 import { ExportControls } from "@/components/dashboard/ExportControls"
@@ -32,81 +33,7 @@ import { MetricsCollector } from "@/components/analytics/MetricsCollector"
 import { ReportsManager } from "@/components/analytics/ReportsManager"
 import { HistoricalAnalysis } from "@/components/analytics/HistoricalAnalysis"
 import { useToast } from "@/hooks/use-toast"
-
-// Enhanced mock data for comprehensive analytics
-const revenueData = [
-  { name: 'Jan', value: 45000, bookings: 1250, tenants: 85 },
-  { name: 'Feb', value: 52000, bookings: 1380, tenants: 89 },
-  { name: 'Mar', value: 48000, bookings: 1295, tenants: 87 },
-  { name: 'Apr', value: 61000, bookings: 1450, tenants: 92 },
-  { name: 'May', value: 55000, bookings: 1375, tenants: 94 },
-  { name: 'Jun', value: 67000, bookings: 1520, tenants: 97 },
-]
-
-const bookingTrendData = [
-  { name: 'Mon', bookings: 245, completed: 220, cancelled: 25 },
-  { name: 'Tue', bookings: 252, completed: 235, cancelled: 17 },
-  { name: 'Wed', bookings: 248, completed: 228, cancelled: 20 },
-  { name: 'Thu', bookings: 261, completed: 245, cancelled: 16 },
-  { name: 'Fri', bookings: 278, completed: 260, cancelled: 18 },
-  { name: 'Sat', bookings: 285, completed: 268, cancelled: 17 },
-  { name: 'Sun', bookings: 272, completed: 255, cancelled: 17 },
-]
-
-const restaurantStatusData = [
-  { name: 'Active', value: 340, color: '#10b981', trend: '+12%' },
-  { name: 'Trial', value: 85, color: '#f59e0b', trend: '+5%' },
-  { name: 'Suspended', value: 12, color: '#ef4444', trend: '-2%' },
-  { name: 'Inactive', value: 8, color: '#6b7280', trend: '0%' },
-]
-
-const performanceMetrics = [
-  { name: 'API Response Time', value: 145, unit: 'ms', status: 'good', target: 200 },
-  { name: 'Database Queries', value: 2.3, unit: 's', status: 'good', target: 3.0 },
-  { name: 'SMS Delivery Rate', value: 98.7, unit: '%', status: 'excellent', target: 95.0 },
-  { name: 'Email Delivery Rate', value: 99.2, unit: '%', status: 'excellent', target: 98.0 },
-  { name: 'Migration Success', value: 99.5, unit: '%', status: 'excellent', target: 99.0 },
-  { name: 'Uptime', value: 99.98, unit: '%', status: 'excellent', target: 99.9 },
-]
-
-const recentActivityData = [
-  {
-    id: 1,
-    type: 'new_restaurant',
-    title: 'Bella Vista Restaurant',
-    description: 'New restaurant onboarded',
-    timestamp: '2 hours ago',
-    status: 'success',
-    metadata: { revenue: 2500, bookings: 45 }
-  },
-  {
-    id: 2,
-    type: 'high_booking_volume',
-    title: 'Ocean Breeze Bistro',
-    description: 'Unusual booking spike detected',
-    timestamp: '3 hours ago',
-    status: 'warning',
-    metadata: { spike: '150%', bookings: 89 }
-  },
-  {
-    id: 3,
-    type: 'payment_issue',
-    title: 'Mountain View Cafe',
-    description: 'Payment failure - requires attention',
-    timestamp: '5 hours ago',
-    status: 'error',
-    metadata: { amount: 49.99 }
-  },
-  {
-    id: 4,
-    type: 'milestone',
-    title: 'Platform Milestone',
-    description: '10,000th booking processed',
-    timestamp: '1 day ago',
-    status: 'success',
-    metadata: { milestone: 10000 }
-  }
-]
+import { supabase } from "@/integrations/supabase/client"
 
 const Dashboard = () => {
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | null>(null)
@@ -114,8 +41,8 @@ const Dashboard = () => {
   
   const { 
     data: realtimeData, 
-    loading, 
-    error, 
+    loading: realtimeLoading, 
+    error: realtimeError, 
     lastUpdated, 
     refreshData 
   } = useRealtimeData({
@@ -124,16 +51,108 @@ const Dashboard = () => {
     cacheTTL: 60000
   })
 
+  const {
+    revenueData,
+    bookingTrendData,
+    restaurantStatusData,
+    recentActivityData,
+    loading: chartsLoading,
+    error: chartsError,
+    refetch: refetchCharts
+  } = useDashboardCharts(dateRange || undefined)
+
+  // Performance metrics (using real data from system_health_metrics table)
+  const [performanceMetrics, setPerformanceMetrics] = useState([
+    { name: 'API Response Time', value: 0, unit: 'ms', status: 'good', target: 200 },
+    { name: 'Database Queries', value: 0, unit: 's', status: 'good', target: 3.0 },
+    { name: 'SMS Delivery Rate', value: 0, unit: '%', status: 'excellent', target: 95.0 },
+    { name: 'Email Delivery Rate', value: 0, unit: '%', status: 'excellent', target: 98.0 },
+    { name: 'Migration Success', value: 0, unit: '%', status: 'excellent', target: 99.0 },
+    { name: 'Uptime', value: 0, unit: '%', status: 'excellent', target: 99.9 },
+  ])
+
+  // Fetch performance metrics from database
+  React.useEffect(() => {
+    const fetchPerformanceMetrics = async () => {
+      try {
+        // Get average metrics from the last 24 hours
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+
+        const { data: metrics } = await supabase
+          .from('system_health_metrics')
+          .select('metric_name, metric_value, metric_unit')
+          .gte('recorded_at', yesterday.toISOString())
+
+        if (metrics) {
+          // Calculate averages for each metric type
+          const metricAverages: Record<string, number> = {}
+          metrics.forEach(metric => {
+            if (!metricAverages[metric.metric_name]) {
+              metricAverages[metric.metric_name] = 0
+            }
+            metricAverages[metric.metric_name] += metric.metric_value
+          })
+
+          // Get count for each metric to calculate average
+          const metricCounts: Record<string, number> = {}
+          metrics.forEach(metric => {
+            metricCounts[metric.metric_name] = (metricCounts[metric.metric_name] || 0) + 1
+          })
+
+          // Calculate final averages
+          Object.keys(metricAverages).forEach(key => {
+            metricAverages[key] = metricAverages[key] / metricCounts[key]
+          })
+
+          // Update performance metrics with real data where available
+          setPerformanceMetrics(prev => prev.map(metric => {
+            const realValue = metricAverages[metric.name.toLowerCase().replace(/\s+/g, '_')]
+            if (realValue !== undefined) {
+              const status = realValue < metric.target * 0.8 ? 'excellent' : 
+                           realValue < metric.target ? 'good' : 'warning'
+              return { ...metric, value: Math.round(realValue * 100) / 100, status }
+            }
+            return metric
+          }))
+        }
+      } catch (error) {
+        console.error('Error fetching performance metrics:', error)
+        // Use fallback values based on realtime data
+        if (realtimeData) {
+          setPerformanceMetrics(prev => prev.map(metric => {
+            switch (metric.name) {
+              case 'SMS Delivery Rate':
+                return { ...metric, value: realtimeData.smsDeliveryRate, status: 'excellent' }
+              case 'Migration Success':
+                return { ...metric, value: realtimeData.migrationSuccessRate, status: 'excellent' }
+              default:
+                return metric
+            }
+          }))
+        }
+      }
+    }
+
+    fetchPerformanceMetrics()
+  }, [realtimeData])
+
   // Connection status for real-time features
   const [isConnected, setIsConnected] = useState(true)
+  
+  // Combined loading state
+  const loading = realtimeLoading || chartsLoading
+  const error = realtimeError || chartsError
 
   const handleDateRangeChange = (range: { from: Date; to: Date } | null) => {
     setDateRange(range)
     refreshData(range || undefined)
+    refetchCharts()
   }
 
   const handleRefresh = () => {
     refreshData(dateRange || undefined)
+    refetchCharts()
     toast({
       title: "Data Refreshed",
       description: "Dashboard data has been updated with the latest information.",
