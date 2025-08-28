@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react"
+import React, { useState, useMemo } from "react"
 import { AdminLayout } from "@/components/admin/AdminLayout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
   BarChart3, 
   TrendingUp, 
@@ -16,171 +17,291 @@ import {
   Clock,
   AlertTriangle,
   CheckCircle,
-  RefreshCw
+  Zap,
+  Target,
+  MessageSquare,
+  Database,
+  Wifi,
+  WifiOff
 } from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts"
-import { supabase } from "@/integrations/supabase/client"
-import { useDashboardStore } from "@/stores/dashboardStore"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from "recharts"
+import { useRealtimeData } from "@/hooks/useRealtimeData"
+import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter"
+import { KPICard } from "@/components/dashboard/KPICard"
+import { ExportControls } from "@/components/dashboard/ExportControls"
+import { useToast } from "@/hooks/use-toast"
 
-// Mock data for the dashboard
+// Enhanced mock data for comprehensive analytics
 const revenueData = [
-  { name: 'Jan', value: 45000 },
-  { name: 'Feb', value: 52000 },
-  { name: 'Mar', value: 48000 },
-  { name: 'Apr', value: 61000 },
-  { name: 'May', value: 55000 },
-  { name: 'Jun', value: 67000 },
+  { name: 'Jan', value: 45000, bookings: 1250, tenants: 85 },
+  { name: 'Feb', value: 52000, bookings: 1380, tenants: 89 },
+  { name: 'Mar', value: 48000, bookings: 1295, tenants: 87 },
+  { name: 'Apr', value: 61000, bookings: 1450, tenants: 92 },
+  { name: 'May', value: 55000, bookings: 1375, tenants: 94 },
+  { name: 'Jun', value: 67000, bookings: 1520, tenants: 97 },
 ]
 
-const bookingData = [
-  { name: 'Mon', bookings: 45 },
-  { name: 'Tue', bookings: 52 },
-  { name: 'Wed', bookings: 48 },
-  { name: 'Thu', bookings: 61 },
-  { name: 'Fri', bookings: 78 },
-  { name: 'Sat', bookings: 85 },
-  { name: 'Sun', bookings: 72 },
+const bookingTrendData = [
+  { name: 'Mon', bookings: 245, completed: 220, cancelled: 25 },
+  { name: 'Tue', bookings: 252, completed: 235, cancelled: 17 },
+  { name: 'Wed', bookings: 248, completed: 228, cancelled: 20 },
+  { name: 'Thu', bookings: 261, completed: 245, cancelled: 16 },
+  { name: 'Fri', bookings: 278, completed: 260, cancelled: 18 },
+  { name: 'Sat', bookings: 285, completed: 268, cancelled: 17 },
+  { name: 'Sun', bookings: 272, completed: 255, cancelled: 17 },
 ]
 
-const tenantStatusData = [
-  { name: 'Active', value: 340, color: '#10b981' },
-  { name: 'Trial', value: 85, color: '#f59e0b' },
-  { name: 'Suspended', value: 12, color: '#ef4444' },
+const restaurantStatusData = [
+  { name: 'Active', value: 340, color: '#10b981', trend: '+12%' },
+  { name: 'Trial', value: 85, color: '#f59e0b', trend: '+5%' },
+  { name: 'Suspended', value: 12, color: '#ef4444', trend: '-2%' },
+  { name: 'Inactive', value: 8, color: '#6b7280', trend: '0%' },
+]
+
+const performanceMetrics = [
+  { name: 'API Response Time', value: 145, unit: 'ms', status: 'good', target: 200 },
+  { name: 'Database Queries', value: 2.3, unit: 's', status: 'good', target: 3.0 },
+  { name: 'SMS Delivery Rate', value: 98.7, unit: '%', status: 'excellent', target: 95.0 },
+  { name: 'Email Delivery Rate', value: 99.2, unit: '%', status: 'excellent', target: 98.0 },
+  { name: 'Migration Success', value: 99.5, unit: '%', status: 'excellent', target: 99.0 },
+  { name: 'Uptime', value: 99.98, unit: '%', status: 'excellent', target: 99.9 },
+]
+
+const recentActivityData = [
+  {
+    id: 1,
+    type: 'new_restaurant',
+    title: 'Bella Vista Restaurant',
+    description: 'New restaurant onboarded',
+    timestamp: '2 hours ago',
+    status: 'success',
+    metadata: { revenue: 2500, bookings: 45 }
+  },
+  {
+    id: 2,
+    type: 'high_booking_volume',
+    title: 'Ocean Breeze Bistro',
+    description: 'Unusual booking spike detected',
+    timestamp: '3 hours ago',
+    status: 'warning',
+    metadata: { spike: '150%', bookings: 89 }
+  },
+  {
+    id: 3,
+    type: 'payment_issue',
+    title: 'Mountain View Cafe',
+    description: 'Payment failure - requires attention',
+    timestamp: '5 hours ago',
+    status: 'error',
+    metadata: { amount: 49.99 }
+  },
+  {
+    id: 4,
+    type: 'milestone',
+    title: 'Platform Milestone',
+    description: '10,000th booking processed',
+    timestamp: '1 day ago',
+    status: 'success',
+    metadata: { milestone: 10000 }
+  }
 ]
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({
-    totalTenants: 0,
-    activeTenants: 0,
-    totalBookings: 0,
-    totalRevenue: 0
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | null>(null)
+  const { toast } = useToast()
+  
+  const { 
+    data: realtimeData, 
+    loading, 
+    error, 
+    lastUpdated, 
+    refreshData 
+  } = useRealtimeData({
+    refreshInterval: 30000,
+    enableCache: true,
+    cacheTTL: 60000
   })
-  const [isLoading, setIsLoading] = useState(true)
-  const { refreshInterval } = useDashboardStore()
 
-  const fetchDashboardData = async () => {
+  // Connection status for real-time features
+  const [isConnected, setIsConnected] = useState(true)
+
+  const handleDateRangeChange = (range: { from: Date; to: Date } | null) => {
+    setDateRange(range)
+    refreshData(range || undefined)
+  }
+
+  const handleRefresh = () => {
+    refreshData(dateRange || undefined)
+    toast({
+      title: "Data Refreshed",
+      description: "Dashboard data has been updated with the latest information.",
+    })
+  }
+
+  // Error boundary for charts
+  const ChartErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     try {
-      setIsLoading(true)
-      
-      // Fetch tenant count
-      const { count: tenantCount } = await supabase
-        .from('tenants')
-        .select('*', { count: 'exact', head: true })
-      
-      // Fetch active tenants
-      const { count: activeCount } = await supabase
-        .from('tenants')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active')
-      
-      // Fetch booking count
-      const { count: bookingCount } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true })
-      
-      setStats({
-        totalTenants: tenantCount || 0,
-        activeTenants: activeCount || 0,
-        totalBookings: bookingCount || 0,
-        totalRevenue: 147500 // Mock data for now
-      })
+      return <>{children}</>
     } catch (error) {
-      console.error('Error fetching dashboard data:', error)
-    } finally {
-      setIsLoading(false)
+      return (
+        <div className="flex items-center justify-center h-32 text-muted-foreground">
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          Unable to load chart
+        </div>
+      )
     }
   }
 
-  useEffect(() => {
-    fetchDashboardData()
+  // Memoized calculations for performance
+  const kpiMetrics = useMemo(() => {
+    if (!realtimeData) return []
     
-    // Set up auto-refresh
-    const interval = setInterval(fetchDashboardData, refreshInterval)
-    return () => clearInterval(interval)
-  }, [refreshInterval])
+    return [
+      {
+        title: "Platform Restaurants",
+        value: realtimeData.totalTenants,
+        icon: Building,
+        trend: { value: 12, label: "from last month", direction: "up" as const },
+        description: "Total registered restaurants",
+        format: "number" as const,
+        accessibilityLabel: `${realtimeData.totalTenants} restaurants registered on the platform`
+      },
+      {
+        title: "Active Restaurants", 
+        value: realtimeData.activeTenants,
+        icon: CheckCircle,
+        trend: { value: 8, label: "from last month", direction: "up" as const },
+        description: "Currently active and operational",
+        format: "number" as const
+      },
+      {
+        title: "Platform Bookings",
+        value: realtimeData.totalBookings,
+        icon: Calendar,
+        trend: { value: 23, label: "from last month", direction: "up" as const },
+        description: "Total bookings processed",
+        format: "number" as const
+      },
+      {
+        title: "Monthly Recurring Revenue",
+        value: realtimeData.mrr,
+        icon: DollarSign,
+        trend: { value: 15, label: "from last month", direction: "up" as const },
+        description: "Current MRR",
+        format: "currency" as const
+      },
+      {
+        title: "ARPU",
+        value: realtimeData.arpu,
+        icon: Target,
+        trend: { value: 5, label: "from last month", direction: "up" as const },
+        description: "Average Revenue Per User",
+        format: "currency" as const
+      },
+      {
+        title: "Churn Rate",
+        value: realtimeData.churnRate,
+        icon: TrendingUp,
+        trend: { value: 0.5, label: "from last month", direction: "down" as const },
+        description: "Monthly customer churn",
+        format: "percentage" as const
+      },
+      {
+        title: "SMS Delivery Rate",
+        value: realtimeData.smsDeliveryRate,
+        icon: MessageSquare,
+        trend: { value: 0.2, label: "from last month", direction: "up" as const },
+        description: "SMS notification success rate",
+        format: "percentage" as const
+      },
+      {
+        title: "ETA Accuracy",
+        value: realtimeData.etaAccuracy,
+        icon: Clock,
+        trend: { value: 2.1, label: "from last month", direction: "up" as const },
+        description: "Booking time prediction accuracy",
+        format: "percentage" as const
+      }
+    ]
+  }, [realtimeData])
+
+  if (error && !realtimeData) {
+    return (
+      <AdminLayout>
+        <div className="space-y-6">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {error} - Please try refreshing the page or contact support if the issue persists.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </AdminLayout>
+    )
+  }
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
+      <div className="space-y-6" role="main" aria-label="Platform Administration Dashboard">
+        {/* Header with Connection Status */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Platform Administration</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">Platform Administration</h1>
+              <div className="flex items-center gap-2">
+                {isConnected ? (
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    <Wifi className="h-3 w-3 mr-1" />
+                    Live
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive">
+                    <WifiOff className="h-3 w-3 mr-1" />
+                    Offline
+                  </Badge>
+                )}
+                {lastUpdated && (
+                  <span className="text-xs text-muted-foreground">
+                    Updated: {lastUpdated.toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
+            </div>
             <p className="text-muted-foreground">
-              Internal staff dashboard for platform management
+              Internal staff dashboard for platform management and analytics
             </p>
           </div>
-          <Button onClick={fetchDashboardData} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          
+          <div className="flex items-center gap-3">
+            <ExportControls dateRange={dateRange} disabled={loading} />
+            <DateRangeFilter
+              value={dateRange}
+              onChange={handleDateRangeChange}
+              onRefresh={handleRefresh}
+              isLoading={loading}
+            />
+          </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* KPI Metrics Grid */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Platform Tenants</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalTenants}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 inline mr-1" />
-                +12% from last month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Restaurants</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeTenants}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 inline mr-1" />
-                +8% from last month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Platform Bookings</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalBookings}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 inline mr-1" />
-                +23% from last month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Platform Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="h-3 w-3 inline mr-1" />
-                +15% from last month
-              </p>
-            </CardContent>
-          </Card>
+          {kpiMetrics.map((metric, index) => (
+            <KPICard
+              key={metric.title}
+              {...metric}
+              loading={loading}
+              className="transition-all hover:shadow-lg"
+            />
+          ))}
         </div>
 
-        {/* Charts Section */}
+        {/* Main Analytics Tabs */}
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="revenue">Revenue</TabsTrigger>
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="tenants">Tenants</TabsTrigger>
+            <TabsTrigger value="restaurants">Restaurants</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
           </TabsList>
 
@@ -189,23 +310,36 @@ const Dashboard = () => {
               <Card className="col-span-4">
                 <CardHeader>
                   <CardTitle>Platform Revenue Overview</CardTitle>
-                  <CardDescription>Monthly platform revenue for the past 6 months</CardDescription>
+                  <CardDescription>Monthly platform revenue and growth trends</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
-                  <ResponsiveContainer width="100%" height={350}>
-                    <LineChart data={revenueData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="hsl(var(--primary))" 
-                        strokeWidth={2}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  <ChartErrorBoundary>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <AreaChart data={revenueData}>
+                        <defs>
+                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip 
+                          formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']}
+                          labelFormatter={(label) => `Month: ${label}`}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="value" 
+                          stroke="hsl(var(--primary))" 
+                          fillOpacity={1}
+                          fill="url(#colorRevenue)"
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ChartErrorBoundary>
                 </CardContent>
               </Card>
 
@@ -215,35 +349,143 @@ const Dashboard = () => {
                   <CardDescription>Distribution of restaurant statuses</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
-                    <PieChart>
-                      <Pie
-                        data={tenantStatusData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={120}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {tenantStatusData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <ChartErrorBoundary>
+                    <ResponsiveContainer width="100%" height={350}>
+                      <PieChart>
+                        <Pie
+                          data={restaurantStatusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={120}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {restaurantStatusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => [value, 'Restaurants']} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartErrorBoundary>
                   <div className="flex justify-center space-x-4 mt-4">
-                    {tenantStatusData.map((entry, index) => (
+                    {restaurantStatusData.map((entry, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <div 
                           className="w-3 h-3 rounded-full" 
                           style={{ backgroundColor: entry.color }}
+                          aria-hidden="true"
                         />
-                        <span className="text-sm">{entry.name}: {entry.value}</span>
+                        <span className="text-sm">
+                          {entry.name}: {entry.value} ({entry.trend})
+                        </span>
                       </div>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Platform Activity</CardTitle>
+                <CardDescription>Latest system events and notifications</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {recentActivityData.map((activity) => (
+                    <div key={activity.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <Badge 
+                          variant={activity.status === 'success' ? 'default' : 
+                                  activity.status === 'warning' ? 'secondary' : 'destructive'}
+                          className="capitalize"
+                        >
+                          {activity.status === 'success' && <CheckCircle className="h-3 w-3 mr-1" />}
+                          {activity.status === 'warning' && <AlertTriangle className="h-3 w-3 mr-1" />}
+                          {activity.status === 'error' && <AlertTriangle className="h-3 w-3 mr-1" />}
+                          {activity.type.replace('_', ' ')}
+                        </Badge>
+                        <div>
+                          <p className="text-sm font-medium">{activity.title}</p>
+                          <p className="text-xs text-muted-foreground">{activity.description}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
+                        {activity.metadata && (
+                          <div className="text-xs">
+                            {Object.entries(activity.metadata).map(([key, value]) => (
+                              <span key={key} className="ml-2">
+                                {key}: {value}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="revenue" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue Growth Trend</CardTitle>
+                  <CardDescription>Monthly revenue progression with forecasting</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChartErrorBoundary>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={revenueData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']} />
+                        <Line 
+                          type="monotone" 
+                          dataKey="value" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={3}
+                          dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ChartErrorBoundary>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Revenue Metrics</CardTitle>
+                  <CardDescription>Key revenue performance indicators</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {realtimeData && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Monthly Recurring Revenue</span>
+                        <span className="font-medium">${realtimeData.mrr.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Average Revenue Per User</span>
+                        <span className="font-medium">${realtimeData.arpu.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Annual Run Rate</span>
+                        <span className="font-medium">${(realtimeData.mrr * 12).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Customer Lifetime Value</span>
+                        <span className="font-medium">${(realtimeData.arpu / (realtimeData.churnRate / 100) * 12).toFixed(0)}</span>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -253,23 +495,26 @@ const Dashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Platform Booking Trends</CardTitle>
-                <CardDescription>Platform-wide bookings by day of the week</CardDescription>
+                <CardDescription>Daily booking patterns across all restaurants</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={bookingData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="bookings" fill="hsl(var(--primary))" />
-                  </BarChart>
-                </ResponsiveContainer>
+                <ChartErrorBoundary>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart data={bookingTrendData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="completed" stackId="a" fill="hsl(var(--primary))" name="Completed" />
+                      <Bar dataKey="cancelled" stackId="a" fill="#ef4444" name="Cancelled" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartErrorBoundary>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="tenants" className="space-y-4">
+          <TabsContent value="restaurants" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -277,67 +522,65 @@ const Dashboard = () => {
                   <CardDescription>Overall platform health metrics</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Active Restaurants</span>
-                      <span className="text-sm font-medium">94.2%</span>
-                    </div>
-                    <Progress value={94.2} className="h-2" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Conversion Rate</span>
-                      <span className="text-sm font-medium">72.8%</span>
-                    </div>
-                    <Progress value={72.8} className="h-2" />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Average Satisfaction</span>
-                      <span className="text-sm font-medium">87.5%</span>
-                    </div>
-                    <Progress value={87.5} className="h-2" />
-                  </div>
+                  {realtimeData && (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm">Active Restaurants</span>
+                          <span className="text-sm font-medium">
+                            {((realtimeData.activeTenants / realtimeData.totalTenants) * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        <Progress value={(realtimeData.activeTenants / realtimeData.totalTenants) * 100} className="h-2" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm">Conversion Rate</span>
+                          <span className="text-sm font-medium">72.8%</span>
+                        </div>
+                        <Progress value={72.8} className="h-2" />
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm">Platform Satisfaction</span>
+                          <span className="text-sm font-medium">87.5%</span>
+                        </div>
+                        <Progress value={87.5} className="h-2" />
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Platform Activity</CardTitle>
-                  <CardDescription>Latest platform activities</CardDescription>
+                  <CardTitle>Top Performing Restaurants</CardTitle>
+                  <CardDescription>Highest revenue generators this month</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
-                      <Badge variant="secondary">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        New
-                      </Badge>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Bella Vista Restaurant</p>
-                        <p className="text-xs text-muted-foreground">Signed up 2 hours ago</p>
+                    {[
+                      { name: 'Ocean Breeze Bistro', revenue: 8900, bookings: 245, growth: '+15%' },
+                      { name: 'Bella Vista Restaurant', revenue: 7200, bookings: 198, growth: '+22%' },
+                      { name: 'Garden Terrace', revenue: 6800, bookings: 189, growth: '+8%' },
+                      { name: 'Mountain View Cafe', revenue: 5900, bookings: 167, growth: '+12%' }
+                    ].map((restaurant, index) => (
+                      <div key={restaurant.name} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <Badge variant="outline">#{index + 1}</Badge>
+                          <div>
+                            <p className="text-sm font-medium">{restaurant.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {restaurant.bookings} bookings
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">${restaurant.revenue.toLocaleString()}</p>
+                          <p className="text-xs text-green-600">{restaurant.growth}</p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <Badge variant="outline">
-                        <Activity className="h-3 w-3 mr-1" />
-                        Updated
-                      </Badge>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Ocean Breeze Bistro</p>
-                        <p className="text-xs text-muted-foreground">Updated settings 5 hours ago</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <Badge variant="destructive">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        Issue
-                      </Badge>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">Mountain View Cafe</p>
-                        <p className="text-xs text-muted-foreground">Payment failed 1 day ago</p>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -348,66 +591,93 @@ const Dashboard = () => {
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardHeader>
-                  <CardTitle>API Performance</CardTitle>
+                  <CardTitle>System Performance</CardTitle>
+                  <CardDescription>Core platform metrics</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Average Response Time</span>
-                      <span className="text-sm font-medium">145ms</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Uptime</span>
-                      <span className="text-sm font-medium">99.97%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Error Rate</span>
-                      <span className="text-sm font-medium">0.02%</span>
-                    </div>
+                  <div className="space-y-4">
+                    {performanceMetrics.slice(0, 3).map((metric) => (
+                      <div key={metric.name} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">{metric.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              {metric.value}{metric.unit}
+                            </span>
+                            <Badge 
+                              variant={metric.status === 'excellent' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {metric.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Progress 
+                            value={metric.unit === '%' ? metric.value : (metric.value / metric.target) * 100} 
+                            className="h-1"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            Target: {metric.target}{metric.unit}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Database Health</CardTitle>
+                  <CardTitle>Communication Systems</CardTitle>
+                  <CardDescription>Delivery and notification rates</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Connection Pool</span>
-                      <span className="text-sm font-medium">78%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Query Performance</span>
-                      <span className="text-sm font-medium">Good</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Storage Used</span>
-                      <span className="text-sm font-medium">45GB</span>
-                    </div>
+                  <div className="space-y-4">
+                    {performanceMetrics.slice(3, 5).map((metric) => (
+                      <div key={metric.name} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">{metric.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              {metric.value}{metric.unit}
+                            </span>
+                            <Badge variant="default" className="text-xs">
+                              {metric.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <Progress value={metric.value} className="h-1" />
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Security Metrics</CardTitle>
+                  <CardTitle>Infrastructure Health</CardTitle>
+                  <CardDescription>Platform reliability metrics</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Failed Login Attempts</span>
-                      <span className="text-sm font-medium">12</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Blocked IPs</span>
-                      <span className="text-sm font-medium">3</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">SSL Certificate</span>
-                      <span className="text-sm font-medium">Valid</span>
-                    </div>
+                  <div className="space-y-4">
+                    {performanceMetrics.slice(5).map((metric) => (
+                      <div key={metric.name} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">{metric.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                              {metric.value}{metric.unit}
+                            </span>
+                            <Badge variant="default" className="text-xs">
+                              <Zap className="h-3 w-3 mr-1" />
+                              {metric.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <Progress value={metric.value} className="h-1" />
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
