@@ -105,9 +105,9 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold">Platform Administration</h1>
             <p className="text-muted-foreground">
-              Manage your restaurant booking platform
+              Internal staff dashboard for platform management
             </p>
           </div>
           <Button onClick={fetchDashboardData} disabled={isLoading}>
@@ -120,7 +120,7 @@ const Dashboard = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
+              <CardTitle className="text-sm font-medium">Platform Tenants</CardTitle>
               <Building className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -134,7 +134,7 @@ const Dashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Tenants</CardTitle>
+              <CardTitle className="text-sm font-medium">Active Restaurants</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -148,7 +148,7 @@ const Dashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+              <CardTitle className="text-sm font-medium">Platform Bookings</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -162,7 +162,7 @@ const Dashboard = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">Platform Revenue</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -188,8 +188,8 @@ const Dashboard = () => {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
               <Card className="col-span-4">
                 <CardHeader>
-                  <CardTitle>Revenue Overview</CardTitle>
-                  <CardDescription>Monthly revenue for the past 6 months</CardDescription>
+                  <CardTitle>Platform Revenue Overview</CardTitle>
+                  <CardDescription>Monthly platform revenue for the past 6 months</CardDescription>
                 </CardHeader>
                 <CardContent className="pl-2">
                   <ResponsiveContainer width="100%" height={350}>
@@ -211,8 +211,8 @@ const Dashboard = () => {
 
               <Card className="col-span-3">
                 <CardHeader>
-                  <CardTitle>Tenant Status</CardTitle>
-                  <CardDescription>Distribution of tenant statuses</CardDescription>
+                  <CardTitle>Restaurant Status</CardTitle>
+                  <CardDescription>Distribution of restaurant statuses</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={350}>
@@ -252,8 +252,8 @@ const Dashboard = () => {
           <TabsContent value="bookings" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Weekly Booking Trends</CardTitle>
-                <CardDescription>Bookings by day of the week</CardDescription>
+                <CardTitle>Platform Booking Trends</CardTitle>
+                <CardDescription>Platform-wide bookings by day of the week</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={350}>
@@ -273,20 +273,20 @@ const Dashboard = () => {
             <div className="grid gap-4 md:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Tenant Health</CardTitle>
+                  <CardTitle>Platform Health</CardTitle>
                   <CardDescription>Overall platform health metrics</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm">Active Tenants</span>
+                      <span className="text-sm">Active Restaurants</span>
                       <span className="text-sm font-medium">94.2%</span>
                     </div>
                     <Progress value={94.2} className="h-2" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm">Trial Conversions</span>
+                      <span className="text-sm">Conversion Rate</span>
                       <span className="text-sm font-medium">72.8%</span>
                     </div>
                     <Progress value={72.8} className="h-2" />
@@ -303,8 +303,8 @@ const Dashboard = () => {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>Latest tenant activities</CardDescription>
+                  <CardTitle>Recent Platform Activity</CardTitle>
+                  <CardDescription>Latest platform activities</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">

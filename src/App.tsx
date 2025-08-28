@@ -10,8 +10,6 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import TenantsPage from "./pages/TenantsPage";
 import SettingsPage from "./pages/SettingsPage";
-
-import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

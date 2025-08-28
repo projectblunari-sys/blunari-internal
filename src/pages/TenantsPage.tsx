@@ -109,14 +109,14 @@ const TenantsPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Tenant Management</h1>
+            <h1 className="text-3xl font-bold">Restaurant Management</h1>
             <p className="text-muted-foreground">
-              Manage restaurant tenants, plans, and configurations
+              Manage platform restaurants, monitor performance, and handle configurations
             </p>
           </div>
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Add New Tenant
+            Add New Restaurant
           </Button>
         </div>
 
@@ -124,7 +124,7 @@ const TenantsPage = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Restaurants</CardTitle>
               <Building className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -135,7 +135,7 @@ const TenantsPage = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Tenants</CardTitle>
+              <CardTitle className="text-sm font-medium">Active Restaurants</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -178,9 +178,9 @@ const TenantsPage = () => {
         {/* Tenants Table */}
         <Card>
           <CardHeader>
-            <CardTitle>All Tenants</CardTitle>
+            <CardTitle>All Restaurants</CardTitle>
             <CardDescription>
-              Comprehensive list of all restaurant tenants
+              Comprehensive list of all platform restaurants
             </CardDescription>
             
             {/* Search and Filters */}
@@ -188,7 +188,7 @@ const TenantsPage = () => {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search tenants..."
+                  placeholder="Search restaurants..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9"
