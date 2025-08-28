@@ -10,7 +10,8 @@ import {
   Building,
   Bell,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  CreditCard
 } from "lucide-react"
 
 import {
@@ -44,6 +45,12 @@ const navigation = [
     title: "Employees",
     url: "/admin/employees", 
     icon: Users,
+    badge: null
+  },
+  {
+    title: "Billing",
+    url: "/admin/billing", 
+    icon: CreditCard,
     badge: null
   },
   {
