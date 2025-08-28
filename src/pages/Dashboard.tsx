@@ -1,294 +1,412 @@
-import { useState } from "react";
-import { AdminLayout } from "@/components/AdminLayout";
-import { TenantMetrics } from "@/components/advanced/TenantMetrics";
-import { EnhancedTenantsList } from "@/components/advanced/EnhancedTenantsList";
-import { TenantProvisioningWizard } from "@/components/TenantProvisioningWizard";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Settings, AlertTriangle, CheckCircle, Activity, Zap } from "lucide-react";
+import { useState, useEffect } from "react"
+import { AdminLayout } from "@/components/admin/AdminLayout"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { 
+  BarChart3, 
+  TrendingUp, 
+  Users, 
+  Building, 
+  Calendar,
+  DollarSign,
+  Activity,
+  Clock,
+  AlertTriangle,
+  CheckCircle,
+  RefreshCw
+} from "lucide-react"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from "recharts"
+import { supabase } from "@/integrations/supabase/client"
+import { useDashboardStore } from "@/stores/dashboardStore"
+
+// Mock data for the dashboard
+const revenueData = [
+  { name: 'Jan', value: 45000 },
+  { name: 'Feb', value: 52000 },
+  { name: 'Mar', value: 48000 },
+  { name: 'Apr', value: 61000 },
+  { name: 'May', value: 55000 },
+  { name: 'Jun', value: 67000 },
+]
+
+const bookingData = [
+  { name: 'Mon', bookings: 45 },
+  { name: 'Tue', bookings: 52 },
+  { name: 'Wed', bookings: 48 },
+  { name: 'Thu', bookings: 61 },
+  { name: 'Fri', bookings: 78 },
+  { name: 'Sat', bookings: 85 },
+  { name: 'Sun', bookings: 72 },
+]
+
+const tenantStatusData = [
+  { name: 'Active', value: 340, color: '#10b981' },
+  { name: 'Trial', value: 85, color: '#f59e0b' },
+  { name: 'Suspended', value: 12, color: '#ef4444' },
+]
 
 const Dashboard = () => {
-  const [showProvisioningWizard, setShowProvisioningWizard] = useState(false);
+  const [stats, setStats] = useState({
+    totalTenants: 0,
+    activeTenants: 0,
+    totalBookings: 0,
+    totalRevenue: 0
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const { refreshInterval } = useDashboardStore()
 
-  const systemAlerts = [
-    {
-      id: "1",
-      type: "info",
-      title: "Database Maintenance Scheduled",
-      message: "Routine maintenance scheduled for tonight 2-4 AM EST",
-      time: "2 hours ago",
-      icon: Activity
-    },
-    {
-      id: "2", 
-      type: "success",
-      title: "Performance Optimization Complete",
-      message: "API response times improved by 15% after optimization",
-      time: "4 hours ago",
-      icon: Zap
-    },
-    {
-      id: "3",
-      type: "warning",
-      title: "High Memory Usage",
-      message: "Server memory usage is at 85% - consider scaling",
-      time: "6 hours ago",
-      icon: AlertTriangle
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true)
+      
+      // Fetch tenant count
+      const { count: tenantCount } = await supabase
+        .from('tenants')
+        .select('*', { count: 'exact', head: true })
+      
+      // Fetch active tenants
+      const { count: activeCount } = await supabase
+        .from('tenants')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active')
+      
+      // Fetch booking count
+      const { count: bookingCount } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+      
+      setStats({
+        totalTenants: tenantCount || 0,
+        activeTenants: activeCount || 0,
+        totalBookings: bookingCount || 0,
+        totalRevenue: 147500 // Mock data for now
+      })
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+    } finally {
+      setIsLoading(false)
     }
-  ];
+  }
 
-  const recentActivity = [
-    { type: "tenant_created", message: "New tenant 'Garden Terrace' provisioned", time: "5 min ago" },
-    { type: "upgrade", message: "Ocean Breeze upgraded to Enterprise", time: "15 min ago" },
-    { type: "feature_enabled", message: "AI Pacing enabled for Bella Vista", time: "1 hour ago" },
-    { type: "billing", message: "Monthly billing cycle completed", time: "2 hours ago" },
-    { type: "security", message: "Security scan completed - no issues", time: "3 hours ago" }
-  ];
-
-  const getAlertColor = (type: string) => {
-    switch (type) {
-      case 'success':
-        return 'text-success';
-      case 'warning':
-        return 'text-warning';
-      case 'error':
-        return 'text-destructive';
-      default:
-        return 'text-primary';
-    }
-  };
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'tenant_created':
-        return '🏪';
-      case 'upgrade':
-        return '⬆️';
-      case 'feature_enabled':
-        return '✨';
-      case 'billing':
-        return '💳';
-      case 'security':
-        return '🛡️';
-      default:
-        return '📋';
-    }
-  };
+  useEffect(() => {
+    fetchDashboardData()
+    
+    // Set up auto-refresh
+    const interval = setInterval(fetchDashboardData, refreshInterval)
+    return () => clearInterval(interval)
+  }, [refreshInterval])
 
   return (
     <AdminLayout>
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
+      <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Platform Overview</h1>
-            <p className="text-muted-foreground mt-1">
-              Monitor and manage your multi-tenant restaurant booking platform
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">
+              Manage your restaurant booking platform
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="outline" size="sm">
-              <Settings className="w-4 h-4 mr-2" />
-              Platform Settings
-            </Button>
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={() => setShowProvisioningWizard(true)}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Tenant
-            </Button>
-          </div>
+          <Button onClick={fetchDashboardData} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
 
-        {/* Platform Metrics */}
-        <TenantMetrics />
+        {/* Stats Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Tenants</CardTitle>
+              <Building className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalTenants}</div>
+              <p className="text-xs text-muted-foreground">
+                <TrendingUp className="h-3 w-3 inline mr-1" />
+                +12% from last month
+              </p>
+            </CardContent>
+          </Card>
 
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Tenants</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeTenants}</div>
+              <p className="text-xs text-muted-foreground">
+                <TrendingUp className="h-3 w-3 inline mr-1" />
+                +8% from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalBookings}</div>
+              <p className="text-xs text-muted-foreground">
+                <TrendingUp className="h-3 w-3 inline mr-1" />
+                +23% from last month
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                <TrendingUp className="h-3 w-3 inline mr-1" />
+                +15% from last month
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="tenants">Tenants</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* System Alerts */}
-              <Card className="shadow-card">
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-4">
                 <CardHeader>
-                  <CardTitle>System Alerts</CardTitle>
-                  <CardDescription>
-                    Recent platform notifications and alerts
-                  </CardDescription>
+                  <CardTitle>Revenue Overview</CardTitle>
+                  <CardDescription>Monthly revenue for the past 6 months</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {systemAlerts.map((alert) => (
-                      <div key={alert.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <alert.icon className={`w-4 h-4 mt-0.5 ${getAlertColor(alert.type)}`} />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{alert.title}</p>
-                          <p className="text-sm text-muted-foreground">{alert.message}</p>
-                          <p className="text-xs text-muted-foreground mt-1">{alert.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <CardContent className="pl-2">
+                  <ResponsiveContainer width="100%" height={350}>
+                    <LineChart data={revenueData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Line 
+                        type="monotone" 
+                        dataKey="value" 
+                        stroke="hsl(var(--primary))" 
+                        strokeWidth={2}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
 
-              {/* Recent Activity */}
-              <Card className="shadow-card">
+              <Card className="col-span-3">
                 <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>
-                    Latest platform events and changes
-                  </CardDescription>
+                  <CardTitle>Tenant Status</CardTitle>
+                  <CardDescription>Distribution of tenant statuses</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {recentActivity.map((activity, index) => (
-                      <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <span className="text-lg">{getActivityIcon(activity.type)}</span>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{activity.message}</p>
-                          <p className="text-xs text-muted-foreground">{activity.time}</p>
-                        </div>
+                  <ResponsiveContainer width="100%" height={350}>
+                    <PieChart>
+                      <Pie
+                        data={tenantStatusData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={120}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {tenantStatusData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex justify-center space-x-4 mt-4">
+                    {tenantStatusData.map((entry, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: entry.color }}
+                        />
+                        <span className="text-sm">{entry.name}: {entry.value}</span>
                       </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
 
-            {/* Quick Actions */}
-            <Card className="shadow-card">
+          <TabsContent value="bookings" className="space-y-4">
+            <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>
-                  Common administrative tasks and shortcuts
-                </CardDescription>
+                <CardTitle>Weekly Booking Trends</CardTitle>
+                <CardDescription>Bookings by day of the week</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Button variant="outline" className="h-24 flex-col gap-2">
-                    <Plus className="w-6 h-6" />
-                    <span>Add Tenant</span>
-                  </Button>
-                  <Button variant="outline" className="h-24 flex-col gap-2">
-                    <Activity className="w-6 h-6" />
-                    <span>View Analytics</span>
-                  </Button>
-                  <Button variant="outline" className="h-24 flex-col gap-2">
-                    <Settings className="w-6 h-6" />
-                    <span>System Settings</span>
-                  </Button>
-                  <Button variant="outline" className="h-24 flex-col gap-2">
-                    <CheckCircle className="w-6 h-6" />
-                    <span>Health Check</span>
-                  </Button>
-                </div>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={bookingData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="bookings" fill="hsl(var(--primary))" />
+                  </BarChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="tenants" className="space-y-6">
-            <EnhancedTenantsList />
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Advanced Analytics Dashboard</CardTitle>
-                <CardDescription>
-                  Comprehensive platform analytics and insights
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Activity className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Coming soon: Deep dive analytics with custom dashboards, predictive insights, and performance optimization recommendations.
-                  </p>
-                  <Badge variant="secondary">Under Development</Badge>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="system" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-card">
+          <TabsContent value="tenants" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
                 <CardHeader>
-                  <CardTitle>System Status</CardTitle>
-                  <CardDescription>
-                    Real-time system health and performance
-                  </CardDescription>
+                  <CardTitle>Tenant Health</CardTitle>
+                  <CardDescription>Overall platform health metrics</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Active Tenants</span>
+                      <span className="text-sm font-medium">94.2%</span>
+                    </div>
+                    <Progress value={94.2} className="h-2" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Trial Conversions</span>
+                      <span className="text-sm font-medium">72.8%</span>
+                    </div>
+                    <Progress value={72.8} className="h-2" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Average Satisfaction</span>
+                      <span className="text-sm font-medium">87.5%</span>
+                    </div>
+                    <Progress value={87.5} className="h-2" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                  <CardDescription>Latest tenant activities</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">API Services</span>
-                      <Badge variant="secondary" className="bg-success/10 text-success">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Operational
+                    <div className="flex items-center space-x-4">
+                      <Badge variant="secondary">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        New
                       </Badge>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Bella Vista Restaurant</p>
+                        <p className="text-xs text-muted-foreground">Signed up 2 hours ago</p>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Database</span>
-                      <Badge variant="secondary" className="bg-success/10 text-success">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Healthy
+                    <div className="flex items-center space-x-4">
+                      <Badge variant="outline">
+                        <Activity className="h-3 w-3 mr-1" />
+                        Updated
                       </Badge>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Ocean Breeze Bistro</p>
+                        <p className="text-xs text-muted-foreground">Updated settings 5 hours ago</p>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Edge Functions</span>
-                      <Badge variant="secondary" className="bg-success/10 text-success">
-                        <CheckCircle className="w-3 h-3 mr-1" />
-                        Running
+                    <div className="flex items-center space-x-4">
+                      <Badge variant="destructive">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Issue
                       </Badge>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Mountain View Cafe</p>
+                        <p className="text-xs text-muted-foreground">Payment failed 1 day ago</p>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Storage</span>
-                      <Badge variant="secondary" className="bg-warning/10 text-warning">
-                        <AlertTriangle className="w-3 h-3 mr-1" />
-                        High Usage
-                      </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle>API Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Average Response Time</span>
+                      <span className="text-sm font-medium">145ms</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Uptime</span>
+                      <span className="text-sm font-medium">99.97%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Error Rate</span>
+                      <span className="text-sm font-medium">0.02%</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="shadow-card">
+              <Card>
                 <CardHeader>
-                  <CardTitle>Performance Metrics</CardTitle>
-                  <CardDescription>
-                    Key performance indicators
-                  </CardDescription>
+                  <CardTitle>Database Health</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Response Time</span>
-                      <span className="text-sm font-medium">142ms</span>
+                      <span className="text-sm">Connection Pool</span>
+                      <span className="text-sm font-medium">78%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Throughput</span>
-                      <span className="text-sm font-medium">2.3k req/min</span>
+                      <span className="text-sm">Query Performance</span>
+                      <span className="text-sm font-medium">Good</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Error Rate</span>
-                      <span className="text-sm font-medium">0.03%</span>
+                      <span className="text-sm">Storage Used</span>
+                      <span className="text-sm font-medium">45GB</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Security Metrics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Failed Login Attempts</span>
+                      <span className="text-sm font-medium">12</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Active Sessions</span>
-                      <span className="text-sm font-medium">142</span>
+                      <span className="text-sm">Blocked IPs</span>
+                      <span className="text-sm font-medium">3</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">SSL Certificate</span>
+                      <span className="text-sm font-medium">Valid</span>
                     </div>
                   </div>
                 </CardContent>
@@ -296,16 +414,9 @@ const Dashboard = () => {
             </div>
           </TabsContent>
         </Tabs>
-
-        {/* Provisioning Wizard Modal */}
-        {showProvisioningWizard && (
-          <TenantProvisioningWizard 
-            onClose={() => setShowProvisioningWizard(false)}
-          />
-        )}
       </div>
     </AdminLayout>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { TenantProvider } from "@/hooks/useSubdomainRouting";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { SubdomainRouter } from "@/components/SubdomainRouter";
 import Index from "./pages/Index";
@@ -21,11 +22,12 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TenantProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
+    <ThemeProvider defaultTheme="system" storageKey="blunari-theme">
+      <AuthProvider>
+        <TenantProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<SubdomainRouter />}>
@@ -65,6 +67,7 @@ const App = () => (
         </TooltipProvider>
       </TenantProvider>
     </AuthProvider>
+  </ThemeProvider>
   </QueryClientProvider>
 );
 
