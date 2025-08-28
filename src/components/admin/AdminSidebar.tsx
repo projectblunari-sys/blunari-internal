@@ -14,7 +14,8 @@ import {
   CreditCard,
   Activity,
   Shield,
-  Utensils
+  Utensils,
+  Globe
 } from "lucide-react"
 
 import {
@@ -72,6 +73,12 @@ const navigation = [
     title: "POS Systems",
     url: "/admin/pos-systems", 
     icon: Utensils,
+    badge: null
+  },
+  {
+    title: "Domains",
+    url: "/admin/domains", 
+    icon: Globe,
     badge: null
   },
   {

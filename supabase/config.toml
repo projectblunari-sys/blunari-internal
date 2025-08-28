@@ -33,3 +33,9 @@ verify_jwt = false
 
 [functions.pos-health-monitor]
 verify_jwt = false
+
+[functions.domain-management]
+verify_jwt = true
+
+[functions.domain-monitoring]
+verify_jwt = false
