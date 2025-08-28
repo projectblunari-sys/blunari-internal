@@ -11,7 +11,8 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
-  CreditCard
+  CreditCard,
+  Activity
 } from "lucide-react"
 
 import {
@@ -51,6 +52,12 @@ const navigation = [
     title: "Billing",
     url: "/admin/billing", 
     icon: CreditCard,
+    badge: null
+  },
+  {
+    title: "Observability",
+    url: "/admin/observability", 
+    icon: Activity,
     badge: null
   },
   {

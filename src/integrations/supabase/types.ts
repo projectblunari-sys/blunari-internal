@@ -58,6 +58,113 @@ export type Database = {
           },
         ]
       }
+      alert_instances: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string
+          fired_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          metric_value: number
+          resolved_at: string | null
+          rule_id: string | null
+          severity: string
+          status: string
+          threshold_value: number
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          fired_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          metric_value: number
+          resolved_at?: string | null
+          rule_id?: string | null
+          severity: string
+          status?: string
+          threshold_value: number
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          fired_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          metric_value?: number
+          resolved_at?: string | null
+          rule_id?: string | null
+          severity?: string
+          status?: string
+          threshold_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_instances_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "alert_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alert_rules: {
+        Row: {
+          conditions: Json | null
+          cooldown_minutes: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          enabled: boolean | null
+          id: string
+          metric_name: string
+          notification_channels: Json | null
+          rule_name: string
+          severity: string
+          threshold_operator: string
+          threshold_value: number
+          updated_at: string
+        }
+        Insert: {
+          conditions?: Json | null
+          cooldown_minutes?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          metric_name: string
+          notification_channels?: Json | null
+          rule_name: string
+          severity: string
+          threshold_operator: string
+          threshold_value: number
+          updated_at?: string
+        }
+        Update: {
+          conditions?: Json | null
+          cooldown_minutes?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          metric_name?: string
+          notification_channels?: Json | null
+          rule_name?: string
+          severity?: string
+          threshold_operator?: string
+          threshold_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -297,6 +404,50 @@ export type Database = {
         }
         Relationships: []
       }
+      business_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_unit: string
+          metric_value: number
+          period_end: string
+          period_start: string
+          tenant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_unit: string
+          metric_value: number
+          period_end: string
+          period_start: string
+          tenant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_unit?: string
+          metric_value?: number
+          period_end?: string
+          period_start?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_metrics_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cuisine_types: {
         Row: {
           created_at: string
@@ -318,6 +469,51 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      database_metrics: {
+        Row: {
+          active_connections: number | null
+          connection_pool_size: number | null
+          created_at: string
+          id: string
+          index_name: string | null
+          metadata: Json | null
+          metric_name: string
+          metric_value: number
+          query_fingerprint: string | null
+          recorded_at: string
+          table_name: string | null
+          waiting_connections: number | null
+        }
+        Insert: {
+          active_connections?: number | null
+          connection_pool_size?: number | null
+          created_at?: string
+          id?: string
+          index_name?: string | null
+          metadata?: Json | null
+          metric_name: string
+          metric_value: number
+          query_fingerprint?: string | null
+          recorded_at?: string
+          table_name?: string | null
+          waiting_connections?: number | null
+        }
+        Update: {
+          active_connections?: number | null
+          connection_pool_size?: number | null
+          created_at?: string
+          id?: string
+          index_name?: string | null
+          metadata?: Json | null
+          metric_name?: string
+          metric_value?: number
+          query_fingerprint?: string | null
+          recorded_at?: string
+          table_name?: string | null
+          waiting_connections?: number | null
         }
         Relationships: []
       }
@@ -520,6 +716,75 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          created_at: string
+          endpoint: string | null
+          error_type: string
+          id: string
+          ip_address: unknown | null
+          message: string
+          metadata: Json | null
+          method: string | null
+          occurred_at: string
+          request_id: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          response_time_ms: number | null
+          severity: string
+          stack_trace: string | null
+          status_code: number | null
+          tenant_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint?: string | null
+          error_type: string
+          id?: string
+          ip_address?: unknown | null
+          message: string
+          metadata?: Json | null
+          method?: string | null
+          occurred_at?: string
+          request_id?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          response_time_ms?: number | null
+          severity: string
+          stack_trace?: string | null
+          status_code?: number | null
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string | null
+          error_type?: string
+          id?: string
+          ip_address?: unknown | null
+          message?: string
+          metadata?: Json | null
+          method?: string | null
+          occurred_at?: string
+          request_id?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          response_time_ms?: number | null
+          severity?: string
+          stack_trace?: string | null
+          status_code?: number | null
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       event_outbox: {
         Row: {
           created_at: string
@@ -603,6 +868,63 @@ export type Database = {
           min_party_size?: number
           tenant_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      performance_trends: {
+        Row: {
+          aggregation_period: string
+          avg_value: number | null
+          count_value: number | null
+          created_at: string
+          id: string
+          max_value: number | null
+          metadata: Json | null
+          metric_category: string
+          metric_name: string
+          min_value: number | null
+          percentile_50: number | null
+          percentile_95: number | null
+          percentile_99: number | null
+          period_end: string
+          period_start: string
+          sum_value: number | null
+        }
+        Insert: {
+          aggregation_period: string
+          avg_value?: number | null
+          count_value?: number | null
+          created_at?: string
+          id?: string
+          max_value?: number | null
+          metadata?: Json | null
+          metric_category: string
+          metric_name: string
+          min_value?: number | null
+          percentile_50?: number | null
+          percentile_95?: number | null
+          percentile_99?: number | null
+          period_end: string
+          period_start: string
+          sum_value?: number | null
+        }
+        Update: {
+          aggregation_period?: string
+          avg_value?: number | null
+          count_value?: number | null
+          created_at?: string
+          id?: string
+          max_value?: number | null
+          metadata?: Json | null
+          metric_category?: string
+          metric_name?: string
+          min_value?: number | null
+          percentile_50?: number | null
+          percentile_95?: number | null
+          percentile_99?: number | null
+          period_end?: string
+          period_start?: string
+          sum_value?: number | null
         }
         Relationships: []
       }
@@ -790,6 +1112,69 @@ export type Database = {
           },
         ]
       }
+      request_traces: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          end_time: string | null
+          http_method: string | null
+          http_status_code: number | null
+          http_url: string | null
+          id: string
+          logs: Json | null
+          operation_name: string
+          parent_span_id: string | null
+          service_name: string
+          span_id: string
+          start_time: string
+          status: string
+          tags: Json | null
+          tenant_id: string | null
+          trace_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          end_time?: string | null
+          http_method?: string | null
+          http_status_code?: number | null
+          http_url?: string | null
+          id?: string
+          logs?: Json | null
+          operation_name: string
+          parent_span_id?: string | null
+          service_name: string
+          span_id: string
+          start_time: string
+          status: string
+          tags?: Json | null
+          tenant_id?: string | null
+          trace_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          end_time?: string | null
+          http_method?: string | null
+          http_status_code?: number | null
+          http_url?: string | null
+          id?: string
+          logs?: Json | null
+          operation_name?: string
+          parent_span_id?: string | null
+          service_name?: string
+          span_id?: string
+          start_time?: string
+          status?: string
+          tags?: Json | null
+          tenant_id?: string | null
+          trace_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       restaurant_tables: {
         Row: {
           active: boolean
@@ -886,6 +1271,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_health_metrics: {
+        Row: {
+          created_at: string
+          endpoint: string | null
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_unit: string
+          metric_value: number
+          recorded_at: string
+          service_name: string
+          severity: string
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_unit: string
+          metric_value: number
+          recorded_at?: string
+          service_name: string
+          severity?: string
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_unit?: string
+          metric_value?: number
+          recorded_at?: string
+          service_name?: string
+          severity?: string
+          status_code?: number | null
+        }
+        Relationships: []
       }
       tenant_features: {
         Row: {
@@ -1052,6 +1479,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      aggregate_performance_trends: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      check_alert_conditions: {
+        Args: { p_metric_name: string; p_metric_value: number }
+        Returns: undefined
+      }
       get_current_employee: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1105,6 +1540,19 @@ export type Database = {
               p_timezone?: string
               p_user_id: string
             }
+        Returns: string
+      }
+      record_system_metric: {
+        Args: {
+          p_endpoint?: string
+          p_metadata?: Json
+          p_metric_name: string
+          p_metric_unit: string
+          p_metric_value: number
+          p_service_name: string
+          p_severity?: string
+          p_status_code?: number
+        }
         Returns: string
       }
       user_has_tenant_access: {
