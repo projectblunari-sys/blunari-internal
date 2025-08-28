@@ -1131,6 +1131,402 @@ export type Database = {
         }
         Relationships: []
       }
+      pos_configurations: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          integration_id: string
+          is_sensitive: boolean
+          setting_key: string
+          setting_type: string
+          setting_value: Json
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          integration_id: string
+          is_sensitive?: boolean
+          setting_key: string
+          setting_type?: string
+          setting_value?: Json
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          integration_id?: string
+          is_sensitive?: boolean
+          setting_key?: string
+          setting_type?: string
+          setting_value?: Json
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_configurations_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "pos_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_data: Json
+          event_source: string
+          event_type: string
+          external_id: string | null
+          id: string
+          integration_id: string
+          max_retries: number
+          processed: boolean
+          processed_at: string | null
+          retry_count: number
+          scheduled_retry_at: string | null
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_data?: Json
+          event_source: string
+          event_type: string
+          external_id?: string | null
+          id?: string
+          integration_id: string
+          max_retries?: number
+          processed?: boolean
+          processed_at?: string | null
+          retry_count?: number
+          scheduled_retry_at?: string | null
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_data?: Json
+          event_source?: string
+          event_type?: string
+          external_id?: string | null
+          id?: string
+          integration_id?: string
+          max_retries?: number
+          processed?: boolean
+          processed_at?: string | null
+          retry_count?: number
+          scheduled_retry_at?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_events_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "pos_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_health_checks: {
+        Row: {
+          check_data: Json
+          check_type: string
+          created_at: string
+          error_message: string | null
+          id: string
+          integration_id: string
+          response_time_ms: number | null
+          status: string
+          status_code: number | null
+          tenant_id: string
+        }
+        Insert: {
+          check_data?: Json
+          check_type: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          integration_id: string
+          response_time_ms?: number | null
+          status: string
+          status_code?: number | null
+          tenant_id: string
+        }
+        Update: {
+          check_data?: Json
+          check_type?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          integration_id?: string
+          response_time_ms?: number | null
+          status?: string
+          status_code?: number | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_health_checks_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "pos_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_integrations: {
+        Row: {
+          configuration: Json
+          created_at: string
+          credentials: Json
+          error_message: string | null
+          health_status: string
+          id: string
+          integration_name: string
+          last_health_check: string | null
+          last_sync_at: string | null
+          metadata: Json
+          provider_id: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          configuration?: Json
+          created_at?: string
+          credentials?: Json
+          error_message?: string | null
+          health_status?: string
+          id?: string
+          integration_name: string
+          last_health_check?: string | null
+          last_sync_at?: string | null
+          metadata?: Json
+          provider_id: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          credentials?: Json
+          error_message?: string | null
+          health_status?: string
+          id?: string
+          integration_name?: string
+          last_health_check?: string | null
+          last_sync_at?: string | null
+          metadata?: Json
+          provider_id?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_integrations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "pos_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_menu_items: {
+        Row: {
+          allergens: Json
+          available: boolean
+          category: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          external_id: string
+          id: string
+          image_url: string | null
+          integration_id: string
+          last_synced_at: string
+          metadata: Json
+          modifiers: Json
+          name: string
+          nutrition_info: Json
+          price: number | null
+          sync_status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          allergens?: Json
+          available?: boolean
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          external_id: string
+          id?: string
+          image_url?: string | null
+          integration_id: string
+          last_synced_at?: string
+          metadata?: Json
+          modifiers?: Json
+          name: string
+          nutrition_info?: Json
+          price?: number | null
+          sync_status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          allergens?: Json
+          available?: boolean
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          external_id?: string
+          id?: string
+          image_url?: string | null
+          integration_id?: string
+          last_synced_at?: string
+          metadata?: Json
+          modifiers?: Json
+          name?: string
+          nutrition_info?: Json
+          price?: number | null
+          sync_status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_menu_items_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "pos_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_providers: {
+        Row: {
+          api_documentation_url: string | null
+          configuration_schema: Json
+          created_at: string
+          description: string | null
+          event_types: Json
+          id: string
+          logo_url: string | null
+          menu_sync_enabled: boolean
+          name: string
+          slug: string
+          status: string
+          updated_at: string
+          webhook_enabled: boolean
+        }
+        Insert: {
+          api_documentation_url?: string | null
+          configuration_schema?: Json
+          created_at?: string
+          description?: string | null
+          event_types?: Json
+          id?: string
+          logo_url?: string | null
+          menu_sync_enabled?: boolean
+          name: string
+          slug: string
+          status?: string
+          updated_at?: string
+          webhook_enabled?: boolean
+        }
+        Update: {
+          api_documentation_url?: string | null
+          configuration_schema?: Json
+          created_at?: string
+          description?: string | null
+          event_types?: Json
+          id?: string
+          logo_url?: string | null
+          menu_sync_enabled?: boolean
+          name?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+          webhook_enabled?: boolean
+        }
+        Relationships: []
+      }
+      pos_webhook_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          headers: Json
+          id: string
+          integration_id: string
+          method: string
+          payload: Json
+          processing_time_ms: number | null
+          response_body: string | null
+          response_status: number | null
+          tenant_id: string
+          verified: boolean
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          headers?: Json
+          id?: string
+          integration_id: string
+          method?: string
+          payload?: Json
+          processing_time_ms?: number | null
+          response_body?: string | null
+          response_status?: number | null
+          tenant_id: string
+          verified?: boolean
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          headers?: Json
+          id?: string
+          integration_id?: string
+          method?: string
+          payload?: Json
+          processing_time_ms?: number | null
+          response_body?: string | null
+          response_status?: number | null
+          tenant_id?: string
+          verified?: boolean
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_webhook_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "pos_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_plans: {
         Row: {
           created_at: string
@@ -1937,6 +2333,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_pos_event: {
+        Args: {
+          p_event_data: Json
+          p_event_type: string
+          p_external_id?: string
+          p_integration_id: string
+        }
+        Returns: string
+      }
       provision_tenant: {
         Args:
           | {
@@ -1973,6 +2378,22 @@ export type Database = {
           p_status_code?: number
         }
         Returns: string
+      }
+      sync_pos_menu_item: {
+        Args: {
+          p_external_id: string
+          p_integration_id: string
+          p_item_data: Json
+        }
+        Returns: string
+      }
+      update_pos_integration_health: {
+        Args: {
+          p_error_message?: string
+          p_integration_id: string
+          p_status: string
+        }
+        Returns: undefined
       }
       user_has_tenant_access: {
         Args: { target_tenant_id: string }

@@ -4,7 +4,7 @@ import {
   LayoutDashboard, 
   Calendar, 
   Users, 
-  Settings, 
+  Settings,
   BarChart3, 
   TableProperties,
   Building,
@@ -13,7 +13,8 @@ import {
   ChevronRight,
   CreditCard,
   Activity,
-  Shield
+  Shield,
+  Utensils
 } from "lucide-react"
 
 import {
@@ -65,6 +66,12 @@ const navigation = [
     title: "System Health",
     url: "/admin/system-health", 
     icon: Shield,
+    badge: null
+  },
+  {
+    title: "POS Systems",
+    url: "/admin/pos-systems", 
+    icon: Utensils,
     badge: null
   },
   {

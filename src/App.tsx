@@ -20,6 +20,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import BillingPage from "@/pages/BillingPage";
 import ObservabilityPage from "@/pages/ObservabilityPage";
 import SystemHealthPage from "@/pages/SystemHealthPage";
+import POSSystemsPage from "@/pages/POSSystemsPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ function App() {
                   <Route path="billing" element={<BillingPage />} />
                   <Route path="observability" element={<ObservabilityPage />} />
                   <Route path="system-health" element={<SystemHealthPage />} />
+                  <Route path="pos-systems" element={<POSSystemsPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
                 
