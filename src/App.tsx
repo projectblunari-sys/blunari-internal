@@ -15,6 +15,7 @@ import Dashboard from "@/pages/Dashboard";
 import TenantsPage from "@/pages/TenantsPage";
 import TenantDetailPage from "@/pages/TenantDetailPage";
 import NewTenantPage from "@/pages/NewTenantPage";
+import { EmployeesPage } from "@/pages/EmployeesPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NotFound from "@/pages/NotFound";
 
@@ -45,6 +46,7 @@ function App() {
                   <Route path="tenants" element={<TenantsPage />} />
                   <Route path="tenants/new" element={<NewTenantPage />} />
                   <Route path="tenants/:tenantId" element={<TenantDetailPage />} />
+                  <Route path="employees" element={<EmployeesPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
                 

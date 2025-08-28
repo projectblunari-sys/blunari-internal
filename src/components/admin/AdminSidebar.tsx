@@ -41,6 +41,12 @@ const navigation = [
     badge: "4"
   },
   {
+    title: "Employees",
+    url: "/admin/employees", 
+    icon: Users,
+    badge: null
+  },
+  {
     title: "Analytics",
     url: "/admin/analytics",
     icon: BarChart3,

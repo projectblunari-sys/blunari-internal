@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          employee_id: string
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          employee_id: string
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          employee_id?: string
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analytics_events: {
         Row: {
           created_at: string
@@ -277,6 +321,44 @@ export type Database = {
         }
         Relationships: []
       }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          manager_id: string | null
+          name: string
+          parent_department_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          manager_id?: string | null
+          name: string
+          parent_department_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          manager_id?: string | null
+          name?: string
+          parent_department_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "departments_parent_department_id_fkey"
+            columns: ["parent_department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       domains: {
         Row: {
           created_at: string
@@ -317,6 +399,123 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          department_id: string | null
+          email: string
+          expires_at: string
+          id: string
+          invitation_token: string
+          invited_by: string
+          role: Database["public"]["Enums"]["employee_role"]
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          department_id?: string | null
+          email: string
+          expires_at: string
+          id?: string
+          invitation_token: string
+          invited_by: string
+          role: Database["public"]["Enums"]["employee_role"]
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          department_id?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invitation_token?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["employee_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_invitations_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string
+          department_id: string | null
+          employee_id: string
+          hire_date: string | null
+          id: string
+          last_activity: string | null
+          last_login: string | null
+          manager_id: string | null
+          metadata: Json
+          permissions: Json
+          role: Database["public"]["Enums"]["employee_role"]
+          status: Database["public"]["Enums"]["employee_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          department_id?: string | null
+          employee_id: string
+          hire_date?: string | null
+          id?: string
+          last_activity?: string | null
+          last_login?: string | null
+          manager_id?: string | null
+          metadata?: Json
+          permissions?: Json
+          role?: Database["public"]["Enums"]["employee_role"]
+          status?: Database["public"]["Enums"]["employee_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string | null
+          employee_id?: string
+          hire_date?: string | null
+          id?: string
+          last_activity?: string | null
+          last_login?: string | null
+          manager_id?: string | null
+          metadata?: Json
+          permissions?: Json
+          role?: Database["public"]["Enums"]["employee_role"]
+          status?: Database["public"]["Enums"]["employee_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
@@ -853,6 +1052,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_employee: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_user_tenant_id: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -866,6 +1069,19 @@ export type Database = {
           tenant_slug: string
           tenant_status: string
         }[]
+      }
+      has_employee_role: {
+        Args: { required_role: Database["public"]["Enums"]["employee_role"] }
+        Returns: boolean
+      }
+      log_employee_activity: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_resource_id?: string
+          p_resource_type?: string
+        }
+        Returns: undefined
       }
       provision_tenant: {
         Args:
@@ -897,7 +1113,8 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      employee_role: "SUPER_ADMIN" | "ADMIN" | "SUPPORT" | "OPS" | "VIEWER"
+      employee_status: "ACTIVE" | "INACTIVE" | "PENDING" | "SUSPENDED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1024,6 +1241,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      employee_role: ["SUPER_ADMIN", "ADMIN", "SUPPORT", "OPS", "VIEWER"],
+      employee_status: ["ACTIVE", "INACTIVE", "PENDING", "SUSPENDED"],
+    },
   },
 } as const
