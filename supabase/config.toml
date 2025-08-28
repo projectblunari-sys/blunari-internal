@@ -37,5 +37,11 @@ verify_jwt = false
 [functions.domain-management]
 verify_jwt = true
 
-[functions.domain-monitoring]
+[functions.update-settings]
+verify_jwt = false
+
+[functions.test-email]
+verify_jwt = false
+
+[functions.system-health]
 verify_jwt = false
