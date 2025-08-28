@@ -173,7 +173,6 @@ const Auth = () => {
                 </CardDescription>
               </div>
             </Tabs>
-            </div>
           </CardHeader>
               
           <CardContent className="space-y-6">
