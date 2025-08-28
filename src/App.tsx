@@ -23,6 +23,7 @@ import SystemHealthPage from "@/pages/SystemHealthPage";
 import POSSystemsPage from "@/pages/POSSystemsPage";
 import DomainsPage from "@/pages/DomainsPage";
 import AgencyKitPage from "@/pages/AgencyKitPage";
+import ProfilePage from "@/pages/ProfilePage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ function App() {
             <Route path="pos-systems" element={<POSSystemsPage />} />
             <Route path="domains" element={<DomainsPage />} />
             <Route path="agency-kit" element={<AgencyKitPage />} />
+            <Route path="profile" element={<ProfilePage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
                 
