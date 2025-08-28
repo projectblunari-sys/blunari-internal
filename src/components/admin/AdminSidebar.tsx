@@ -90,6 +90,12 @@ const navigation = [
     badge: null
   },
   {
+    title: "Impersonate",
+    url: "/admin/impersonate", 
+    icon: Shield,
+    badge: null
+  },
+  {
     title: "Analytics",
     url: "/admin/analytics",
     icon: BarChart3,

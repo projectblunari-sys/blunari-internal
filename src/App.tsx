@@ -20,6 +20,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import BillingPage from "@/pages/BillingPage";
 import ObservabilityPage from "@/pages/ObservabilityPage";
 import SystemHealthPage from "@/pages/SystemHealthPage";
+import ImpersonationPage from "@/pages/ImpersonationPage";
 import POSSystemsPage from "@/pages/POSSystemsPage";
 import DomainsPage from "@/pages/DomainsPage";
 import AgencyKitPage from "@/pages/AgencyKitPage";
@@ -60,7 +61,8 @@ function App() {
             <Route path="pos-systems" element={<POSSystemsPage />} />
             <Route path="domains" element={<DomainsPage />} />
             <Route path="agency-kit" element={<AgencyKitPage />} />
-            <Route path="profile" element={<ProfilePage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="impersonate" element={<ImpersonationPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
                 
