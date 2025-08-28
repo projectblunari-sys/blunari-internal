@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, CheckCircle, TrendingUp, Users, Calendar, Brain, Shield, Zap, Star, Quote } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-restaurant.jpg";
 
 const Index = () => {
@@ -83,10 +84,18 @@ const Index = () => {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost">Features</Button>
-            <Button variant="ghost">Pricing</Button>
-            <Button variant="ghost">Support</Button>
-            <Button variant="outline">Sign In</Button>
+            <Link to="/solutions">
+              <Button variant="ghost">Solutions</Button>
+            </Link>
+            <Link to="/industries">
+              <Button variant="ghost">Industries</Button>
+            </Link>
+            <Link to="/about">
+              <Button variant="ghost">About</Button>
+            </Link>
+            <Link to="/dashboard">
+              <Button variant="outline">Dashboard</Button>
+            </Link>
             <Button variant="default">Get Started</Button>
           </div>
         </div>
