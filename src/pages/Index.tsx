@@ -377,7 +377,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="container mx-auto px-6 py-12 border-t">
         <div className="text-center text-muted-foreground">
-          <p>© 2024 Blunari. Built with ❤️ for the restaurant industry.</p>
+          <p>© 2024 Blunari. Built with ❤️ by Blunari Developers for the restaurant industry.</p>
         </div>
       </footer>
     </div>
