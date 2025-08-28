@@ -1,12 +1,30 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+
+interface UserProfile {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  email: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface UserTenant {
+  tenant_id: string;
+  tenant_name: string;
+  tenant_slug: string;
+  tenant_status: string;
+  provisioning_status: string;
+}
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  profile: any | null;
-  tenant: any | null;
+  profile: UserProfile | null;
+  tenant: UserTenant | null;
   loading: boolean;
   signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -27,11 +45,11 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
-  const [tenant, setTenant] = useState<any | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [tenant, setTenant] = useState<UserTenant | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string) => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -40,7 +58,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .maybeSingle();
 
       if (profileError) {
-        console.error('Error fetching profile:', profileError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching profile:', profileError);
+        }
         return;
       }
 
@@ -51,7 +71,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .rpc('get_user_tenant', { p_user_id: userId });
 
       if (tenantError) {
-        console.error('Error fetching tenant:', tenantError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching tenant:', tenantError);
+        }
         return;
       }
 
@@ -59,27 +81,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setTenant(tenantData[0]);
       }
     } catch (error) {
-      console.error('Error in fetchProfile:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error in fetchProfile:', error);
+      }
     }
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       await fetchProfile(user.id);
     }
-  };
+  }, [user, fetchProfile]);
 
   useEffect(() => {
+    let isMounted = true;
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        if (!isMounted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
           // Defer profile fetching to avoid auth state deadlock
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            if (isMounted) {
+              fetchProfile(session.user.id);
+            }
           }, 0);
         } else {
           setProfile(null);
@@ -92,33 +122,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         setTimeout(() => {
-          fetchProfile(session.user.id);
+          if (isMounted) {
+            fetchProfile(session.user.id);
+          }
         }, 0);
       }
       
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchProfile]);
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
+  const signUp = useCallback(async (email: string, password: string, firstName: string, lastName: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/onboarding`;
+      // Enhanced validation
+      if (!email || !password || !firstName || !lastName) {
+        return { error: { message: 'All fields are required' } };
+      }
+
+      if (password.length < 8) {
+        return { error: { message: 'Password must be at least 8 characters long' } };
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return { error: { message: 'Please enter a valid email address' } };
+      }
+
+      const redirectUrl = `${window.location.origin}/admin/dashboard`;
       
       const { error } = await supabase.auth.signUp({
-        email,
+        email: email.toLowerCase().trim(),
         password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            first_name: firstName,
-            last_name: lastName
+            first_name: firstName.trim(),
+            last_name: lastName.trim()
           }
         }
       });
@@ -127,12 +177,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       return { error };
     }
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
+      // Enhanced validation
+      if (!email || !password) {
+        return { error: { message: 'Email and password are required' } };
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.toLowerCase().trim(),
         password
       });
 
@@ -140,13 +195,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       return { error };
     }
-  };
+  }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setProfile(null);
-    setTenant(null);
-  };
+  const signOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+      setProfile(null);
+      setTenant(null);
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error signing out:', error);
+      }
+    }
+  }, []);
 
   const value = {
     user,
