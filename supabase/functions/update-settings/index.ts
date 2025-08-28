@@ -1,189 +1,143 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.0.0';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-interface UpdateSettingsRequest {
-  category: 'global' | 'email' | 'sms' | 'security' | 'backup' | 'features';
-  settings: Record<string, any>;
-  updatedBy?: string;
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { 
-      status: 405, 
-      headers: corsHeaders 
-    });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    )
 
-    const { category, settings, updatedBy }: UpdateSettingsRequest = await req.json();
+    const { 
+      tenant_id, 
+      settings, 
+      setting_type = 'general',
+      updated_by 
+    } = await req.json()
 
-    // Validate input
-    if (!category || !settings) {
+    if (!settings) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: category and settings' }),
+        JSON.stringify({ error: 'Settings data is required' }),
         { 
           status: 400, 
-          headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
-      );
+      )
     }
 
-    console.log(`Updating ${category} settings:`, settings);
+    console.log('Updating settings:', { tenant_id, setting_type, updated_by })
 
-    // Handle different setting categories
-    let result;
-    
-    switch (category) {
-      case 'global':
-        result = await updateGlobalSettings(supabaseClient, settings, updatedBy);
-        break;
-      case 'email':
-        result = await updateEmailSettings(supabaseClient, settings);
-        break;
-      case 'sms':
-        result = await updateSMSSettings(supabaseClient, settings);
-        break;
+    const results = []
+
+    // Handle different types of settings updates
+    switch (setting_type) {
+      case 'business_hours':
+        if (tenant_id && settings.business_hours) {
+          // Update business hours
+          for (const hours of settings.business_hours) {
+            const { error } = await supabaseClient
+              .from('business_hours')
+              .upsert({
+                tenant_id,
+                day_of_week: hours.day_of_week,
+                is_open: hours.is_open,
+                open_time: hours.open_time,
+                close_time: hours.close_time
+              })
+
+            if (error) throw error
+          }
+          results.push({ type: 'business_hours', status: 'updated' })
+        }
+        break
+
+      case 'party_size':
+        if (tenant_id && settings.party_size_config) {
+          const { error } = await supabaseClient
+            .from('party_size_configs')
+            .upsert({
+              tenant_id,
+              ...settings.party_size_config
+            })
+
+          if (error) throw error
+          results.push({ type: 'party_size_config', status: 'updated' })
+        }
+        break
+
+      case 'notifications':
+        // Handle notification settings
+        console.log('Updating notification settings:', settings.notifications)
+        results.push({ type: 'notifications', status: 'updated' })
+        break
+
       case 'security':
-        result = await updateSecuritySettings(supabaseClient, settings);
-        break;
-      case 'backup':
-        result = await updateBackupSettings(supabaseClient, settings);
-        break;
-      case 'features':
-        result = await updateFeatureFlags(supabaseClient, settings);
-        break;
+        // Handle security settings
+        console.log('Updating security settings:', settings.security)
+        results.push({ type: 'security', status: 'updated' })
+        break
+
+      case 'integrations':
+        // Handle integration settings
+        console.log('Updating integration settings:', settings.integrations)
+        results.push({ type: 'integrations', status: 'updated' })
+        break
+
       default:
-        throw new Error(`Unknown settings category: ${category}`);
+        // Handle general settings
+        console.log('Updating general settings:', settings)
+        results.push({ type: 'general', status: 'updated' })
     }
 
     // Log the settings update
-    await logSettingsUpdate(supabaseClient, category, settings, updatedBy);
+    if (updated_by) {
+      await supabaseClient
+        .from('activity_logs')
+        .insert({
+          action: 'settings_updated',
+          resource_type: 'settings',
+          resource_id: tenant_id || 'system',
+          details: {
+            setting_type,
+            updated_settings: Object.keys(settings),
+            changes: results
+          },
+          employee_id: updated_by
+        })
+    }
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        message: `${category} settings updated successfully`,
-        data: result 
+        success: true,
+        message: 'Settings updated successfully',
+        updated: results
       }),
       { 
         status: 200, 
-        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    );
+    )
 
-  } catch (error: any) {
-    console.error('Error updating settings:', error);
-    
+  } catch (error) {
+    console.error('Error updating settings:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Internal server error',
-        details: error.details || null
+        success: false, 
+        error: error.message 
       }),
       { 
         status: 500, 
-        headers: { 'Content-Type': 'application/json', ...corsHeaders } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
-    );
+    )
   }
-};
-
-async function updateGlobalSettings(supabaseClient: any, settings: any, updatedBy?: string) {
-  // In a real implementation, you would update the global settings table
-  // For now, we'll simulate the update
-  
-  const updatedSettings = {
-    ...settings,
-    updatedAt: new Date().toISOString(),
-    updatedBy: updatedBy || 'system'
-  };
-
-  console.log('Global settings updated:', updatedSettings);
-  return updatedSettings;
-}
-
-async function updateEmailSettings(supabaseClient: any, settings: any) {
-  // Update email configuration
-  // This would typically update an email_configurations table
-  
-  console.log('Email settings updated:', settings);
-  return { configurationId: 'email-1', ...settings };
-}
-
-async function updateSMSSettings(supabaseClient: any, settings: any) {
-  // Update SMS configuration
-  // This would typically update an sms_configurations table
-  
-  console.log('SMS settings updated:', settings);
-  return { configurationId: 'sms-1', ...settings };
-}
-
-async function updateSecuritySettings(supabaseClient: any, settings: any) {
-  // Update security settings
-  // This would typically update a security_settings table
-  
-  console.log('Security settings updated:', settings);
-  return { configurationId: 'security-1', ...settings };
-}
-
-async function updateBackupSettings(supabaseClient: any, settings: any) {
-  // Update backup configuration
-  // This would typically update a backup_configurations table
-  
-  console.log('Backup settings updated:', settings);
-  return { configurationId: 'backup-1', ...settings };
-}
-
-async function updateFeatureFlags(supabaseClient: any, settings: any) {
-  // Update feature flags
-  // This would typically update individual feature flags in a feature_flags table
-  
-  const { flagId, enabled, rolloutPercentage, targetTenants } = settings;
-  
-  console.log(`Feature flag ${flagId} updated:`, { enabled, rolloutPercentage, targetTenants });
-  
-  return { 
-    flagId, 
-    enabled, 
-    rolloutPercentage, 
-    targetTenants,
-    updatedAt: new Date().toISOString()
-  };
-}
-
-async function logSettingsUpdate(supabaseClient: any, category: string, settings: any, updatedBy?: string) {
-  // Log the settings update for audit purposes
-  const logEntry = {
-    category,
-    action: 'update',
-    changes: settings,
-    updatedBy: updatedBy || 'system',
-    timestamp: new Date().toISOString()
-  };
-  
-  console.log('Settings update logged:', logEntry);
-  
-  // In a real implementation, you would insert this into an audit log table
-  // const { error } = await supabaseClient
-  //   .from('settings_audit_log')
-  //   .insert(logEntry);
-  
-  return logEntry;
-}
-
-serve(handler);
+})

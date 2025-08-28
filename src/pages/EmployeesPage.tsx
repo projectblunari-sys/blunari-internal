@@ -63,12 +63,13 @@ export const EmployeesPage = () => {
 
   const fetchEmployees = async () => {
     try {
+      // Fix the query to properly join with profiles table
       const { data, error } = await supabase
         .from('employees')
         .select(`
           *,
-          profiles:user_id (first_name, last_name, email, avatar_url),
-          departments (name)
+          profiles!inner(*),
+          departments(name)
         `)
         .order('created_at', { ascending: false });
 
