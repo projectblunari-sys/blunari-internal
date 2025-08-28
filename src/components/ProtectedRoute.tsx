@@ -14,12 +14,11 @@ export const ProtectedRoute = ({ children, requireTenant = false }: ProtectedRou
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        navigate('/auth');
-      } else if (requireTenant && !tenant) {
-        navigate('/onboarding');
+        navigate('/');
       }
+      // For internal staff app - no tenant requirement, go directly to dashboard
     }
-  }, [user, tenant, loading, navigate, requireTenant]);
+  }, [user, loading, navigate]);
 
   if (loading) {
     return (
@@ -36,9 +35,7 @@ export const ProtectedRoute = ({ children, requireTenant = false }: ProtectedRou
     return null; // Will redirect to auth
   }
 
-  if (requireTenant && !tenant) {
-    return null; // Will redirect to onboarding
-  }
+  // For internal staff app - no tenant requirement needed
 
   return <>{children}</>;
 };

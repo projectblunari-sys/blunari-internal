@@ -34,35 +34,30 @@ const App = () => (
               {/* Authentication */}
               <Route path="/auth" element={<Auth />} />
               
-              {/* Onboarding for new admin users */}
-              <Route path="/onboarding" element={
-                <ProtectedRoute>
-                  <Onboarding />
-                </ProtectedRoute>
-              } />
+              {/* Remove onboarding for internal staff app */}
               
               {/* Admin Dashboard - Main Application */}
               <Route path="/admin/dashboard" element={
-                <ProtectedRoute requireTenant={true}>
+                <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               } />
               
               {/* Admin Sub-routes */}
               <Route path="/admin/tenants" element={
-                <ProtectedRoute requireTenant={true}>
+                <ProtectedRoute>
                   <TenantsPage />
                 </ProtectedRoute>
               } />
               
               <Route path="/admin/settings" element={
-                <ProtectedRoute requireTenant={true}>
+                <ProtectedRoute>
                   <SettingsPage />
                 </ProtectedRoute>
               } />
               
               <Route path="/admin/*" element={
-                <ProtectedRoute requireTenant={true}>
+                <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
               } />
