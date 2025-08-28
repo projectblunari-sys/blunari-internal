@@ -8,7 +8,6 @@ import {
   BarChart3, 
   TableProperties,
   Building,
-  Palette,
   Bell,
   ChevronLeft,
   ChevronRight
@@ -30,33 +29,21 @@ import { useDashboardStore } from "@/stores/dashboardStore"
 
 const navigation = [
   {
-    title: "Overview",
-    url: "/admin",
+    title: "Dashboard",
+    url: "/admin/dashboard",
     icon: LayoutDashboard,
     badge: null
   },
   {
-    title: "Bookings",
-    url: "/admin/bookings", 
-    icon: Calendar,
-    badge: "12"
-  },
-  {
-    title: "Tenants",
+    title: "Tenants", 
     url: "/admin/tenants",
     icon: Building,
-    badge: null
+    badge: "4"
   },
   {
     title: "Analytics",
     url: "/admin/analytics",
     icon: BarChart3,
-    badge: null
-  },
-  {
-    title: "Table Management",
-    url: "/admin/tables",
-    icon: TableProperties,
     badge: null
   }
 ]
@@ -67,12 +54,6 @@ const bottomNavigation = [
     url: "/admin/notifications",
     icon: Bell,
     badge: "3"
-  },
-  {
-    title: "Appearance", 
-    url: "/admin/appearance",
-    icon: Palette,
-    badge: null
   },
   {
     title: "Settings",
@@ -88,8 +69,8 @@ export function AdminSidebar() {
   const location = useLocation()
 
   const isActive = (path: string) => {
-    if (path === "/admin") {
-      return location.pathname === "/admin"
+    if (path === "/admin/dashboard") {
+      return location.pathname === "/admin/dashboard" || location.pathname === "/admin"
     }
     return location.pathname.startsWith(path)
   }
