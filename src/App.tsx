@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { TenantProvider } from "@/hooks/useSubdomainRouting";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SubdomainRouter } from "@/components/SubdomainRouter";
 import Index from "./pages/Index";
 import Solutions from "./pages/Solutions";
 import Industries from "./pages/Industries";
@@ -20,32 +22,48 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/solutions" element={<Solutions />} />
-            <Route path="/industries" element={<Industries />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/onboarding" element={
-              <ProtectedRoute>
-                <Onboarding />
-              </ProtectedRoute>
-            } />
-            <Route path="/dashboard" element={
-              <ProtectedRoute requireTenant={true}>
-                <ClientDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin" element={<Dashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <TenantProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<SubdomainRouter />}>
+                {/* Main app routes */}
+                <Route index element={<Index />} />
+                <Route path="solutions" element={<Solutions />} />
+                <Route path="industries" element={<Industries />} />
+                <Route path="about" element={<About />} />
+                <Route path="auth" element={<Auth />} />
+                <Route path="onboarding" element={
+                  <ProtectedRoute>
+                    <Onboarding />
+                  </ProtectedRoute>
+                } />
+                <Route path="dashboard" element={
+                  <ProtectedRoute requireTenant={true}>
+                    <ClientDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="admin" element={<Dashboard />} />
+                
+                {/* Client routes for tenant subdomains */}
+                <Route path="client" element={
+                  <ProtectedRoute requireTenant={true}>
+                    <ClientDashboard />
+                  </ProtectedRoute>
+                } />
+                
+                {/* 404 route */}
+                <Route path="not-found" element={<NotFound />} />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </TenantProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

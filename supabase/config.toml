@@ -1,1 +1,4 @@
 project_id = "kbfbbkcaxhzlnbqxwgoz"
+
+[functions.subdomain-router]
+verify_jwt = false
