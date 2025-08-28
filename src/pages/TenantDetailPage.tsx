@@ -213,29 +213,41 @@ const TenantDetailPage = () => {
           <KPICard
             title="Total Bookings"
             value={metrics.totalBookings.toString()}
-            change="+12%"
-            trend="up"
+            trend={{
+              value: 12,
+              label: "this month",
+              direction: "up"
+            }}
             icon={Calendar}
           />
           <KPICard
             title="Revenue (30d)"
             value={`$${metrics.totalRevenue.toFixed(2)}`}
-            change="+18%"
-            trend="up" 
+            trend={{
+              value: 18,
+              label: "this month", 
+              direction: "up"
+            }}
             icon={DollarSign}
           />
           <KPICard
             title="Active Bookings"
             value={metrics.activeBookings.toString()}
-            change="+5%"
-            trend="up"
+            trend={{
+              value: 5,
+              label: "vs last week",
+              direction: "up"
+            }}
             icon={Users}
           />
           <KPICard
             title="Conversion Rate"
             value={`${metrics.conversionRate}%`}
-            change="+2.1%"
-            trend="up"
+            trend={{
+              value: 2.1,
+              label: "this month",
+              direction: "up"
+            }}
             icon={BarChart3}
           />
         </div>

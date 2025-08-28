@@ -2,9 +2,10 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
 import { AdminHeader } from "@/components/admin/AdminHeader"
 import { useDashboardStore } from "@/stores/dashboardStore"
+import { Outlet } from "react-router-dom"
 
 interface AdminLayoutProps {
-  children: React.ReactNode
+  children?: React.ReactNode
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
@@ -19,7 +20,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <AdminHeader />
           
           <main className="flex-1 overflow-auto p-6">
-            {children}
+            {children || <Outlet />}
           </main>
         </div>
       </div>

@@ -35,18 +35,16 @@ function App() {
                 {/* Protected Admin Routes */}
                 <Route path="/admin" element={
                   <ProtectedRoute>
-                    <AdminLayout>
-                      <Routes>
-                        <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                        <Route path="dashboard" element={<Dashboard />} />
-                        <Route path="tenants" element={<TenantsPage />} />
-                        <Route path="tenants/new" element={<NewTenantPage />} />
-                        <Route path="tenants/:tenantId" element={<TenantDetailPage />} />
-                        <Route path="settings" element={<SettingsPage />} />
-                      </Routes>
-                    </AdminLayout>
+                    <AdminLayout />
                   </ProtectedRoute>
                 }>
+                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="dashboard" element={<Dashboard />} />
+                  <Route path="tenants" element={<TenantsPage />} />
+                  <Route path="tenants/new" element={<NewTenantPage />} />
+                  <Route path="tenants/:tenantId" element={<TenantDetailPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                </Route>
                 
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />
