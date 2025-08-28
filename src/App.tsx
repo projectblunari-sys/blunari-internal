@@ -18,6 +18,7 @@ import NewTenantPage from "@/pages/NewTenantPage";
 import { EmployeesPage } from "@/pages/EmployeesPage";
 import SettingsPage from "@/pages/SettingsPage";
 import BillingPage from "@/pages/BillingPage";
+import OperationsPage from "@/pages/OperationsPage";
 import ObservabilityPage from "@/pages/ObservabilityPage";
 import SystemHealthPage from "@/pages/SystemHealthPage";
 import ImpersonationPage from "@/pages/ImpersonationPage";
@@ -57,6 +58,7 @@ function App() {
                   <Route path="tenants/:tenantId" element={<TenantDetailPage />} />
                   <Route path="employees" element={<EmployeesPage />} />
             <Route path="billing" element={<BillingPage />} />
+            <Route path="operations" element={<OperationsPage />} />
             <Route path="observability" element={<ObservabilityPage />} />
             <Route path="system-health" element={<SystemHealthPage />} />
             <Route path="pos-systems" element={<POSSystemsPage />} />

@@ -60,9 +60,15 @@ const navigation = [
     badge: null
   },
   {
+    title: "Operations",
+    url: "/admin/operations", 
+    icon: Activity,
+    badge: null
+  },
+  {
     title: "Observability",
     url: "/admin/observability", 
-    icon: Activity,
+    icon: Shield,
     badge: null
   },
   {
