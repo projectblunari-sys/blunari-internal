@@ -17,7 +17,7 @@ const RoadmapPage: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
               <Rocket className="h-3 w-3 mr-1" />
               Innovation Hub
             </Badge>
@@ -35,7 +35,7 @@ const RoadmapPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Badge variant="default" className="bg-green-500">Ready</Badge>
+                <Badge variant="default" className="bg-success/10 text-success border-success/20">Ready</Badge>
                 <p className="text-sm text-muted-foreground">
                   Native iOS & Android app with Capacitor integration
                 </p>
@@ -52,7 +52,7 @@ const RoadmapPage: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Badge variant="default" className="bg-green-500">Ready</Badge>
+                <Badge variant="default" className="bg-success/10 text-success border-success/20">Ready</Badge>
                 <p className="text-sm text-muted-foreground">
                   WebSocket-powered live data and notifications
                 </p>
@@ -154,8 +154,8 @@ const RoadmapPage: React.FC = () => {
               </ol>
             </div>
             
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
+            <div className="p-4 bg-primary/5 rounded-lg">
+              <p className="text-sm text-primary">
                 📱 <strong>Requirements:</strong> iOS development requires macOS with Xcode. Android development requires Android Studio.
                 For more detailed instructions, visit our comprehensive mobile development guide.
               </p>

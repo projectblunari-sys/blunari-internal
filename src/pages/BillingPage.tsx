@@ -195,15 +195,15 @@ export default function BillingPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-500';
+        return 'bg-success/10 text-success border-success/20';
       case 'trialing':
-        return 'bg-blue-500';
+        return 'bg-primary/10 text-primary border-primary/20';
       case 'past_due':
-        return 'bg-yellow-500';
+        return 'bg-warning/10 text-warning border-warning/20';
       case 'canceled':
-        return 'bg-red-500';
+        return 'bg-destructive/10 text-destructive border-destructive/20';
       default:
-        return 'bg-gray-500';
+        return 'bg-muted/50 text-muted-foreground border-muted/20';
     }
   };
 

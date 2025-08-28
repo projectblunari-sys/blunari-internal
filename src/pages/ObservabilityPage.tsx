@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -300,15 +299,15 @@ export default function ObservabilityPage() {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical':
-        return 'bg-red-500';
+        return 'bg-destructive/10 text-destructive border-destructive/20';
       case 'high':
-        return 'bg-orange-500';
+        return 'bg-warning/10 text-warning border-warning/20';
       case 'medium':
-        return 'bg-yellow-500';
+        return 'bg-primary/10 text-primary border-primary/20';
       case 'low':
-        return 'bg-blue-500';
+        return 'bg-secondary/10 text-secondary-foreground border-secondary/20';
       default:
-        return 'bg-gray-500';
+        return 'bg-muted/50 text-muted-foreground border-muted/20';
     }
   };
 
@@ -325,23 +324,20 @@ export default function ObservabilityPage() {
 
   if (loading && systemMetrics.length === 0) {
     return (
-      <AdminLayout>
-        <div className="p-8 space-y-6">
-          <div className="h-8 bg-muted rounded animate-pulse" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-muted rounded animate-pulse" />
-            ))}
-          </div>
+      <div className="p-8 space-y-6">
+        <div className="h-8 bg-muted rounded animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-muted rounded animate-pulse" />
+          ))}
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="p-8 space-y-8">
-        <div className="flex items-center justify-between">
+    <div className="p-8 space-y-8">
+      <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Observability Dashboard</h1>
             <p className="text-muted-foreground">
@@ -644,7 +640,6 @@ export default function ObservabilityPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </AdminLayout>
+    </div>
   );
 }

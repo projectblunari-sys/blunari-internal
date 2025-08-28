@@ -66,7 +66,7 @@ export default function ProfilePage() {
           </h1>
           <p className="text-muted-foreground">{profile.jobTitle}</p>
           <div className="flex items-center gap-2 mt-2">
-            <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+            <Badge className="bg-success/10 text-success border-success/20">
               Active
             </Badge>
             {securitySettings.twoFactorEnabled && (

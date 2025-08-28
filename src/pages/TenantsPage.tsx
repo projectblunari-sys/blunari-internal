@@ -119,11 +119,11 @@ const TenantsPage = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
+        return <Badge variant="default" className="bg-success/10 text-success border-success/20">Active</Badge>;
       case 'inactive':
-        return <Badge variant="secondary">Inactive</Badge>;
+        return <Badge variant="secondary" className="bg-muted/50 text-muted-foreground">Inactive</Badge>;
       case 'suspended':
-        return <Badge variant="destructive">Suspended</Badge>;
+        return <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">Suspended</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -181,7 +181,8 @@ const TenantsPage = () => {
         </div>
         <Button 
           onClick={() => navigate('/admin/tenants/new')}
-          className="bg-primary hover:bg-primary/90 transition-all duration-200 hover:scale-105 animate-slide-in-right"
+          variant="premium"
+          className="hover:scale-105 transition-all duration-200"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add New Tenant

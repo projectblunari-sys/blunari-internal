@@ -125,7 +125,7 @@ export default function ImpersonationPage() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+          <Badge className="bg-success/10 text-success border-success/20">
             {activeSessions.length} Active
           </Badge>
           <StartImpersonationDialog onStart={handleStartImpersonation}>
@@ -138,15 +138,15 @@ export default function ImpersonationPage() {
       </div>
 
       {/* Security Warning */}
-      <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20">
+      <Card className="border-warning/20 bg-warning/5 dark:border-warning/20 dark:bg-warning/5">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2 text-amber-800 dark:text-amber-400">
+          <CardTitle className="text-sm flex items-center gap-2 text-warning">
             <AlertTriangle className="h-4 w-4" />
             Security Guidelines
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-amber-700 dark:text-amber-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-warning">
             <ul className="space-y-1">
               <li>• Only use for legitimate support purposes</li>
               <li>• Sessions are automatically logged and audited</li>
@@ -166,10 +166,10 @@ export default function ImpersonationPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
-            <Activity className="h-4 w-4 text-green-600" />
+            <Activity className="h-4 w-4 text-success" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{activeSessions.length}</div>
+            <div className="text-2xl font-bold text-success">{activeSessions.length}</div>
             <p className="text-xs text-muted-foreground">Currently running</p>
           </CardContent>
         </Card>
@@ -177,10 +177,10 @@ export default function ImpersonationPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <Clock className="h-4 w-4 text-blue-600" />
+            <Clock className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{completedSessions.length}</div>
+            <div className="text-2xl font-bold text-primary">{completedSessions.length}</div>
             <p className="text-xs text-muted-foreground">Successfully completed</p>
           </CardContent>
         </Card>
@@ -188,10 +188,10 @@ export default function ImpersonationPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Expired</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <AlertTriangle className="h-4 w-4 text-warning" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{expiredSessions.length}</div>
+            <div className="text-2xl font-bold text-warning">{expiredSessions.length}</div>
             <p className="text-xs text-muted-foreground">Timed out</p>
           </CardContent>
         </Card>

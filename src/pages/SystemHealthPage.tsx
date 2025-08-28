@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -346,13 +345,13 @@ export default function SystemHealthPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'healthy':
-        return 'bg-green-500';
+        return 'bg-success/10 text-success border-success/20';
       case 'degraded':
-        return 'bg-yellow-500';
+        return 'bg-warning/10 text-warning border-warning/20';
       case 'unhealthy':
-        return 'bg-red-500';
+        return 'bg-destructive/10 text-destructive border-destructive/20';
       default:
-        return 'bg-gray-500';
+        return 'bg-muted/50 text-muted-foreground border-muted/20';
     }
   };
 
@@ -382,16 +381,14 @@ export default function SystemHealthPage() {
 
   if (loading && services.length === 0) {
     return (
-      <AdminLayout>
-        <div className="p-8 space-y-6">
-          <div className="h-8 bg-muted rounded animate-pulse" />
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 bg-muted rounded animate-pulse" />
-            ))}
-          </div>
+      <div className="p-8 space-y-6">
+        <div className="h-8 bg-muted rounded animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-muted rounded animate-pulse" />
+          ))}
         </div>
-      </AdminLayout>
+      </div>
     );
   }
 
@@ -403,9 +400,8 @@ export default function SystemHealthPage() {
     : 0;
 
   return (
-    <AdminLayout>
-      <div className="p-8 space-y-8">
-        <div className="flex items-center justify-between">
+    <div className="p-8 space-y-8">
+      <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">System Health</h1>
             <p className="text-muted-foreground">
@@ -796,7 +792,6 @@ export default function SystemHealthPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </AdminLayout>
+    </div>
   );
 }

@@ -75,7 +75,7 @@ const OperationsPage: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
               <Activity className="h-3 w-3 mr-1" />
               All Systems Operational
             </Badge>
