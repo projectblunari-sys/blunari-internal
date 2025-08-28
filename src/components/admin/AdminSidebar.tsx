@@ -82,6 +82,13 @@ const operationsNavigation: NavigationItem[] = [
     description: "Deployments and monitoring"
   },
   {
+    title: "Analytics",
+    url: "/admin/analytics", 
+    icon: BarChart3,
+    badge: null,
+    description: "Reports and insights"
+  },
+  {
     title: "Observability",
     url: "/admin/observability", 
     icon: Shield,
