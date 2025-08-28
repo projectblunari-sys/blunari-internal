@@ -388,7 +388,7 @@ export default MyBookingPage;`;
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="poweredBy">Show "Powered by Blunari Developers"</Label>
+                      <Label htmlFor="poweredBy">Show "Powered by Blunari"</Label>
                       <Switch
                         checked={config.branding.poweredBy}
                         onCheckedChange={(checked) => 
@@ -505,7 +505,7 @@ export default MyBookingPage;`;
                       </button>
                       {config.branding.poweredBy && (
                         <div className="text-xs text-muted-foreground text-center">
-                          Powered by Blunari Developers
+                          Powered by Blunari
                         </div>
                       )}
                     </div>

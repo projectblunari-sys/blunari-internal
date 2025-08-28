@@ -343,7 +343,7 @@ export default function About() {
               <span className="font-semibold">Blunari</span>
             </div>
             <div className="text-sm text-muted-foreground">
-              © 2025 Blunari. Bringing intelligence to modern hospitality. Developed by Blunari Developers.
+              © 2025 Blunari. Bringing intelligence to modern hospitality.
             </div>
           </div>
         </div>
