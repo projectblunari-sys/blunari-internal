@@ -63,15 +63,22 @@ export function AdminHeader() {
         <div className="flex items-center gap-6">
           <SidebarTrigger className="h-8 w-8 rounded-md hover:bg-slate-800 transition-colors duration-200 text-white" />
           
-          <div className="flex items-center gap-3">
-            <img
-              src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png"
-              alt="Blunari"
-              className="h-7 w-7 rounded object-cover"
-              loading="lazy"
-            />
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-white">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png"
+                alt="Blunari"
+                className="h-8 w-8 rounded-lg object-cover shadow-sm"
+                loading="lazy"
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-white">Blunari</span>
+                <span className="text-xs text-slate-300">Admin Portal</span>
+              </div>
+            </div>
+            <div className="h-6 w-px bg-slate-700 hidden sm:block"></div>
+            <div className="flex items-center gap-2 hidden sm:flex">
+              <span className="text-sm text-slate-300">
                 {user?.email?.split('@')[0] || 'admin'}'s Account
               </span>
             </div>

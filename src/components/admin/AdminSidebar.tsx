@@ -255,36 +255,8 @@ export const AdminSidebar = memo(() => {
 
   return (
     <Sidebar className={`${!open ? "w-16" : "w-64"} border-r border-border/40 transition-all duration-300 bg-sidebar shadow-card`}>
-      <SidebarHeader className="border-b border-border/40 bg-gradient-glass">
-        <div className="flex items-center justify-between p-4">
-          {open && (
-            <div className="flex items-center gap-3">
-              <img
-                src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png"
-                alt="Blunari"
-                className="h-8 w-8 rounded-lg object-cover shadow-elegant"
-                loading="lazy"
-              />
-              <div>
-                <span className="text-lg font-bold text-sidebar-foreground">Blunari</span>
-                <p className="text-xs text-sidebar-foreground/70">Admin Portal</p>
-              </div>
-            </div>
-          )}
-          {!open && (
-            <img
-              src="https://raw.githubusercontent.com/3sc0rp/Blunari/refs/heads/main/logo-bg.png"
-              alt="Blunari"
-              className="h-8 w-8 rounded-lg object-cover shadow-elegant mx-auto"
-              loading="lazy"
-            />
-          )}
-        </div>
-      </SidebarHeader>
-
-      <SidebarContent className="flex flex-col justify-between">
-        {/* Main Navigation */}
-        <div className="space-y-4 py-4">
+      <SidebarContent className="flex flex-col justify-between">{/* Main Navigation */}
+        <div className="space-y-4 py-6">
           <NavigationSection
             title="Main"
             items={mainNavigation}
