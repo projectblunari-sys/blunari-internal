@@ -1,270 +1,407 @@
-import { useState } from "react"
-import { AdminLayout } from "@/components/admin/AdminLayout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { 
-  Building, 
-  Users, 
-  Search,
-  Filter,
-  Plus,
-  MoreHorizontal,
-  Trash2,
-  Edit,
-  CheckCircle,
-  XCircle,
-  AlertTriangle
-} from "lucide-react"
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { 
+  Search, 
+  Filter, 
+  Plus, 
+  MoreHorizontal, 
+  Settings, 
+  Globe, 
+  Eye,
+  Building2,
+  Users,
+  Calendar,
+  TrendingUp
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  currency: string;
+  timezone: string;
+  created_at: string;
+  updated_at: string;
+  bookings_count?: number;
+  revenue?: number;
+  domains_count?: number;
+}
 
 const TenantsPage = () => {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   
-  // Mock tenant data
-  const tenants = [
-    {
-      id: "1",
-      name: "Bella Vista Restaurant",
-      slug: "bella-vista",
-      status: "active",
-      plan: "Professional",
-      bookings: 1250,
-      revenue: 15600,
-      lastActive: "2 hours ago",
-      created: "2024-01-15"
-    },
-    {
-      id: "2", 
-      name: "Ocean Breeze Bistro",
-      slug: "ocean-breeze",
-      status: "active",
-      plan: "Enterprise", 
-      bookings: 2100,
-      revenue: 28900,
-      lastActive: "1 hour ago",
-      created: "2024-02-03"
-    },
-    {
-      id: "3",
-      name: "Mountain View Cafe",
-      slug: "mountain-view",
-      status: "suspended",
-      plan: "Starter",
-      bookings: 450,
-      revenue: 5200,
-      lastActive: "2 days ago", 
-      created: "2024-03-12"
-    },
-    {
-      id: "4",
-      name: "Garden Terrace",
-      slug: "garden-terrace",
-      status: "trial",
-      plan: "Trial",
-      bookings: 89,
-      revenue: 1200,
-      lastActive: "30 min ago",
-      created: "2024-03-28"
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    fetchTenants();
+  }, [searchTerm, statusFilter, sortBy, sortOrder, currentPage]);
+
+  const fetchTenants = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from('tenants')
+        .select('*', { count: 'exact' });
+
+      // Apply filters
+      if (searchTerm) {
+        query = query.or(`name.ilike.%${searchTerm}%,slug.ilike.%${searchTerm}%`);
+      }
+      
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      // Apply sorting
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+      // Apply pagination
+      const start = (currentPage - 1) * itemsPerPage;
+      query = query.range(start, start + itemsPerPage - 1);
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      setTenants(data || []);
+      setTotalCount(count || 0);
+    } catch (error) {
+      console.error('Error fetching tenants:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch tenants",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  ]
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Active</Badge>
+        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
+      case 'inactive':
+        return <Badge variant="secondary">Inactive</Badge>;
       case 'suspended':
-        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Suspended</Badge>
-      case 'trial':
-        return <Badge variant="outline"><AlertTriangle className="w-3 h-3 mr-1" />Trial</Badge>
+        return <Badge variant="destructive">Suspended</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="outline">{status}</Badge>;
     }
-  }
+  };
 
-  const filteredTenants = tenants.filter(tenant =>
-    tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tenant.slug.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+  const stats = [
+    {
+      title: "Total Tenants",
+      value: totalCount.toString(),
+      icon: Building2,
+      color: "from-blue-500 to-blue-600"
+    },
+    {
+      title: "Active Tenants", 
+      value: tenants.filter(t => t.status === 'active').length.toString(),
+      icon: Users,
+      color: "from-green-500 to-green-600"
+    },
+    {
+      title: "New This Month",
+      value: tenants.filter(t => {
+        const created = new Date(t.created_at);
+        const now = new Date();
+        return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+      }).length.toString(),
+      icon: Calendar,
+      color: "from-purple-500 to-purple-600"
+    },
+    {
+      title: "Growth Rate",
+      value: "+12.5%",
+      icon: TrendingUp,
+      color: "from-orange-500 to-orange-600"
+    }
+  ];
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Restaurant Management</h1>
-            <p className="text-muted-foreground">
-              Manage platform restaurants, monitor performance, and handle configurations
-            </p>
-          </div>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Restaurant
-          </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div>
+          <h1 className="text-3xl font-heading font-bold text-foreground">
+            Tenant Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage all restaurant tenants and their configurations
+          </p>
         </div>
+        <Button 
+          onClick={() => navigate('/admin/tenants/new')}
+          className="bg-primary hover:bg-primary/90"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add New Tenant
+        </Button>
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Restaurants</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{tenants.length}</div>
-              <p className="text-xs text-muted-foreground">+2 this month</p>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <Card key={stat.title} className="border-0 shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {stat.value}
+                  </p>
+                </div>
+                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
+                  <stat.icon className="h-6 w-6 text-white" />
+                </div>
+              </div>
             </CardContent>
           </Card>
+        ))}
+      </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Restaurants</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {tenants.filter(t => t.status === 'active').length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {Math.round((tenants.filter(t => t.status === 'active').length / tenants.length) * 100)}% active rate
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${tenants.reduce((sum, t) => sum + t.revenue, 0).toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">+15% from last month</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {tenants.reduce((sum, t) => sum + t.bookings, 0).toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">+23% from last month</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tenants Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Restaurants</CardTitle>
-            <CardDescription>
-              Comprehensive list of all platform restaurants
-            </CardDescription>
-            
-            {/* Search and Filters */}
-            <div className="flex items-center space-x-4 pt-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search restaurants..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
+      {/* Filters and Search */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tenants by name or slug..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          </CardHeader>
-          <CardContent>
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={`${sortBy}_${sortOrder}`} onValueChange={(value) => {
+              const [field, order] = value.split('_');
+              setSortBy(field);
+              setSortOrder(order as "asc" | "desc");
+            }}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at_desc">Newest First</SelectItem>
+                <SelectItem value="created_at_asc">Oldest First</SelectItem>
+                <SelectItem value="name_asc">Name A-Z</SelectItem>
+                <SelectItem value="name_desc">Name Z-A</SelectItem>
+                <SelectItem value="status_asc">Status</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tenants Table */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle>Tenants Directory</CardTitle>
+          <CardDescription>
+            {totalCount} total tenants found
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Restaurant</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Bookings</TableHead>
-                  <TableHead>Revenue</TableHead>
-                  <TableHead>Last Active</TableHead>
-                  <TableHead className="w-[70px]"></TableHead>
+                  <TableHead>Timezone</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Domains</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredTenants.map((tenant) => (
-                  <TableRow key={tenant.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{tenant.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {tenant.slug}.blunari.com
+                {loading ? (
+                  // Loading skeleton
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <div className="space-y-2">
+                          <div className="h-4 bg-muted rounded animate-pulse" />
+                          <div className="h-3 bg-muted rounded animate-pulse w-2/3" />
                         </div>
+                      </TableCell>
+                      <TableCell><div className="h-6 bg-muted rounded animate-pulse w-16" /></TableCell>
+                      <TableCell><div className="h-4 bg-muted rounded animate-pulse w-24" /></TableCell>
+                      <TableCell><div className="h-4 bg-muted rounded animate-pulse w-20" /></TableCell>
+                      <TableCell><div className="h-4 bg-muted rounded animate-pulse w-8" /></TableCell>
+                      <TableCell><div className="h-8 bg-muted rounded animate-pulse w-8 ml-auto" /></TableCell>
+                    </TableRow>
+                  ))
+                ) : tenants.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <div className="text-muted-foreground">
+                        {searchTerm || statusFilter !== 'all' 
+                          ? 'No tenants match your filters' 
+                          : 'No tenants found'}
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(tenant.status)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{tenant.plan}</Badge>
-                    </TableCell>
-                    <TableCell>{tenant.bookings.toLocaleString()}</TableCell>
-                    <TableCell>${tenant.revenue.toLocaleString()}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {tenant.lastActive}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Users className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  tenants.map((tenant) => (
+                    <TableRow key={tenant.id}>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium text-foreground">{tenant.name}</div>
+                          <div className="text-sm text-muted-foreground">/{tenant.slug}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(tenant.status)}</TableCell>
+                      <TableCell className="text-muted-foreground">{tenant.timezone}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(tenant.created_at).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">{tenant.domains_count || 0}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => navigate(`/admin/tenants/${tenant.id}/settings`)}
+                            >
+                              <Settings className="h-4 w-4 mr-2" />
+                              Settings
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => navigate(`/admin/tenants/${tenant.id}/domains`)}
+                            >
+                              <Globe className="h-4 w-4 mr-2" />
+                              Domains
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </div>
-    </AdminLayout>
-  )
-}
+          </div>
 
-export default TenantsPage
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-6">
+              <div className="text-sm text-muted-foreground">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} tenants
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
+                  return page <= totalPages ? (
+                    <Button
+                      key={page}
+                      variant={page === currentPage ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </Button>
+                  ) : null;
+                })}
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default TenantsPage;

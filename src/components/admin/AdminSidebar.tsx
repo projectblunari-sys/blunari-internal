@@ -112,7 +112,7 @@ export function AdminSidebar() {
       </div>
 
       <SidebarContent className="flex flex-col justify-between">
-        {/* Main Navigation */}
+        {/* Navigation Items */}
         <div className="space-y-4 py-4">
           <SidebarGroup>
             <SidebarGroupLabel className={!open ? "sr-only" : ""}>
