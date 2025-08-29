@@ -3411,6 +3411,14 @@ export type Database = {
         }
         Returns: Json
       }
+      can_access_booking: {
+        Args: { booking_tenant_id: string }
+        Returns: boolean
+      }
+      can_access_profile: {
+        Args: { profile_user_id: string }
+        Returns: boolean
+      }
       check_alert_conditions: {
         Args: { p_metric_name: string; p_metric_value: number }
         Returns: undefined
@@ -3505,6 +3513,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_data_access_attempt: {
+        Args: {
+          p_operation: string
+          p_resource_id?: string
+          p_success?: boolean
+          p_table_name: string
+        }
+        Returns: undefined
+      }
       log_employee_activity: {
         Args: {
           p_action: string
@@ -3571,6 +3588,10 @@ export type Database = {
           p_status_code?: number
         }
         Returns: string
+      }
+      strict_tenant_access_check: {
+        Args: { target_tenant_id: string }
+        Returns: boolean
       }
       sync_pos_menu_item: {
         Args: {
