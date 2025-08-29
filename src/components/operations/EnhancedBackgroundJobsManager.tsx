@@ -127,8 +127,18 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
         }));
       }
       
-      console.log('✅ Processed metrics:', processedMetrics);
-      setMetrics(processedMetrics);
+      // Deduplicate metrics - keep only the latest value for each metric name
+      const uniqueMetrics = new Map();
+      processedMetrics.forEach(metric => {
+        const existing = uniqueMetrics.get(metric.name);
+        if (!existing || new Date(metric.timestamp || 0) > new Date(existing.timestamp || 0)) {
+          uniqueMetrics.set(metric.name, metric);
+        }
+      });
+      
+      const deduplicatedMetrics = Array.from(uniqueMetrics.values());
+      console.log('✅ Deduplicated metrics:', deduplicatedMetrics);
+      setMetrics(deduplicatedMetrics);
       
       // Check alerts only when we have new metrics
       if (processedMetrics && processedMetrics.length > 0) {
