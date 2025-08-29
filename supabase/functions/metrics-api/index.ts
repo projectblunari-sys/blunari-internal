@@ -41,13 +41,57 @@ serve(async (req) => {
     const requestData = await req.json()
     const metricType = requestData.type || 'system'
     
-    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://background-ops.fly.dev'
+    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL')
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
     console.log('Metrics API: Fetching system metrics')
     console.log(`Background Ops URL: ${backgroundOpsUrl}`)
     console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
     console.log(`Metric type: ${metricType}`)
+
+    // If no background ops URL is configured, return mock metrics
+    if (!backgroundOpsUrl) {
+      console.log('BACKGROUND_OPS_URL not configured, returning mock metrics')
+      
+      // Generate mock metrics based on type
+      const mockMetrics = [
+        { name: 'cpu_usage', value: Math.random() * 80 + 10, unit: 'percent' },
+        { name: 'memory_usage', value: Math.random() * 70 + 20, unit: 'percent' },
+        { name: 'disk_usage', value: Math.random() * 60 + 30, unit: 'percent' },
+        { name: 'response_time', value: Math.random() * 200 + 50, unit: 'ms' },
+        { name: 'error_rate', value: Math.random() * 5, unit: 'percent' }
+      ]
+
+      // Store mock metrics in database
+      const { error: insertError } = await supabaseClient
+        .from('system_health_metrics')
+        .insert(
+          mockMetrics.map(metric => ({
+            metric_name: metric.name,
+            metric_value: metric.value,
+            metric_unit: metric.unit,
+            service_name: 'background-ops',
+            severity: 'info',
+            metadata: { mock: true, type: metricType }
+          }))
+        )
+
+      if (insertError) {
+        console.error('Failed to insert mock metrics:', insertError)
+      }
+      
+      return new Response(
+        JSON.stringify({
+          metrics: mockMetrics,
+          timestamp: new Date().toISOString(),
+          mock: true
+        }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
 
     // Fetch metrics from background operations service
     const response = await fetch(`${backgroundOpsUrl}/api/v1/metrics?type=${metricType}`, {

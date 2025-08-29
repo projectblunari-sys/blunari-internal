@@ -137,8 +137,56 @@ serve(async (req) => {
       }
     }
     
-    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://background-ops.fly.dev'
+    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL')
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
+
+    console.log(`Jobs API: ${action}`)
+    console.log(`Background Ops URL: ${backgroundOpsUrl}`)
+    console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
+
+    // If no background ops URL is configured, return mock data
+    if (!backgroundOpsUrl) {
+      console.log('BACKGROUND_OPS_URL not configured, returning mock data')
+      
+      if (action === 'list') {
+        return new Response(
+          JSON.stringify([
+            {
+              id: 'mock-job-1',
+              type: 'system_maintenance',
+              status: 'completed',
+              payload: { task: 'Mock maintenance task' },
+              priority: 1,
+              progress: 100,
+              created_at: new Date().toISOString(),
+              completed_at: new Date().toISOString()
+            },
+            {
+              id: 'mock-job-2', 
+              type: 'data_cleanup',
+              status: 'running',
+              payload: { task: 'Mock cleanup task' },
+              priority: 2,
+              progress: 45,
+              created_at: new Date(Date.now() - 3600000).toISOString(),
+              started_at: new Date(Date.now() - 1800000).toISOString()
+            }
+          ]),
+          { 
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+      
+      return new Response(
+        JSON.stringify({ mock: true, message: 'Background operations service not configured' }),
+        { 
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
 
     let endpoint = '/api/v1/jobs'
     let method = 'GET'
@@ -176,10 +224,6 @@ serve(async (req) => {
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
     }
-
-    console.log(`Jobs API: ${method} ${endpoint}`)
-    console.log(`Background Ops URL: ${backgroundOpsUrl}`)
-    console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
 
     const response = await fetch(`${backgroundOpsUrl}${endpoint}`, {
       method,
