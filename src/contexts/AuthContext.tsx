@@ -146,32 +146,63 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = useCallback(async (email: string, password: string, firstName: string, lastName: string) => {
     try {
-      // Enhanced validation
+      // Enhanced validation with security checks
       if (!email || !password || !firstName || !lastName) {
         return { error: { message: 'All fields are required' } };
       }
 
-      if (password.length < 8) {
-        return { error: { message: 'Password must be at least 8 characters long' } };
+      if (password.length < 12) {
+        return { error: { message: 'Password must be at least 12 characters long for security' } };
+      }
+
+      // Enhanced password strength check
+      const hasUpperCase = /[A-Z]/.test(password);
+      const hasLowerCase = /[a-z]/.test(password);
+      const hasNumbers = /\d/.test(password);
+      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+      if (!hasUpperCase || !hasLowerCase || !hasNumbers || !hasSpecialChar) {
+        return { error: { message: 'Password must contain uppercase, lowercase, numbers, and special characters' } };
       }
 
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return { error: { message: 'Please enter a valid email address' } };
       }
 
+      // Sanitize input
+      const sanitizedEmail = email.toLowerCase().trim();
+      const sanitizedFirstName = firstName.trim().replace(/[<>]/g, '');
+      const sanitizedLastName = lastName.trim().replace(/[<>]/g, '');
+
       const redirectUrl = `${window.location.origin}/admin/dashboard`;
       
       const { error } = await supabase.auth.signUp({
-        email: email.toLowerCase().trim(),
+        email: sanitizedEmail,
         password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            first_name: firstName.trim(),
-            last_name: lastName.trim()
+            first_name: sanitizedFirstName,
+            last_name: sanitizedLastName
           }
         }
       });
+
+      // Log registration attempt
+      if (!error) {
+        try {
+          await supabase.rpc('log_security_event', {
+            p_event_type: 'user_registration',
+            p_severity: 'info',
+            p_event_data: {
+              email: sanitizedEmail,
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (logError) {
+          console.warn('Failed to log registration event:', logError);
+        }
+      }
 
       return { error };
     } catch (error) {
@@ -186,10 +217,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error: { message: 'Email and password are required' } };
       }
 
+      const sanitizedEmail = email.toLowerCase().trim();
+
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
+        email: sanitizedEmail,
         password
       });
+
+      // Log authentication attempt
+      try {
+        await supabase.rpc('log_security_event', {
+          p_event_type: error ? 'login_failed' : 'login_success',
+          p_severity: error ? 'medium' : 'info',
+          p_event_data: {
+            email: sanitizedEmail,
+            timestamp: new Date().toISOString(),
+            error_type: error?.message || null
+          }
+        });
+      } catch (logError) {
+        console.warn('Failed to log authentication event:', logError);
+      }
 
       return { error };
     } catch (error) {

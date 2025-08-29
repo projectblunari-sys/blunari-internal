@@ -16,6 +16,8 @@ interface PersonalInfoTabProps {
 }
 
 export function PersonalInfoTab({ profile, onUpdate }: PersonalInfoTabProps) {
+  // Note: This component is deprecated in favor of SecureProfileManager
+  // Please use SecureProfileManager for enhanced security
   const [editedProfile, setEditedProfile] = useState(profile);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
