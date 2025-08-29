@@ -246,6 +246,103 @@ export type Database = {
         }
         Relationships: []
       }
+      api_rate_limits: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          requests_count: number
+          tenant_id: string
+          window_end: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          requests_count?: number
+          tenant_id: string
+          window_end: string
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          requests_count?: number
+          tenant_id?: string
+          window_end?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_rate_limits_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_request_logs: {
+        Row: {
+          correlation_id: string | null
+          created_at: string
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address: unknown | null
+          method: string
+          request_size_bytes: number | null
+          response_size_bytes: number | null
+          response_time_ms: number
+          status_code: number
+          tenant_id: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          correlation_id?: string | null
+          created_at?: string
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          method: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms: number
+          status_code: number
+          tenant_id: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          correlation_id?: string | null
+          created_at?: string
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address?: unknown | null
+          method?: string
+          request_size_bytes?: number | null
+          response_size_bytes?: number | null
+          response_time_ms?: number
+          status_code?: number
+          tenant_id?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_request_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auto_provisioning: {
         Row: {
           completed_at: string | null
@@ -289,6 +386,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "auto_provisioning_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_availability_cache: {
+        Row: {
+          available_slots: Json
+          cache_key: string
+          created_at: string
+          date: string
+          expires_at: string
+          id: string
+          party_size: number
+          tenant_id: string
+        }
+        Insert: {
+          available_slots?: Json
+          cache_key: string
+          created_at?: string
+          date: string
+          expires_at: string
+          id?: string
+          party_size: number
+          tenant_id: string
+        }
+        Update: {
+          available_slots?: Json
+          cache_key?: string
+          created_at?: string
+          date?: string
+          expires_at?: string
+          id?: string
+          party_size?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_availability_cache_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1331,6 +1469,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      notification_queue: {
+        Row: {
+          created_at: string
+          data: Json
+          delivered_at: string | null
+          delivery_method: string[]
+          id: string
+          message: string
+          notification_type: string
+          scheduled_at: string
+          status: string
+          tenant_id: string
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          delivered_at?: string | null
+          delivery_method?: string[]
+          id?: string
+          message: string
+          notification_type: string
+          scheduled_at?: string
+          status?: string
+          tenant_id: string
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          delivered_at?: string | null
+          delivery_method?: string[]
+          id?: string
+          message?: string
+          notification_type?: string
+          scheduled_at?: string
+          status?: string
+          tenant_id?: string
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_queue_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       party_size_configs: {
         Row: {
@@ -2813,6 +3004,82 @@ export type Database = {
         }
         Relationships: []
       }
+      system_metrics: {
+        Row: {
+          id: string
+          labels: Json
+          metric_name: string
+          metric_value: number
+          recorded_at: string
+          tenant_id: string | null
+        }
+        Insert: {
+          id?: string
+          labels?: Json
+          metric_name: string
+          metric_value: number
+          recorded_at?: string
+          tenant_id?: string | null
+        }
+        Update: {
+          id?: string
+          labels?: Json
+          metric_name?: string
+          metric_value?: number
+          recorded_at?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_metrics_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_cache_config: {
+        Row: {
+          cache_ttl_seconds: number
+          created_at: string
+          enable_availability_cache: boolean
+          enable_business_hours_cache: boolean
+          enable_menu_cache: boolean
+          id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          cache_ttl_seconds?: number
+          created_at?: string
+          enable_availability_cache?: boolean
+          enable_business_hours_cache?: boolean
+          enable_menu_cache?: boolean
+          id?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          cache_ttl_seconds?: number
+          created_at?: string
+          enable_availability_cache?: boolean
+          enable_business_hours_cache?: boolean
+          enable_menu_cache?: boolean
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_cache_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenant_features: {
         Row: {
           created_at: string
@@ -2844,6 +3111,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "tenant_features_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_plans: {
+        Row: {
+          billing_cycle_end: string | null
+          billing_cycle_start: string | null
+          created_at: string
+          features: Json
+          id: string
+          is_active: boolean
+          max_api_requests_per_hour: number
+          max_bookings_per_day: number
+          plan_tier: Database["public"]["Enums"]["plan_tier"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle_end?: string | null
+          billing_cycle_start?: string | null
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_api_requests_per_hour?: number
+          max_bookings_per_day?: number
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle_end?: string | null
+          billing_cycle_start?: string | null
+          created_at?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          max_api_requests_per_hour?: number
+          max_bookings_per_day?: number
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_plans_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -2982,6 +3299,53 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_endpoints: {
+        Row: {
+          created_at: string
+          endpoint_url: string
+          event_types: string[]
+          id: string
+          is_active: boolean
+          last_successful_delivery: string | null
+          retry_policy: Json
+          secret_key: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint_url: string
+          event_types?: string[]
+          id?: string
+          is_active?: boolean
+          last_successful_delivery?: string | null
+          retry_policy?: Json
+          secret_key: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint_url?: string
+          event_types?: string[]
+          id?: string
+          is_active?: boolean
+          last_successful_delivery?: string | null
+          retry_policy?: Json
+          secret_key?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       widget_configs: {
         Row: {
           configuration: Json
@@ -3029,6 +3393,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cache_availability: {
+        Args: {
+          p_available_slots: Json
+          p_cache_duration_minutes?: number
+          p_date: string
+          p_party_size: number
+          p_tenant_id: string
+        }
+        Returns: undefined
+      }
       calculate_sla_metrics: {
         Args: {
           p_period_end: string
@@ -3040,6 +3414,14 @@ export type Database = {
       check_alert_conditions: {
         Args: { p_metric_name: string; p_metric_value: number }
         Returns: undefined
+      }
+      check_rate_limit: {
+        Args: {
+          p_endpoint: string
+          p_max_requests?: number
+          p_tenant_id: string
+        }
+        Returns: boolean
       }
       check_service_health: {
         Args: { p_service_id: string }
@@ -3065,9 +3447,25 @@ export type Database = {
         }
         Returns: string
       }
+      create_notification: {
+        Args: {
+          p_data?: Json
+          p_delivery_methods?: string[]
+          p_message: string
+          p_tenant_id: string
+          p_title: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       generate_ticket_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_cached_availability: {
+        Args: { p_date: string; p_party_size: number; p_tenant_id: string }
+        Returns: Json
       }
       get_current_employee: {
         Args: Record<PropertyKey, never>
@@ -3094,6 +3492,18 @@ export type Database = {
       hash_api_key: {
         Args: { api_key: string }
         Returns: string
+      }
+      log_api_request: {
+        Args: {
+          p_correlation_id?: string
+          p_endpoint: string
+          p_method: string
+          p_response_time_ms: number
+          p_status_code: number
+          p_tenant_id: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
       log_employee_activity: {
         Args: {
@@ -3202,6 +3612,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_tenant_access: {
+        Args: { tenant_uuid: string }
+        Returns: boolean
+      }
       verify_domain: {
         Args: { p_domain_id: string; p_verification_success: boolean }
         Returns: undefined
@@ -3212,6 +3626,7 @@ export type Database = {
       domain_type: "custom" | "subdomain" | "wildcard"
       employee_role: "SUPER_ADMIN" | "ADMIN" | "SUPPORT" | "OPS" | "VIEWER"
       employee_status: "ACTIVE" | "INACTIVE" | "PENDING" | "SUSPENDED"
+      plan_tier: "FREE" | "BASIC" | "PREMIUM" | "ENTERPRISE"
       ssl_status: "pending" | "active" | "error" | "expired" | "renewing"
     }
     CompositeTypes: {
@@ -3344,6 +3759,7 @@ export const Constants = {
       domain_type: ["custom", "subdomain", "wildcard"],
       employee_role: ["SUPER_ADMIN", "ADMIN", "SUPPORT", "OPS", "VIEWER"],
       employee_status: ["ACTIVE", "INACTIVE", "PENDING", "SUSPENDED"],
+      plan_tier: ["FREE", "BASIC", "PREMIUM", "ENTERPRISE"],
       ssl_status: ["pending", "active", "error", "expired", "renewing"],
     },
   },
