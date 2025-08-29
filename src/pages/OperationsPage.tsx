@@ -5,8 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { DeploymentManager } from '@/components/operations/DeploymentManager';
 import { LoggingManager } from '@/components/operations/LoggingManager';
 import { BackupManager } from '@/components/operations/BackupManager';
+import { BackgroundJobsManager } from '@/components/operations/BackgroundJobsManager';
 import { SystemHealthCard } from '@/components/settings/SystemHealthCard';
-import { Activity, Server, Database, Shield, Rocket, FileText, Settings } from 'lucide-react';
+import { Activity, Server, Database, Shield, Rocket, FileText, Settings, Cpu } from 'lucide-react';
 
 // Mock system health data
 const mockSystemHealth = {
@@ -139,10 +140,14 @@ const OperationsPage: React.FC = () => {
 
         {/* Main Operations Tabs */}
         <Tabs defaultValue="health" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="health" className="flex items-center space-x-2">
               <Activity className="h-4 w-4" />
               <span>Health</span>
+            </TabsTrigger>
+            <TabsTrigger value="jobs" className="flex items-center space-x-2">
+              <Cpu className="h-4 w-4" />
+              <span>Background Jobs</span>
             </TabsTrigger>
             <TabsTrigger value="deployments" className="flex items-center space-x-2">
               <Rocket className="h-4 w-4" />
@@ -167,6 +172,10 @@ const OperationsPage: React.FC = () => {
               health={mockSystemHealth}
               onRefresh={() => console.log('Refreshing health data...')}
             />
+          </TabsContent>
+
+          <TabsContent value="jobs">
+            <BackgroundJobsManager />
           </TabsContent>
 
           <TabsContent value="deployments">
