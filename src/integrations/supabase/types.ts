@@ -26,6 +26,7 @@ export type Database = {
           status: string
           timestamp: string | null
           type: string | null
+          user_id: string | null
         }
         Insert: {
           activity_type: string
@@ -38,6 +39,7 @@ export type Database = {
           status: string
           timestamp?: string | null
           type?: string | null
+          user_id?: string | null
         }
         Update: {
           activity_type?: string
@@ -50,6 +52,7 @@ export type Database = {
           status?: string
           timestamp?: string | null
           type?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -480,6 +483,7 @@ export type Database = {
           scheduled_for: string | null
           started_at: string | null
           status: string
+          type: string | null
           updated_at: string
         }
         Insert: {
@@ -499,6 +503,7 @@ export type Database = {
           scheduled_for?: string | null
           started_at?: string | null
           status?: string
+          type?: string | null
           updated_at?: string
         }
         Update: {
@@ -518,6 +523,7 @@ export type Database = {
           scheduled_for?: string | null
           started_at?: string | null
           status?: string
+          type?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -3216,6 +3222,7 @@ export type Database = {
           labels: Json
           metric_name: string
           metric_value: number
+          name: string
           recorded_at: string
           tenant_id: string | null
         }
@@ -3224,6 +3231,7 @@ export type Database = {
           labels?: Json
           metric_name: string
           metric_value: number
+          name?: string
           recorded_at?: string
           tenant_id?: string | null
         }
@@ -3232,6 +3240,7 @@ export type Database = {
           labels?: Json
           metric_name?: string
           metric_value?: number
+          name?: string
           recorded_at?: string
           tenant_id?: string | null
         }

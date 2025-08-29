@@ -144,43 +144,139 @@ serve(async (req) => {
     console.log(`Background Ops URL: ${backgroundOpsUrl}`)
     console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
 
-    // If no background ops URL is configured, return mock data
+    // If no background ops URL is configured, use database for real data
     if (!backgroundOpsUrl) {
-      console.log('BACKGROUND_OPS_URL not configured, returning mock data')
+      console.log('BACKGROUND_OPS_URL not configured, using database data')
       
       if (action === 'list') {
-        return new Response(
-          JSON.stringify([
-            {
-              id: 'mock-job-1',
-              type: 'system_maintenance',
-              status: 'completed',
-              payload: { task: 'Mock maintenance task' },
-              priority: 1,
-              progress: 100,
-              created_at: new Date().toISOString(),
-              completed_at: new Date().toISOString()
-            },
-            {
-              id: 'mock-job-2', 
-              type: 'data_cleanup',
-              status: 'running',
-              payload: { task: 'Mock cleanup task' },
-              priority: 2,
-              progress: 45,
-              created_at: new Date(Date.now() - 3600000).toISOString(),
-              started_at: new Date(Date.now() - 1800000).toISOString()
-            }
-          ]),
-          { 
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        try {
+          const { data: jobs, error: dbError } = await supabaseClient
+            .from('background_jobs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50)
+          
+          if (dbError) {
+            console.error('Database error fetching jobs:', dbError)
+            return new Response(
+              JSON.stringify({ error: 'Failed to fetch jobs from database', details: dbError.message }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
           }
-        )
+          
+          // Transform database format to API format
+          const transformedJobs = (jobs || []).map(job => ({
+            id: job.id,
+            type: job.job_type,
+            status: job.status,
+            payload: job.payload || {},
+            priority: job.priority || 0,
+            progress: Math.min(100, Math.max(0, job.progress || 0)),
+            created_at: job.created_at,
+            started_at: job.started_at,
+            completed_at: job.completed_at,
+            error: job.error_message
+          }))
+          
+          return new Response(
+            JSON.stringify(transformedJobs),
+            { 
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          )
+        } catch (error) {
+          console.error('Error fetching jobs from database:', error)
+          return new Response(
+            JSON.stringify({ error: 'Database connection failed', details: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      }
+      
+      if (action === 'create') {
+        try {
+          const { data: newJob, error: createError } = await supabaseClient
+            .from('background_jobs')
+            .insert({
+              job_type: requestData.type,
+              status: 'pending',
+              payload: requestData.payload || {},
+              priority: requestData.priority || 0,
+              progress: 0
+            })
+            .select()
+            .single()
+          
+          if (createError) {
+            console.error('Error creating job:', createError)
+            return new Response(
+              JSON.stringify({ error: 'Failed to create job', details: createError.message }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
+          
+          const transformedJob = {
+            id: newJob.id,
+            type: newJob.job_type,
+            status: newJob.status,
+            payload: newJob.payload || {},
+            priority: newJob.priority || 0,
+            progress: newJob.progress || 0,
+            created_at: newJob.created_at
+          }
+          
+          return new Response(
+            JSON.stringify(transformedJob),
+            { 
+              status: 201,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          )
+        } catch (error) {
+          console.error('Error creating job:', error)
+          return new Response(
+            JSON.stringify({ error: 'Failed to create job', details: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      }
+      
+      if (action === 'cancel') {
+        try {
+          const { data: updatedJob, error: updateError } = await supabaseClient
+            .from('background_jobs')
+            .update({ status: 'cancelled' })
+            .eq('id', requestData.id)
+            .select()
+            .single()
+          
+          if (updateError) {
+            console.error('Error cancelling job:', updateError)
+            return new Response(
+              JSON.stringify({ error: 'Failed to cancel job', details: updateError.message }),
+              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
+          
+          return new Response(
+            JSON.stringify({ success: true, job: updatedJob }),
+            { 
+              status: 200,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          )
+        } catch (error) {
+          console.error('Error cancelling job:', error)
+          return new Response(
+            JSON.stringify({ error: 'Failed to cancel job', details: error.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
       }
       
       return new Response(
-        JSON.stringify({ mock: true, message: 'Background operations service not configured' }),
+        JSON.stringify({ success: true, message: 'Using database for background operations' }),
         { 
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
