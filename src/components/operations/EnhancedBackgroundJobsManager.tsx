@@ -83,51 +83,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
   } = useBackgroundOpsAPI();
   const { toast } = useToast();
 
-  const checkAlertConditions = useCallback((currentMetrics: SystemMetrics[]) => {
-    const newAlerts: Array<{ id: string; message: string; severity: 'low' | 'medium' | 'high'; timestamp: Date }> = [];
-    
-    alertRules.forEach(rule => {
-      if (!rule.enabled) return;
-      
-      const metric = currentMetrics.find(m => m.name === rule.metric);
-      if (!metric) return;
-      
-      let triggered = false;
-      switch (rule.operator) {
-        case 'gt':
-          triggered = metric.value > rule.threshold;
-          break;
-        case 'lt':
-          triggered = metric.value < rule.threshold;
-          break;
-        case 'eq':
-          triggered = metric.value === rule.threshold;
-          break;
-      }
-      
-      if (triggered) {
-        const severity = rule.threshold > 80 ? 'high' : rule.threshold > 50 ? 'medium' : 'low';
-        newAlerts.push({
-          id: `${rule.id}-${Date.now()}`,
-          message: `${rule.metric} is ${metric.value}${metric.unit} (threshold: ${rule.threshold}${metric.unit})`,
-          severity,
-          timestamp: new Date()
-        });
-      }
-    });
-    
-    if (newAlerts.length > 0) {
-      setAlerts(prev => [...newAlerts, ...prev].slice(0, 50)); // Keep last 50 alerts
-      
-      newAlerts.forEach(alert => {
-        toast({
-          title: `Alert: ${alert.severity.toUpperCase()}`,
-          description: alert.message,
-          variant: alert.severity === 'high' ? 'destructive' : 'default',
-        });
-      });
-    }
-  }, [alertRules, toast]);
+  // Removed duplicate checkAlertConditions function since it's now inline in fetchData
 
   const fetchData = useCallback(async () => {
     try {
@@ -141,14 +97,58 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
       setHealthStatus(healthData);
       setMetrics(metricsData?.metrics || []);
       
-      // Check alerts
-      if (metricsData?.metrics) {
-        checkAlertConditions(metricsData.metrics);
+      // Check alerts only when we have new metrics
+      if (metricsData?.metrics && metricsData.metrics.length > 0) {
+        // Use current alertRules state
+        const currentAlertRules = alertRules;
+        const newAlerts: Array<{ id: string; message: string; severity: 'low' | 'medium' | 'high'; timestamp: Date }> = [];
+        
+        currentAlertRules.forEach(rule => {
+          if (!rule.enabled) return;
+          
+          const metric = metricsData.metrics.find(m => m.name === rule.metric);
+          if (!metric) return;
+          
+          let triggered = false;
+          switch (rule.operator) {
+            case 'gt':
+              triggered = metric.value > rule.threshold;
+              break;
+            case 'lt':
+              triggered = metric.value < rule.threshold;
+              break;
+            case 'eq':
+              triggered = metric.value === rule.threshold;
+              break;
+          }
+          
+          if (triggered) {
+            const severity = rule.threshold > 80 ? 'high' : rule.threshold > 50 ? 'medium' : 'low';
+            newAlerts.push({
+              id: `${rule.id}-${Date.now()}`,
+              message: `${rule.metric} is ${metric.value}${metric.unit} (threshold: ${rule.threshold}${metric.unit})`,
+              severity,
+              timestamp: new Date()
+            });
+          }
+        });
+        
+        if (newAlerts.length > 0) {
+          setAlerts(prev => [...newAlerts, ...prev].slice(0, 50));
+          
+          newAlerts.forEach(alert => {
+            toast({
+              title: `Alert: ${alert.severity.toUpperCase()}`,
+              description: alert.message,
+              variant: alert.severity === 'high' ? 'destructive' : 'default',
+            });
+          });
+        }
       }
     } catch (error) {
       console.error('Failed to fetch background ops data:', error);
     }
-  }, [getJobs, getHealthStatus, getMetrics, checkAlertConditions]);
+  }, [getJobs, getHealthStatus, getMetrics, alertRules, toast]);
 
   // Filter jobs based on criteria
   useEffect(() => {

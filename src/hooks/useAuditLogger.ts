@@ -123,12 +123,20 @@ export function useAuditLogger() {
 // Helper function to get client IP (simplified for demo)
 async function getClientIP(): Promise<string | null> {
   try {
-    // In a real application, you might use a service like ipapi.co or get this from headers
-    const response = await fetch('https://api.ipify.org?format=json');
+    // Use a more reliable IP service or fallback gracefully
+    const response = await fetch('https://api.ipify.org?format=json', {
+      signal: AbortSignal.timeout(3000) // 3 second timeout
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
     const data = await response.json();
     return data.ip;
   } catch (error) {
     console.warn('Could not get client IP:', error);
-    return null;
+    // Return a placeholder instead of null to avoid blocking audit logs
+    return '0.0.0.0';
   }
 }

@@ -46,7 +46,7 @@ function App() {
             <SecurityMonitor />
             <Toaster />
             <Sonner />
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <Routes>
                 {/* Auth Routes */}
                 <Route path="/" element={<Auth />} />

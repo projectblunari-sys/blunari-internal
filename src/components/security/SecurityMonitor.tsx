@@ -25,18 +25,19 @@ export const SecurityMonitor = () => {
       }
     };
 
-    const handleBeforeUnload = () => {
-      if (user) {
-        logSecurityEvent({
-          eventType: 'page_unload',
-          severity: 'low',
-          eventData: {
-            timestamp: new Date().toISOString(),
-            session_duration: Date.now() - (performance.timing.navigationStart || 0)
-          }
-        });
-      }
-    };
+    // Temporarily disabled to prevent IP fetching errors during debugging
+    // const handleBeforeUnload = () => {
+    //   if (user) {
+    //     logSecurityEvent({
+    //       eventType: 'page_unload',
+    //       severity: 'low',
+    //       eventData: {
+    //         timestamp: new Date().toISOString(),
+    //         session_duration: Date.now() - (performance.timing.navigationStart || 0)
+    //       }
+    //     });
+    //   }
+    // };
 
     const handleError = (event: ErrorEvent) => {
       if (user) {
@@ -55,13 +56,13 @@ export const SecurityMonitor = () => {
 
     // Add event listeners
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    // window.addEventListener('beforeunload', handleBeforeUnload); // Temporarily disabled
     window.addEventListener('error', handleError);
 
     // Cleanup
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // window.removeEventListener('beforeunload', handleBeforeUnload); // Temporarily disabled
       window.removeEventListener('error', handleError);
     };
   }, [user, logSecurityEvent]);
