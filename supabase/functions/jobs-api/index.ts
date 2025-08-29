@@ -82,6 +82,8 @@ serve(async (req) => {
     }
 
     console.log(`Jobs API: ${method} ${endpoint}`)
+    console.log(`Background Ops URL: ${backgroundOpsUrl}`)
+    console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
 
     const response = await fetch(`${backgroundOpsUrl}${endpoint}`, {
       method,
@@ -91,6 +93,24 @@ serve(async (req) => {
       },
       body,
     })
+
+    console.log(`Response status: ${response.status}`)
+    console.log(`Response headers: ${JSON.stringify(Object.fromEntries(response.headers.entries()))}`)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Background service error: ${response.status} - ${errorText}`)
+      return new Response(
+        JSON.stringify({ 
+          error: `Background service returned ${response.status}`, 
+          details: errorText 
+        }),
+        { 
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
 
     const data = await response.json()
 

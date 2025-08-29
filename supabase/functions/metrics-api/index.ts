@@ -37,14 +37,19 @@ serve(async (req) => {
       )
     }
 
-    const url = new URL(req.url)
-    const metricType = url.searchParams.get('type') || 'system'
+    // Parse request body for metric type
+    const requestData = await req.json()
+    const metricType = requestData.type || 'system'
     
     const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://services.blunari.ai'
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
-    console.log(`Metrics API: fetching ${metricType} metrics`)
+    console.log('Metrics API: Fetching system metrics')
+    console.log(`Background Ops URL: ${backgroundOpsUrl}`)
+    console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
+    console.log(`Metric type: ${metricType}`)
 
+    // Fetch metrics from background operations service
     const response = await fetch(`${backgroundOpsUrl}/api/metrics?type=${metricType}`, {
       method: 'GET',
       headers: {
@@ -53,27 +58,45 @@ serve(async (req) => {
       },
     })
 
-    const data = await response.json()
+    console.log(`Metrics response status: ${response.status}`)
 
-    // Store metrics in database for historical tracking
-    if (data.metrics && Array.isArray(data.metrics)) {
-      const metricsToInsert = data.metrics.map((metric: any) => ({
-        metric_name: metric.name,
-        metric_value: metric.value,
-        metric_unit: metric.unit || 'count',
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Background service metrics error: ${response.status} - ${errorText}`)
+      return new Response(
+        JSON.stringify({ 
+          error: `Background service returned ${response.status}`, 
+          details: errorText 
+        }),
+        { 
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    const metricsData = await response.json()
+    console.log(`Metrics data received: ${JSON.stringify(metricsData)}`)
+
+    // Store metrics in Supabase
+    const { error: insertError } = await supabaseClient
+      .from('system_health_metrics')
+      .insert({
+        metric_name: 'background_ops_metrics',
+        metric_value: metricsData.metrics?.length || 0,
+        metric_unit: 'count',
         service_name: 'background-ops',
-        metadata: metric.metadata || {},
-      }))
+        metadata: metricsData
+      })
 
-      await supabaseClient
-        .from('system_health_metrics')
-        .insert(metricsToInsert)
+    if (insertError) {
+      console.error('Error storing metrics:', insertError)
     }
 
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify(metricsData),
       { 
-        status: response.status,
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
