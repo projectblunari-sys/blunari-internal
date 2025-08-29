@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useBackgroundOpsAPI, BackgroundJob, SystemMetrics, HealthStatus } from '@/hooks/useBackgroundOpsAPI';
+import { JobsDebugger } from './JobsDebugger';
 import { 
   Clock, 
   Play, 
@@ -185,9 +186,10 @@ export const BackgroundJobsManager: React.FC = () => {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="jobs">Background Jobs</TabsTrigger>
           <TabsTrigger value="metrics">System Metrics</TabsTrigger>
+          <TabsTrigger value="debug">Debug</TabsTrigger>
         </TabsList>
 
         <TabsContent value="jobs" className="space-y-4">
@@ -316,6 +318,10 @@ export const BackgroundJobsManager: React.FC = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="debug" className="space-y-4">
+          <JobsDebugger />
         </TabsContent>
       </Tabs>
     </div>

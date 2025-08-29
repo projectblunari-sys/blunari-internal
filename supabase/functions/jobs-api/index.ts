@@ -41,6 +41,102 @@ serve(async (req) => {
     const requestData = await req.json()
     const action = requestData.action || 'list'
     
+    console.log(`Jobs API called with action: ${action}`, requestData)
+    
+    // If action is 'cleanup', handle database cleanup
+    if (action === 'cleanup') {
+      console.log('Cleaning up corrupted jobs from database...')
+      
+      try {
+        // Delete jobs with corrupted payloads or invalid data
+        const { data: corruptedJobs, error: selectError } = await supabaseClient
+          .from('background_jobs')
+          .select('id, job_type, status, payload')
+          .limit(100)
+        
+        if (selectError) {
+          console.error('Error selecting jobs:', selectError)
+          return new Response(
+            JSON.stringify({ error: 'Failed to select jobs', details: selectError.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
+        console.log(`Found ${corruptedJobs?.length || 0} jobs in database`)
+        
+        // Delete old health check jobs or jobs with invalid data
+        const { data: deletedJobs, error: deleteError } = await supabaseClient
+          .from('background_jobs')
+          .delete()
+          .or('job_type.eq.health_check,status.eq.failed,created_at.lt.2024-01-01')
+          .select()
+        
+        if (deleteError) {
+          console.error('Error deleting corrupted jobs:', deleteError)
+          return new Response(
+            JSON.stringify({ error: 'Failed to delete corrupted jobs', details: deleteError.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
+        console.log(`Deleted ${deletedJobs?.length || 0} corrupted jobs`)
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: `Cleaned up ${deletedJobs?.length || 0} corrupted jobs`,
+            remainingJobs: corruptedJobs?.length || 0
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } catch (cleanupError) {
+        console.error('Cleanup error:', cleanupError)
+        return new Response(
+          JSON.stringify({ error: 'Cleanup failed', details: cleanupError.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+    
+    // If action is 'debug', show database contents
+    if (action === 'debug') {
+      console.log('Debugging database contents...')
+      
+      try {
+        const { data: jobs, error: dbError } = await supabaseClient
+          .from('background_jobs')
+          .select('*')
+          .limit(10)
+        
+        if (dbError) {
+          console.error('Database error:', dbError)
+          return new Response(
+            JSON.stringify({ error: 'Database query failed', details: dbError.message }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
+        console.log('Database jobs:', JSON.stringify(jobs, null, 2))
+        
+        return new Response(
+          JSON.stringify({ 
+            debug: true,
+            jobsInDatabase: jobs?.length || 0,
+            jobs: jobs || [],
+            backgroundOpsUrl: Deno.env.get('BACKGROUND_OPS_URL'),
+            apiKeyPresent: !!Deno.env.get('BACKGROUND_OPS_API_KEY')
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      } catch (debugError) {
+        console.error('Debug error:', debugError)
+        return new Response(
+          JSON.stringify({ error: 'Debug failed', details: debugError.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+    
     const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://background-ops.fly.dev'
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
