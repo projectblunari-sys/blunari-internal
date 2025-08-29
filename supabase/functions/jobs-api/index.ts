@@ -37,10 +37,11 @@ serve(async (req) => {
       )
     }
 
-    const url = new URL(req.url)
-    const action = url.searchParams.get('action') || 'list'
+    // Parse request body for action and parameters
+    const requestData = await req.json()
+    const action = requestData.action || 'list'
     
-    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://your-app.fly.dev'
+    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://services.blunari.ai'
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
     let endpoint = '/api/jobs'
@@ -52,26 +53,32 @@ serve(async (req) => {
         endpoint = '/api/jobs'
         method = 'GET'
         break
+      case 'get':
+        endpoint = `/api/jobs/${requestData.id}`
+        method = 'GET'
+        break
       case 'create':
         endpoint = '/api/jobs'
         method = 'POST'
-        body = await req.json()
-        break
-      case 'get':
-        const jobId = url.searchParams.get('id')
-        endpoint = `/api/jobs/${jobId}`
-        method = 'GET'
+        body = JSON.stringify({
+          type: requestData.type,
+          payload: requestData.payload || {},
+          priority: requestData.priority || 1
+        })
         break
       case 'cancel':
-        const cancelId = url.searchParams.get('id')
-        endpoint = `/api/jobs/${cancelId}/cancel`
+        endpoint = `/api/jobs/${requestData.id}/cancel`
         method = 'POST'
         break
       case 'retry':
-        const retryId = url.searchParams.get('id')
-        endpoint = `/api/jobs/${retryId}/retry`
+        endpoint = `/api/jobs/${requestData.id}/retry`
         method = 'POST'
         break
+      default:
+        return new Response(
+          JSON.stringify({ error: 'Invalid action' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
     }
 
     console.log(`Jobs API: ${method} ${endpoint}`)
@@ -82,7 +89,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
         'X-API-Key': backgroundOpsApiKey,
       },
-      body: body ? JSON.stringify(body) : undefined,
+      body,
     })
 
     const data = await response.json()
