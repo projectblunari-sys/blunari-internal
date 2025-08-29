@@ -458,6 +458,7 @@ export type Database = {
           completed_at: string | null
           created_at: string
           error_message: string | null
+          failed_at: string | null
           id: string
           job_name: string
           job_type: string
@@ -476,6 +477,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           error_message?: string | null
+          failed_at?: string | null
           id?: string
           job_name: string
           job_type: string
@@ -494,6 +496,7 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           error_message?: string | null
+          failed_at?: string | null
           id?: string
           job_name?: string
           job_type?: string
