@@ -63,7 +63,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
   const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
   const [jobFilter, setJobFilter] = useState<JobFilter>({});
   const [activeTab, setActiveTab] = useState('jobs');
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false); // Disabled by default to prevent infinite loops
   const [refreshInterval, setRefreshInterval] = useState(30);
   const [alertRules, setAlertRules] = useState<AlertRule[]>([
     { id: '1', metric: 'cpu_usage', threshold: 90, operator: 'gt', enabled: true },
@@ -83,26 +83,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
   } = useBackgroundOpsAPI();
   const { toast } = useToast();
 
-  const fetchData = useCallback(async () => {
-    try {
-      const [jobsData, healthData, metricsData] = await Promise.all([
-        getJobs(),
-        getHealthStatus(),
-        getMetrics('system')
-      ]);
-      
-      setJobs(jobsData);
-      setHealthStatus(healthData);
-      setMetrics(metricsData.metrics);
-      
-      // Check alerts
-      checkAlertConditions(metricsData.metrics);
-    } catch (error) {
-      console.error('Failed to fetch background ops data:', error);
-    }
-  }, [getJobs, getHealthStatus, getMetrics]);
-
-  const checkAlertConditions = (currentMetrics: SystemMetrics[]) => {
+  const checkAlertConditions = useCallback((currentMetrics: SystemMetrics[]) => {
     const newAlerts: Array<{ id: string; message: string; severity: 'low' | 'medium' | 'high'; timestamp: Date }> = [];
     
     alertRules.forEach(rule => {
@@ -146,7 +127,28 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
         });
       });
     }
-  };
+  }, [alertRules, toast]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [jobsData, healthData, metricsData] = await Promise.all([
+        getJobs(),
+        getHealthStatus(),
+        getMetrics('system')
+      ]);
+      
+      setJobs(jobsData || []);
+      setHealthStatus(healthData);
+      setMetrics(metricsData?.metrics || []);
+      
+      // Check alerts
+      if (metricsData?.metrics) {
+        checkAlertConditions(metricsData.metrics);
+      }
+    } catch (error) {
+      console.error('Failed to fetch background ops data:', error);
+    }
+  }, [getJobs, getHealthStatus, getMetrics, checkAlertConditions]);
 
   // Filter jobs based on criteria
   useEffect(() => {
@@ -174,11 +176,15 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
     setFilteredJobs(filtered);
   }, [jobs, jobFilter]);
 
+  // Initial data load
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   // Auto-refresh functionality
   useEffect(() => {
     if (!autoRefresh) return;
     
-    fetchData();
     const interval = setInterval(fetchData, refreshInterval * 1000);
     return () => clearInterval(interval);
   }, [autoRefresh, refreshInterval, fetchData]);

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
@@ -33,7 +33,7 @@ export const useBackgroundOpsAPI = () => {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
-  const callAPI = async (functionName: string, options: any = {}) => {
+  const callAPI = useCallback(async (functionName: string, options: any = {}) => {
     try {
       setLoading(true)
       
@@ -55,23 +55,23 @@ export const useBackgroundOpsAPI = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [toast])
 
   // Job Management
-  const getJobs = async (): Promise<BackgroundJob[]> => {
+  const getJobs = useCallback(async (): Promise<BackgroundJob[]> => {
     console.log('Calling jobs-api with action: list')
     return callAPI('jobs-api', {
       body: { action: 'list' }
     })
-  }
+  }, [callAPI])
 
-  const getJob = async (id: string): Promise<BackgroundJob> => {
+  const getJob = useCallback(async (id: string): Promise<BackgroundJob> => {
     return callAPI('jobs-api', {
       body: { action: 'get', id }
     })
-  }
+  }, [callAPI])
 
-  const createJob = async (jobData: {
+  const createJob = useCallback(async (jobData: {
     type: string
     payload: Record<string, any>
     priority?: number
@@ -79,27 +79,27 @@ export const useBackgroundOpsAPI = () => {
     return callAPI('jobs-api', {
       body: { action: 'create', ...jobData }
     })
-  }
+  }, [callAPI])
 
-  const cancelJob = async (id: string): Promise<boolean> => {
+  const cancelJob = useCallback(async (id: string): Promise<boolean> => {
     return callAPI('jobs-api', {
       body: { action: 'cancel', id }
     })
-  }
+  }, [callAPI])
 
-  const retryJob = async (id: string): Promise<BackgroundJob> => {
+  const retryJob = useCallback(async (id: string): Promise<BackgroundJob> => {
     return callAPI('jobs-api', {
       body: { action: 'retry', id }
     })
-  }
+  }, [callAPI])
 
   // Health Check
-  const getHealthStatus = async (): Promise<HealthStatus> => {
+  const getHealthStatus = useCallback(async (): Promise<HealthStatus> => {
     return callAPI('health-check-api')
-  }
+  }, [callAPI])
 
   // Metrics
-  const getMetrics = async (type: 'system' | 'jobs' | 'database' = 'system'): Promise<{
+  const getMetrics = useCallback(async (type: 'system' | 'jobs' | 'database' = 'system'): Promise<{
     metrics: SystemMetrics[]
     timestamp: string
   }> => {
@@ -107,14 +107,14 @@ export const useBackgroundOpsAPI = () => {
     return callAPI('metrics-api', {
       body: { type }
     })
-  }
+  }, [callAPI])
 
   // Generic proxy for other endpoints
-  const proxyRequest = async (endpoint: string, params: Record<string, any> = {}) => {
+  const proxyRequest = useCallback(async (endpoint: string, params: Record<string, any> = {}) => {
     return callAPI('background-ops-proxy', {
       body: { endpoint, ...params }
     })
-  }
+  }, [callAPI])
 
   return {
     loading,
