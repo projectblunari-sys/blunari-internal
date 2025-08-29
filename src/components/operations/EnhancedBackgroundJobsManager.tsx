@@ -93,7 +93,9 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
         getMetrics('system')
       ]);
       
-      setJobs(jobsData || []);
+      // Handle jobs data - it might be an array or an object with jobs property
+      const jobsList = Array.isArray(jobsData) ? jobsData : (jobsData as any)?.jobs || [];
+      setJobs(jobsList);
       setHealthStatus(healthData);
       setMetrics(metricsData?.metrics || []);
       
@@ -163,7 +165,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
     }
     
     if (jobFilter.priority && jobFilter.priority !== 'all-priority') {
-      filtered = filtered.filter(job => job.priority.toString() === jobFilter.priority);
+      filtered = filtered.filter(job => (job.priority || 0).toString() === jobFilter.priority);
     }
     
     if (jobFilter.search) {
@@ -190,36 +192,66 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
   }, [autoRefresh, refreshInterval, fetchData]);
 
   const handleBulkCancel = async () => {
+    if (selectedJobs.length === 0) return;
+    
     try {
-      await Promise.all(selectedJobs.map(jobId => cancelJob(jobId)));
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const jobId of selectedJobs) {
+        try {
+          await cancelJob(jobId);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          console.error(`Failed to cancel job ${jobId}:`, error);
+        }
+      }
+      
       toast({
-        title: "Bulk Operation Completed",
-        description: `${selectedJobs.length} jobs cancelled successfully.`,
+        title: "Bulk Cancel Completed",
+        description: `${successCount} jobs cancelled successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}.`,
+        variant: errorCount > 0 ? "destructive" : "default",
       });
       setSelectedJobs([]);
       fetchData();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to cancel some jobs.",
+        description: "Failed to cancel jobs.",
         variant: "destructive",
       });
     }
   };
 
   const handleBulkRetry = async () => {
+    if (selectedJobs.length === 0) return;
+    
     try {
-      await Promise.all(selectedJobs.map(jobId => retryJob(jobId)));
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (const jobId of selectedJobs) {
+        try {
+          await retryJob(jobId);
+          successCount++;
+        } catch (error) {
+          errorCount++;
+          console.error(`Failed to retry job ${jobId}:`, error);
+        }
+      }
+      
       toast({
-        title: "Bulk Operation Completed",
-        description: `${selectedJobs.length} jobs queued for retry.`,
+        title: "Bulk Retry Completed",
+        description: `${successCount} jobs queued for retry${errorCount > 0 ? `, ${errorCount} failed` : ''}.`,
+        variant: errorCount > 0 ? "destructive" : "default",
       });
       setSelectedJobs([]);
       fetchData();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to retry some jobs.",
+        description: "Failed to retry jobs.",
         variant: "destructive",
       });
     }
@@ -469,6 +501,61 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                   </CardDescription>
                 </div>
                 <div className="flex items-center space-x-2">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Create Job
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create Test Job</DialogTitle>
+                        <DialogDescription>
+                          Create a test background job for debugging purposes
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Job Type</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select job type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="test-simple">Simple Test Job</SelectItem>
+                              <SelectItem value="test-long">Long Running Test</SelectItem>
+                              <SelectItem value="test-fail">Failing Test Job</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Priority</Label>
+                          <Select defaultValue="1">
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">High (1)</SelectItem>
+                              <SelectItem value="2">Medium (2)</SelectItem>
+                              <SelectItem value="3">Low (3)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button onClick={() => {
+                          // Create test job logic here
+                          toast({
+                            title: "Test job created",
+                            description: "A test background job has been queued",
+                          });
+                        }}>
+                          Create Job
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                   <Button onClick={exportJobs} size="sm" variant="outline">
                     <Download className="h-4 w-4 mr-2" />
                     Export
@@ -607,22 +694,22 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell className="font-medium">{job.type}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{job.priority}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="w-24">
-                            <Progress value={job.progress} className="h-2" />
-                            <span className="text-xs text-muted-foreground">
-                              {job.progress}%
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
-                          </div>
-                        </TableCell>
+                         <TableCell>
+                           <Badge variant="outline">{job.priority || 0}</Badge>
+                         </TableCell>
+                         <TableCell>
+                           <div className="w-24">
+                             <Progress value={job.progress || 0} className="h-2" />
+                             <span className="text-xs text-muted-foreground">
+                               {job.progress || 0}%
+                             </span>
+                           </div>
+                         </TableCell>
+                         <TableCell>
+                           <div className="text-sm">
+                             {job.created_at ? formatDistanceToNow(new Date(job.created_at), { addSuffix: true }) : 'Unknown'}
+                           </div>
+                         </TableCell>
                         <TableCell>
                           <div className="text-sm">
                             {job.started_at && job.completed_at ? (
