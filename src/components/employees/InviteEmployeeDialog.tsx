@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { SecureForm } from "@/components/security/SecureForm";
+import { InputSanitizer } from "@/lib/security/inputSanitizer";
 import { Mail, Loader2 } from "lucide-react";
 
 interface Department {
@@ -31,10 +33,20 @@ export const InviteEmployeeDialog = ({
   const [departmentId, setDepartmentId] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !role) {
-      toast.error("Please fill in all required fields");
+  const handleFormSubmit = async (formData: FormData) => {
+    const email = formData.get('email') as string;
+    const role = formData.get('role') as string;
+    const departmentId = formData.get('department_id') as string;
+    
+    // Additional validation and sanitization
+    const sanitizedEmail = InputSanitizer.sanitizeEmail(email);
+    if (!sanitizedEmail) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (!role) {
+      toast.error("Please select a role");
       return;
     }
 
@@ -43,7 +55,7 @@ export const InviteEmployeeDialog = ({
       // Call edge function to send invitation
       const { error } = await supabase.functions.invoke('invite-employee', {
         body: {
-          email,
+          email: sanitizedEmail,
           role,
           department_id: departmentId || null
         }
@@ -75,11 +87,17 @@ export const InviteEmployeeDialog = ({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <SecureForm 
+          onSubmit={handleFormSubmit} 
+          action="invite_employee"
+          rateLimit={{ limit: 5, windowMinutes: 10 }}
+          className="space-y-4"
+        >
           <div className="space-y-2">
             <Label htmlFor="email">Email Address *</Label>
             <Input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -102,6 +120,7 @@ export const InviteEmployeeDialog = ({
                 <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
               </SelectContent>
             </Select>
+            <input type="hidden" name="role" value={role} />
           </div>
 
           <div className="space-y-2">
@@ -118,6 +137,7 @@ export const InviteEmployeeDialog = ({
                 ))}
               </SelectContent>
             </Select>
+            <input type="hidden" name="department_id" value={departmentId} />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
@@ -134,7 +154,7 @@ export const InviteEmployeeDialog = ({
               Send Invitation
             </Button>
           </div>
-        </form>
+        </SecureForm>
       </DialogContent>
     </Dialog>
   );

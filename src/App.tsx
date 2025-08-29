@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SecurityMonitor } from "@/components/security/SecurityMonitor";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 
@@ -42,6 +43,7 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
         <AuthProvider>
           <TooltipProvider>
+            <SecurityMonitor />
             <Toaster />
             <Sonner />
             <BrowserRouter>
