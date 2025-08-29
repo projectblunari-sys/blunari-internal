@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { CSRFProtection } from "@/lib/security/csrfProtection";
 import { RateLimiter } from "@/lib/security/rateLimiter";
-import { InputSanitizer } from "@/lib/security/inputSanitizer";
 import { useAuditLogger } from "@/hooks/useAuditLogger";
 import { useAuth } from "@/contexts/AuthContext";
 
