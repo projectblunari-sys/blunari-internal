@@ -190,36 +190,16 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ Failed to fetch background ops data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch operations data. Please check your connection.",
+        variant: "destructive",
+      });
       
-      // Create mock health data that matches UI expectations
-      const mockHealthData: HealthStatus = {
-        status: 'healthy' as const,
-        services: {
-          'background-ops': 'healthy' as const,
-          'api-gateway': 'healthy' as const,
-          'database': 'healthy' as const
-        },
-        uptime: 99.9,
-        version: '1.0.0'
-      };
-      
-      // Create mock metrics data that includes system health metrics
-      const mockMetrics = [
-        { name: 'cpu_usage', value: 45.2, unit: '%' },
-        { name: 'memory_usage', value: 67.8, unit: '%' },
-        { name: 'disk_usage', value: 23.1, unit: '%' },
-        { name: 'db_connections', value: 156, unit: 'count' },
-        { name: 'active_users', value: 1247, unit: 'count' },
-        { name: 'api_response_time', value: 145, unit: 'ms' },
-        { name: 'network_io', value: 12.4, unit: 'MB/s' },
-        { name: 'error_rate', value: 0.5, unit: '%' }
-      ];
-      
-      console.log('🔧 Using mock health data:', mockHealthData);
-      console.log('🔧 Using mock metrics data:', mockMetrics);
-      
-      setHealthStatus(mockHealthData);
-      setMetrics(mockMetrics);
+      // Clear existing data instead of using mock data
+      setJobs([]);
+      setHealthStatus(null);
+      setMetrics([]);
     }
   }, [getJobs, getHealthStatus, getMetrics, alertRules, toast]);
 
@@ -457,180 +437,191 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
       </Card>
 
       {/* System Health Overview */}
-      {healthStatus && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg flex items-center">
-                  <Activity className="h-5 w-5 mr-2" />
-                  System Health Overview
-                </CardTitle>
-                <CardDescription>Real-time system performance metrics</CardDescription>
-              </div>
-              <div className="flex items-center space-x-2">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg flex items-center">
+                <Activity className="h-5 w-5 mr-2" />
+                System Health Overview
+              </CardTitle>
+              <CardDescription>Real-time system performance metrics</CardDescription>
+            </div>
+            <div className="flex items-center space-x-2">
+              {healthStatus ? (
                 <Badge variant={healthStatus.status === 'healthy' ? 'default' : 'destructive'}>
                   {healthStatus.status === 'healthy' ? 'Healthy' : 'Unhealthy'}
                 </Badge>
-                <Button onClick={fetchData} size="sm" variant="outline">
-                  Refresh
-                </Button>
-              </div>
+              ) : (
+                <Badge variant="outline">No Data</Badge>
+              )}
+              <Button onClick={fetchData} size="sm" variant="outline" disabled={loading}>
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-5">
-              {/* CPU Usage */}
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Server className="h-8 w-8 text-blue-500" />
-                </div>
-                <div className="text-3xl font-bold text-blue-600">
-                  {metrics.find(m => m.name === 'cpu_usage')?.value.toFixed(0) || '45'}%
-                </div>
-                <div className="text-sm text-muted-foreground mb-2">CPU Usage</div>
-                <Progress 
-                  value={metrics.find(m => m.name === 'cpu_usage')?.value || 45} 
-                  className="h-2"
-                />
-              </div>
-
-              {/* Memory Usage */}
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <BarChart3 className="h-8 w-8 text-purple-500" />
-                </div>
-                <div className="text-3xl font-bold text-purple-600">
-                  {metrics.find(m => m.name === 'memory_usage')?.value.toFixed(0) || '67'}%
-                </div>
-                <div className="text-sm text-muted-foreground mb-2">Memory</div>
-                <Progress 
-                  value={metrics.find(m => m.name === 'memory_usage')?.value || 67} 
-                  className="h-2"
-                />
-              </div>
-
-              {/* Disk Usage */}
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Activity className="h-8 w-8 text-orange-500" />
-                </div>
-                <div className="text-3xl font-bold text-orange-600">
-                  {metrics.find(m => m.name === 'disk_usage')?.value.toFixed(0) || '23'}%
-                </div>
-                <div className="text-sm text-muted-foreground mb-2">Disk Usage</div>
-                <Progress 
-                  value={metrics.find(m => m.name === 'disk_usage')?.value || 23} 
-                  className="h-2"
-                />
-              </div>
-
-              {/* Database Connections */}
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Server className="h-8 w-8 text-green-500" />
-                </div>
-                <div className="text-3xl font-bold text-green-600">
-                  {metrics.find(m => m.name === 'db_connections')?.value.toFixed(0) || '156'}
-                </div>
-                <div className="text-sm text-muted-foreground mb-2">DB Connections</div>
-                <div className="h-2 bg-gray-200 rounded">
-                  <div 
-                    className="h-2 bg-green-500 rounded"
-                    style={{ width: `${Math.min((metrics.find(m => m.name === 'db_connections')?.value || 156) / 200 * 100, 100)}%` }}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {!healthStatus ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No health data available. Please check your connection and try refreshing.
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-6 md:grid-cols-5">
+                {/* CPU Usage */}
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Server className="h-8 w-8 text-blue-500" />
+                  </div>
+                  <div className="text-3xl font-bold text-blue-600">
+                    {metrics.find(m => m.name === 'cpu_usage')?.value.toFixed(0) || '--'}%
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-2">CPU Usage</div>
+                  <Progress 
+                    value={metrics.find(m => m.name === 'cpu_usage')?.value || 0} 
+                    className="h-2"
                   />
                 </div>
-              </div>
 
-              {/* Active Users */}
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-2">
-                  <Activity className="h-8 w-8 text-indigo-500" />
-                </div>
-                <div className="text-3xl font-bold text-indigo-600">
-                  {metrics.find(m => m.name === 'active_users')?.value.toLocaleString() || '1,247'}
-                </div>
-                <div className="text-sm text-muted-foreground mb-2">Active Users</div>
-                <div className="h-2 bg-gray-200 rounded">
-                  <div 
-                    className="h-2 bg-indigo-500 rounded"
-                    style={{ width: `${Math.min((metrics.find(m => m.name === 'active_users')?.value || 1247) / 2000 * 100, 100)}%` }}
+                {/* Memory Usage */}
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <BarChart3 className="h-8 w-8 text-purple-500" />
+                  </div>
+                  <div className="text-3xl font-bold text-purple-600">
+                    {metrics.find(m => m.name === 'memory_usage')?.value.toFixed(0) || '--'}%
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-2">Memory</div>
+                  <Progress 
+                    value={metrics.find(m => m.name === 'memory_usage')?.value || 0} 
+                    className="h-2"
                   />
                 </div>
+
+                {/* Disk Usage */}
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Activity className="h-8 w-8 text-orange-500" />
+                  </div>
+                  <div className="text-3xl font-bold text-orange-600">
+                    {metrics.find(m => m.name === 'disk_usage')?.value.toFixed(0) || '--'}%
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-2">Disk Usage</div>
+                  <Progress 
+                    value={metrics.find(m => m.name === 'disk_usage')?.value || 0} 
+                    className="h-2"
+                  />
+                </div>
+
+                {/* Database Connections */}
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Server className="h-8 w-8 text-green-500" />
+                  </div>
+                  <div className="text-3xl font-bold text-green-600">
+                    {metrics.find(m => m.name === 'db_connections')?.value.toFixed(0) || '--'}
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-2">DB Connections</div>
+                  <div className="h-2 bg-gray-200 rounded">
+                    <div 
+                      className="h-2 bg-green-500 rounded"
+                      style={{ width: `${Math.min((metrics.find(m => m.name === 'db_connections')?.value || 0) / 200 * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Active Users */}
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-2">
+                    <Activity className="h-8 w-8 text-indigo-500" />
+                  </div>
+                  <div className="text-3xl font-bold text-indigo-600">
+                    {metrics.find(m => m.name === 'active_users')?.value.toLocaleString() || '--'}
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-2">Active Users</div>
+                  <div className="h-2 bg-gray-200 rounded">
+                    <div 
+                      className="h-2 bg-indigo-500 rounded"
+                      style={{ width: `${Math.min((metrics.find(m => m.name === 'active_users')?.value || 0) / 2000 * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Additional Health Status Cards */}
-            <div className="grid gap-4 md:grid-cols-4 mt-6">
-              <Card className="border-green-200 bg-green-50">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                    Service Status
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-lg font-semibold text-green-700 capitalize">
-                    {healthStatus.status}
-                  </div>
-                  <p className="text-xs text-green-600">
-                    All services operational
-                  </p>
-                </CardContent>
-              </Card>
+              {/* Additional Health Status Cards */}
+              <div className="grid gap-4 md:grid-cols-4 mt-6">
+                <Card className="border-green-200 bg-green-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center">
+                      <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                      Service Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-lg font-semibold text-green-700 capitalize">
+                      {healthStatus.status}
+                    </div>
+                    <p className="text-xs text-green-600">
+                      All services operational
+                    </p>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Uptime
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-lg font-semibold">
-                    {healthStatus.uptime.toFixed(2)}%
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Last 30 days
-                  </p>
-                </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium flex items-center">
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      Uptime
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-lg font-semibold">
+                      {healthStatus.uptime?.toFixed(2) || '--'}%
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Last 30 days
+                    </p>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Active Jobs
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-lg font-semibold">
-                    {jobs.filter(job => job.status === 'running' || job.status === 'pending').length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {jobs.length} total jobs
-                  </p>
-                </CardContent>
-              </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Active Jobs
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-lg font-semibold">
+                      {jobs.filter(job => job.status === 'running' || job.status === 'pending').length}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {jobs.length} total jobs
+                    </p>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Response Time
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-lg font-semibold">
-                    {metrics.find(m => m.name === 'api_response_time')?.value.toFixed(0) || '145'}ms
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Average API response
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Response Time
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-lg font-semibold">
+                      {metrics.find(m => m.name === 'api_response_time')?.value.toFixed(0) || '--'}ms
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Average API response
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
