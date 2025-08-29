@@ -105,6 +105,7 @@ serve(async (req) => {
             timestamp: new Date().toISOString(),
             source: 'database_initial'
           }), {
+            status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           })
         }
@@ -125,6 +126,7 @@ serve(async (req) => {
           timestamp: new Date().toISOString(),
           source: 'database'
         }), {
+          status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         })
       } catch (error) {
@@ -194,7 +196,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Metrics API error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false 
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

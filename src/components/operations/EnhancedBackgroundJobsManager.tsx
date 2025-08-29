@@ -94,9 +94,18 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
       console.log('🔄 Fetching background ops data...');
       
       const [jobsData, healthData, metricsData] = await Promise.all([
-        getJobs(),
-        getHealthStatus(),
-        getMetrics('system')
+        getJobs().catch(err => {
+          console.error('Jobs API failed:', err);
+          return { jobs: [], total: 0 };
+        }),
+        getHealthStatus().catch(err => {
+          console.error('Health API failed:', err);
+          return null;
+        }),
+        getMetrics('system').catch(err => {
+          console.error('Metrics API failed:', err);
+          return { metrics: [], timestamp: new Date().toISOString() };
+        })
       ]);
       
       console.log('📊 Raw data received:', {
@@ -105,27 +114,12 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
         metrics: metricsData
       });
       
-      // Handle jobs data from enhanced API - it returns { jobs, total }
-      const jobsList = jobsData?.jobs || [];
-      setJobs(jobsList);
+      // Handle jobs data - already normalized in API hook
+      setJobs(jobsData.jobs || []);
       setHealthStatus(healthData);
       
-      // Debug metrics handling
-      console.log('🔍 Processing metrics:', metricsData);
-      
-      let processedMetrics = [];
-      if (metricsData?.metrics) {
-        processedMetrics = metricsData.metrics;
-      } else if (Array.isArray(metricsData)) {
-        processedMetrics = metricsData;
-      } else if (metricsData && typeof metricsData === 'object') {
-        // If it's an object but not array, try to extract metrics
-        processedMetrics = Object.entries(metricsData).map(([key, value]) => ({
-          name: key,
-          value: typeof value === 'number' ? value : 0,
-          unit: '%'
-        }));
-      }
+      // Handle metrics data - already normalized in API hook
+      const processedMetrics = metricsData.metrics || [];
       
       // Deduplicate metrics - keep only the latest value for each metric name
       const uniqueMetrics = new Map();
@@ -137,16 +131,14 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
       });
       
       const deduplicatedMetrics = Array.from(uniqueMetrics.values());
-      console.log('✅ Deduplicated metrics:', deduplicatedMetrics);
+      console.log('✅ Processed metrics:', deduplicatedMetrics);
       setMetrics(deduplicatedMetrics);
       
       // Check alerts only when we have new metrics
       if (processedMetrics && processedMetrics.length > 0) {
-        // Use current alertRules state
-        const currentAlertRules = alertRules;
         const newAlerts: Array<{ id: string; message: string; severity: 'low' | 'medium' | 'high'; timestamp: Date }> = [];
         
-        currentAlertRules.forEach(rule => {
+        alertRules.forEach(rule => {
           if (!rule.enabled) return;
           
           const metric = processedMetrics.find(m => m.name === rule.metric);
@@ -234,12 +226,19 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  // Auto-refresh functionality
+  // Auto-refresh functionality with proper cleanup
   useEffect(() => {
-    if (!autoRefresh) return;
+    let interval: NodeJS.Timeout | null = null;
     
-    const interval = setInterval(fetchData, refreshInterval * 1000);
-    return () => clearInterval(interval);
+    if (autoRefresh) {
+      interval = setInterval(fetchData, refreshInterval * 1000);
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
   }, [autoRefresh, refreshInterval, fetchData]);
 
   const handleBulkCancel = async () => {

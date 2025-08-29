@@ -179,7 +179,10 @@ serve(async (req) => {
           }))
           
           return new Response(
-            JSON.stringify(transformedJobs),
+            JSON.stringify({
+              jobs: transformedJobs,
+              total: transformedJobs.length
+            }),
             { 
               status: 200,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -361,7 +364,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Jobs API error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false 
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

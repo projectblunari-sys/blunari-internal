@@ -94,9 +94,18 @@ export const useEnhancedBackgroundOpsAPI = () => {
     limit?: number
     offset?: number
   }): Promise<{ jobs: BackgroundJob[], total: number }> => {
-    return callAPI('jobs-api', {
+    const result = await callAPI('jobs-api', {
       body: { action: 'list', filters }
     })
+    
+    // Handle different response formats
+    if (Array.isArray(result)) {
+      return { jobs: result, total: result.length }
+    }
+    if (result.jobs && Array.isArray(result.jobs)) {
+      return { jobs: result.jobs, total: result.total || result.jobs.length }
+    }
+    return { jobs: [], total: 0 }
   }, [callAPI])
 
   const getJob = useCallback(async (id: string): Promise<BackgroundJob> => {
@@ -226,16 +235,45 @@ export const useEnhancedBackgroundOpsAPI = () => {
 
   // Enhanced Health & Metrics
   const getHealthStatus = useCallback(async (): Promise<HealthStatus> => {
-    return callAPI('health-check-api')
+    const result = await callAPI('health-check-api')
+    
+    // Normalize response format
+    return {
+      status: result.status || 'unhealthy',
+      services: result.services || {},
+      uptime: result.uptime || 0,
+      version: result.version
+    }
   }, [callAPI])
 
   const getMetrics = useCallback(async (type: 'system' | 'jobs' | 'database' = 'system'): Promise<{
     metrics: SystemMetrics[]
     timestamp: string
   }> => {
-    return callAPI('metrics-api', {
+    const result = await callAPI('metrics-api', {
       body: { type }
     })
+    
+    // Normalize metrics response format
+    let metrics: SystemMetrics[] = []
+    
+    if (result.metrics && Array.isArray(result.metrics)) {
+      metrics = result.metrics
+    } else if (Array.isArray(result)) {
+      metrics = result
+    } else if (result && typeof result === 'object') {
+      // Convert object format to array
+      metrics = Object.entries(result).map(([key, value]) => ({
+        name: key,
+        value: typeof value === 'number' ? value : 0,
+        unit: key.includes('usage') ? '%' : key.includes('time') ? 'ms' : 'count'
+      }))
+    }
+    
+    return {
+      metrics,
+      timestamp: result.timestamp || new Date().toISOString()
+    }
   }, [callAPI])
 
   const getHistoricalMetrics = useCallback(async (

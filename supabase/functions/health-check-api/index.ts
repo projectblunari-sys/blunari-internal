@@ -136,27 +136,31 @@ serve(async (req) => {
     console.error('Health check API error:', error)
     
     // Store failed health check
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    )
+    try {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      )
 
-    await supabaseClient
-      .from('system_health_metrics')
-      .insert({
-        metric_name: 'background_ops_health',
-        metric_value: 0,
-        metric_unit: 'status',
-        service_name: 'background-ops',
-        status_code: 0,
-        metadata: { error: error.message },
-      })
+      await supabaseClient
+        .from('system_health_metrics')
+        .insert({
+          metric_name: 'background_ops_health',
+          metric_value: 0,
+          metric_unit: 'status',
+          service_name: 'background-ops',
+          status_code: 0,
+          metadata: { error: error.message || 'Unknown error' },
+        })
+    } catch (dbError) {
+      console.error('Failed to store error metrics:', dbError)
+    }
 
     return new Response(
       JSON.stringify({ 
         success: false,
         status: 'unhealthy',
-        error: error.message 
+        error: error instanceof Error ? error.message : 'Unknown error'
       }),
       { 
         status: 500, 
