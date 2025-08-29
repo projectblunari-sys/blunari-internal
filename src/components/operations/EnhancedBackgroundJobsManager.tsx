@@ -463,8 +463,13 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
         </CardHeader>
         <CardContent>
           {!healthStatus ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No health data available. Please check your connection and try refreshing.
+            <div className="text-center py-8">
+              <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-muted-foreground mb-2">Health Data Unavailable</h3>
+              <p className="text-sm text-muted-foreground">
+                Health monitoring service is not configured or unavailable. 
+                Please configure BACKGROUND_OPS_URL to enable health monitoring.
+              </p>
             </div>
           ) : (
             <>
@@ -475,7 +480,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                     <Server className="h-8 w-8 text-blue-500" />
                   </div>
                   <div className="text-3xl font-bold text-blue-600">
-                    {metrics.find(m => m.name === 'cpu_usage')?.value.toFixed(0) || '--'}%
+                    {metrics.find(m => m.name === 'cpu_usage')?.value?.toFixed(0) || 'N/A'}
                   </div>
                   <div className="text-sm text-muted-foreground mb-2">CPU Usage</div>
                   <Progress 
@@ -490,7 +495,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                     <BarChart3 className="h-8 w-8 text-purple-500" />
                   </div>
                   <div className="text-3xl font-bold text-purple-600">
-                    {metrics.find(m => m.name === 'memory_usage')?.value.toFixed(0) || '--'}%
+                    {metrics.find(m => m.name === 'memory_usage')?.value?.toFixed(0) || 'N/A'}
                   </div>
                   <div className="text-sm text-muted-foreground mb-2">Memory</div>
                   <Progress 
@@ -505,7 +510,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                     <Activity className="h-8 w-8 text-orange-500" />
                   </div>
                   <div className="text-3xl font-bold text-orange-600">
-                    {metrics.find(m => m.name === 'disk_usage')?.value.toFixed(0) || '--'}%
+                    {metrics.find(m => m.name === 'disk_usage')?.value?.toFixed(0) || 'N/A'}
                   </div>
                   <div className="text-sm text-muted-foreground mb-2">Disk Usage</div>
                   <Progress 
@@ -520,7 +525,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                     <Server className="h-8 w-8 text-green-500" />
                   </div>
                   <div className="text-3xl font-bold text-green-600">
-                    {metrics.find(m => m.name === 'db_connections')?.value.toFixed(0) || '--'}
+                    {metrics.find(m => m.name === 'db_connections')?.value?.toFixed(0) || 'N/A'}
                   </div>
                   <div className="text-sm text-muted-foreground mb-2">DB Connections</div>
                   <div className="h-2 bg-gray-200 rounded">
@@ -537,7 +542,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                     <Activity className="h-8 w-8 text-indigo-500" />
                   </div>
                   <div className="text-3xl font-bold text-indigo-600">
-                    {metrics.find(m => m.name === 'active_users')?.value.toLocaleString() || '--'}
+                    {metrics.find(m => m.name === 'active_users')?.value?.toLocaleString() || 'N/A'}
                   </div>
                   <div className="text-sm text-muted-foreground mb-2">Active Users</div>
                   <div className="h-2 bg-gray-200 rounded">
@@ -609,7 +614,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-lg font-semibold">
-                      {metrics.find(m => m.name === 'api_response_time')?.value.toFixed(0) || '--'}ms
+                      {metrics.find(m => m.name === 'api_response_time')?.value?.toFixed(0) || 'N/A'}ms
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Average API response

@@ -72,38 +72,14 @@ serve(async (req) => {
           })
         }
         
-        // If no metrics exist, create some persistent ones
+        // If no metrics exist, return empty array
         if (!existingMetrics || existingMetrics.length === 0) {
-          console.log('No metrics found, creating stable metrics')
-          
-          const stableMetrics = [
-            { name: 'cpu_usage', value: 34.2, unit: 'percent' },
-            { name: 'memory_usage', value: 67.8, unit: 'percent' },
-            { name: 'disk_usage', value: 45.1, unit: 'percent' },
-            { name: 'response_time', value: 87, unit: 'ms' },
-            { name: 'error_rate', value: 1.2, unit: 'percent' },
-            { name: 'jobs_pending', value: 3, unit: 'count' },
-            { name: 'jobs_running', value: 2, unit: 'count' },
-            { name: 'jobs_completed', value: 142, unit: 'count' },
-            { name: 'jobs_failed', value: 1, unit: 'count' }
-          ]
-          
-          // Insert stable metrics
-          for (const metric of stableMetrics) {
-            await supabaseClient.from('system_health_metrics').insert({
-              metric_name: metric.name,
-              metric_value: metric.value,
-              metric_unit: metric.unit,
-              service_name: 'system',
-              severity: 'info',
-              metadata: { persistent: true, type: metricType }
-            })
-          }
+          console.log('No metrics found in database')
           
           return new Response(JSON.stringify({
-            metrics: stableMetrics,
+            metrics: [],
             timestamp: new Date().toISOString(),
-            source: 'database_initial'
+            source: 'database_empty'
           }), {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }

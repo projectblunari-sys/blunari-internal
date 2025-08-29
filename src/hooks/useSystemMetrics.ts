@@ -39,89 +39,11 @@ export const useSystemMetrics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock data generation
-  const generateMockData = useCallback(() => {
-    const mockSystemMetrics: SystemMetric[] = [
-      {
-        id: '1',
-        metric_name: 'api_response_time',
-        metric_value: 145,
-        metric_unit: 'ms',
-        service_name: 'api-gateway',
-        severity: 'info',
-        recorded_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        metric_name: 'db_query_time',
-        metric_value: 2.3,
-        metric_unit: 'ms',
-        service_name: 'database',
-        severity: 'info',
-        recorded_at: new Date().toISOString()
-      },
-      {
-        id: '3',
-        metric_name: 'active_users',
-        metric_value: 2847,
-        metric_unit: 'count',
-        service_name: 'platform',
-        severity: 'info',
-        recorded_at: new Date().toISOString()
-      },
-      {
-        id: '4',
-        metric_name: 'system_uptime',
-        metric_value: 99.98,
-        metric_unit: '%',
-        service_name: 'infrastructure',
-        severity: 'info',
-        recorded_at: new Date().toISOString()
-      }
-    ];
-
-    const mockDatabaseMetrics: DatabaseMetric[] = [
-      {
-        id: '1',
-        metric_name: 'connection_utilization',
-        metric_value: 67,
-        active_connections: 15,
-        waiting_connections: 2,
-        connection_pool_size: 25,
-        recorded_at: new Date().toISOString()
-      },
-      {
-        id: '2',
-        metric_name: 'query_performance',
-        metric_value: 2.1,
-        active_connections: 12,
-        waiting_connections: 0,
-        connection_pool_size: 25,
-        recorded_at: new Date().toISOString()
-      }
-    ];
-
-    const mockPerformanceTrends: PerformanceTrend[] = Array.from({ length: 24 }, (_, i) => ({
-      id: `trend-${i}`,
-      metric_category: 'application',
-      metric_name: 'response_time',
-      period_start: new Date(Date.now() - (24 - i) * 60 * 60 * 1000).toISOString(),
-      period_end: new Date(Date.now() - (23 - i) * 60 * 60 * 1000).toISOString(),
-      avg_value: 120 + Math.random() * 50,
-      percentile_50: 110 + Math.random() * 40,
-      percentile_95: 180 + Math.random() * 80,
-      percentile_99: 250 + Math.random() * 100
-    }));
-
-    setSystemMetrics(mockSystemMetrics);
-    setDatabaseMetrics(mockDatabaseMetrics);
-    setPerformanceTrends(mockPerformanceTrends);
+  // Remove mock data completely - this hook should not be used anymore
+  useEffect(() => {
+    console.warn('useSystemMetrics hook contains mock data and should not be used for operations page');
     setLoading(false);
   }, []);
-
-  useEffect(() => {
-    generateMockData();
-  }, [generateMockData]);
 
   const calculateHealthScore = useCallback(() => {
     if (systemMetrics.length === 0) return 100;
