@@ -79,7 +79,7 @@ export const BulkActionsDialog = ({
           updates.status = newStatus;
           break;
         case 'change_department':
-          updates.department_id = newDepartment || null;
+          updates.department_id = newDepartment === 'no-department' ? null : newDepartment || null;
           break;
         case 'activate':
           updates.status = 'ACTIVE';
@@ -222,7 +222,7 @@ export const BulkActionsDialog = ({
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Department</SelectItem>
+                  <SelectItem value="no-department">No Department</SelectItem>
                   {departments.map(dept => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}

@@ -152,7 +152,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
   useEffect(() => {
     let filtered = jobs;
     
-    if (jobFilter.status) {
+    if (jobFilter.status && jobFilter.status !== 'all-status') {
       filtered = filtered.filter(job => job.status === jobFilter.status);
     }
     
@@ -160,7 +160,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
       filtered = filtered.filter(job => job.type.includes(jobFilter.type!));
     }
     
-    if (jobFilter.priority) {
+    if (jobFilter.priority && jobFilter.priority !== 'all-priority') {
       filtered = filtered.filter(job => job.priority.toString() === jobFilter.priority);
     }
     
@@ -518,7 +518,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Status</SelectItem>
+                    <SelectItem value="all-status">All Status</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="running">Running</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
@@ -531,7 +531,7 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Priority</SelectItem>
+                    <SelectItem value="all-priority">All Priority</SelectItem>
                     <SelectItem value="1">High (1)</SelectItem>
                     <SelectItem value="2">Medium (2)</SelectItem>
                     <SelectItem value="3">Low (3)</SelectItem>
