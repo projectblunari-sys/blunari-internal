@@ -44,21 +44,21 @@ serve(async (req) => {
     const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://background-ops.fly.dev'
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
-    let endpoint = '/jobs'
+    let endpoint = '/api/v1/jobs'
     let method = 'GET'
     let body = null
 
     switch (action) {
       case 'list':
-        endpoint = '/jobs'
+        endpoint = '/api/v1/jobs'
         method = 'GET'
         break
       case 'get':
-        endpoint = `/jobs/${requestData.id}`
+        endpoint = `/api/v1/jobs/${requestData.id}`
         method = 'GET'
         break
       case 'create':
-        endpoint = '/jobs'
+        endpoint = '/api/v1/jobs'
         method = 'POST'
         body = JSON.stringify({
           type: requestData.type,
@@ -67,11 +67,11 @@ serve(async (req) => {
         })
         break
       case 'cancel':
-        endpoint = `/jobs/${requestData.id}/cancel`
+        endpoint = `/api/v1/jobs/${requestData.id}/cancel`
         method = 'POST'
         break
       case 'retry':
-        endpoint = `/jobs/${requestData.id}/retry`
+        endpoint = `/api/v1/jobs/${requestData.id}/retry`
         method = 'POST'
         break
       default:

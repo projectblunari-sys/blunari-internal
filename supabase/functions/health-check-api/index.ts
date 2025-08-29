@@ -56,7 +56,7 @@ serve(async (req) => {
     console.log(`Background Ops URL: ${backgroundOpsUrl}`)
     console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
 
-    const response = await fetch(`${backgroundOpsUrl}/health`, {
+    const response = await fetch(`${backgroundOpsUrl}/api/v1/health`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -50,7 +50,7 @@ serve(async (req) => {
     console.log(`Metric type: ${metricType}`)
 
     // Fetch metrics from background operations service
-    const response = await fetch(`${backgroundOpsUrl}/metrics?type=${metricType}`, {
+    const response = await fetch(`${backgroundOpsUrl}/api/v1/metrics?type=${metricType}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
