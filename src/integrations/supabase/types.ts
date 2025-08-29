@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_feed: {
+        Row: {
+          activity_type: string
+          created_at: string
+          details: Json | null
+          id: string
+          message: string
+          service_name: string
+          status: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          message: string
+          service_name: string
+          status: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          message?: string
+          service_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action: string
@@ -57,6 +87,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      admin_users: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          role: Database["public"]["Enums"]["admin_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          role?: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       alert_instances: {
         Row: {
@@ -392,6 +452,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      background_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          job_name: string
+          job_type: string
+          max_retries: number | null
+          payload: Json | null
+          priority: number | null
+          result: Json | null
+          retry_count: number | null
+          scheduled_at: string | null
+          scheduled_for: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_name: string
+          job_type: string
+          max_retries?: number | null
+          payload?: Json | null
+          priority?: number | null
+          result?: Json | null
+          retry_count?: number | null
+          scheduled_at?: string | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_name?: string
+          job_type?: string
+          max_retries?: number | null
+          payload?: Json | null
+          priority?: number | null
+          result?: Json | null
+          retry_count?: number | null
+          scheduled_at?: string | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       booking_availability_cache: {
         Row: {
@@ -2450,6 +2567,80 @@ export type Database = {
         }
         Relationships: []
       }
+      service_health: {
+        Row: {
+          created_at: string
+          id: string
+          last_check: string | null
+          metadata: Json | null
+          requests_per_minute: number | null
+          response_time_ms: number | null
+          service_name: string
+          status: string
+          updated_at: string
+          uptime_percentage: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_check?: string | null
+          metadata?: Json | null
+          requests_per_minute?: number | null
+          response_time_ms?: number | null
+          service_name: string
+          status: string
+          updated_at?: string
+          uptime_percentage?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_check?: string | null
+          metadata?: Json | null
+          requests_per_minute?: number | null
+          response_time_ms?: number | null
+          service_name?: string
+          status?: string
+          updated_at?: string
+          uptime_percentage?: number | null
+        }
+        Relationships: []
+      }
+      service_health_checks: {
+        Row: {
+          checked_at: string | null
+          details: Json | null
+          id: number
+          response_time: number
+          service_id: string | null
+          status: string
+        }
+        Insert: {
+          checked_at?: string | null
+          details?: Json | null
+          id?: number
+          response_time: number
+          service_id?: string | null
+          status: string
+        }
+        Update: {
+          checked_at?: string | null
+          details?: Json | null
+          id?: number
+          response_time?: number
+          service_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_health_checks_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_health_status: {
         Row: {
           checked_at: string
@@ -2971,6 +3162,7 @@ export type Database = {
           metric_name: string
           metric_unit: string
           metric_value: number
+          name: string | null
           recorded_at: string
           service_name: string
           severity: string
@@ -2984,6 +3176,7 @@ export type Database = {
           metric_name: string
           metric_unit: string
           metric_value: number
+          name?: string | null
           recorded_at?: string
           service_name: string
           severity?: string
@@ -2997,6 +3190,7 @@ export type Database = {
           metric_name?: string
           metric_unit?: string
           metric_value?: number
+          name?: string | null
           recorded_at?: string
           service_name?: string
           severity?: string
@@ -3346,6 +3540,69 @@ export type Database = {
           },
         ]
       }
+      webhook_logs: {
+        Row: {
+          data: Json
+          event_type: string
+          id: number
+          signature: string | null
+          source: string
+          timestamp: string | null
+        }
+        Insert: {
+          data: Json
+          event_type: string
+          id?: number
+          signature?: string | null
+          source: string
+          timestamp?: string | null
+        }
+        Update: {
+          data?: Json
+          event_type?: string
+          id?: number
+          signature?: string | null
+          source?: string
+          timestamp?: string | null
+        }
+        Relationships: []
+      }
+      websocket_connections: {
+        Row: {
+          connected_at: string | null
+          connection_id: string
+          created_at: string
+          disconnected_at: string | null
+          id: string
+          last_activity: string | null
+          metadata: Json | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          connected_at?: string | null
+          connection_id: string
+          created_at?: string
+          disconnected_at?: string | null
+          id?: string
+          last_activity?: string | null
+          metadata?: Json | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          connected_at?: string | null
+          connection_id?: string
+          created_at?: string
+          disconnected_at?: string | null
+          id?: string
+          last_activity?: string | null
+          metadata?: Json | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       widget_configs: {
         Row: {
           configuration: Json
@@ -3483,6 +3740,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_user_admin_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["admin_role"]
+      }
       get_user_tenant: {
         Args: { p_user_id: string }
         Returns: {
@@ -3492,6 +3753,10 @@ export type Database = {
           tenant_slug: string
           tenant_status: string
         }[]
+      }
+      has_admin_access: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       has_employee_role: {
         Args: { required_role: Database["public"]["Enums"]["employee_role"] }
@@ -3532,15 +3797,24 @@ export type Database = {
         Returns: undefined
       }
       log_security_event: {
-        Args: {
-          p_employee_id?: string
-          p_event_data?: Json
-          p_event_type: string
-          p_ip_address?: unknown
-          p_severity?: string
-          p_user_agent?: string
-          p_user_id?: string
-        }
+        Args:
+          | {
+              event_data?: Json
+              event_type: string
+              ip_address?: unknown
+              severity?: string
+              user_agent?: string
+              user_id?: string
+            }
+          | {
+              p_employee_id?: string
+              p_event_data?: Json
+              p_event_type: string
+              p_ip_address?: unknown
+              p_severity?: string
+              p_user_agent?: string
+              p_user_id?: string
+            }
         Returns: string
       }
       process_pos_event: {
@@ -3643,6 +3917,7 @@ export type Database = {
       }
     }
     Enums: {
+      admin_role: "super_admin" | "admin" | "operator" | "viewer"
       domain_status: "pending" | "active" | "error" | "expired" | "suspended"
       domain_type: "custom" | "subdomain" | "wildcard"
       employee_role: "SUPER_ADMIN" | "ADMIN" | "SUPPORT" | "OPS" | "VIEWER"
@@ -3776,6 +4051,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_role: ["super_admin", "admin", "operator", "viewer"],
       domain_status: ["pending", "active", "error", "expired", "suspended"],
       domain_type: ["custom", "subdomain", "wildcard"],
       employee_role: ["SUPER_ADMIN", "ADMIN", "SUPPORT", "OPS", "VIEWER"],
