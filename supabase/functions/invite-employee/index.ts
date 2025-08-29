@@ -139,6 +139,33 @@ const handler = async (req: Request): Promise<Response> => {
       throw employeeCreateError;
     }
 
+    // Send invitation email
+    try {
+      // Get inviter's profile info
+      const { data: inviterProfile } = await supabase.auth.admin.getUserById(user.id)
+      const inviterName = inviterProfile.user?.user_metadata?.full_name || 
+                         `${inviterProfile.user?.user_metadata?.first_name || 'Team'} ${inviterProfile.user?.user_metadata?.last_name || 'Member'}`
+
+      const emailResult = await supabase.functions.invoke('send-invitation-email', {
+        body: {
+          email: email,
+          inviterName: inviterName,
+          role: role,
+          invitationToken: invitationToken,
+          companyName: 'Blunari Admin',
+          acceptUrl: `${req.headers.get('origin') || 'http://localhost:5173'}/auth?invitation=${invitationToken}`
+        }
+      })
+
+      if (emailResult.error) {
+        console.warn('Failed to send invitation email:', emailResult.error)
+      } else {
+        console.log('✅ Invitation email sent successfully')
+      }
+    } catch (emailError) {
+      console.warn('Invitation email error (non-blocking):', emailError)
+    }
+
     // Send password reset email (this will allow them to set their password)
     const { error: resetError } = await supabase.auth.admin.generateLink({
       type: 'recovery',
@@ -171,8 +198,9 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Employee invitation sent successfully',
-        employee_id: employeeId
+        message: `Employee invitation sent successfully to ${email}`,
+        employee_id: employeeId,
+        email: email
       }),
       {
         status: 200,

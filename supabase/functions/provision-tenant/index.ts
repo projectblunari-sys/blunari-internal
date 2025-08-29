@@ -216,11 +216,32 @@ serve(async (req) => {
 
     logStep("Provisioning completed successfully", { tenantId })
 
+    // Send welcome email to the owner
+    try {
+      logStep('Sending welcome email to owner')
+      const emailResult = await supabaseAdmin.functions.invoke('send-welcome-email', {
+        body: {
+          ownerName: `${requestData.ownerFirstName} ${requestData.ownerLastName}`,
+          ownerEmail: requestData.ownerEmail,
+          restaurantName: requestData.restaurantName,
+          loginUrl: `${Deno.env.get('SUPABASE_URL')?.replace('/supabase.co', '.lovable.app')}/auth`
+        }
+      })
+
+      if (emailResult.error) {
+        console.warn('Failed to send welcome email:', emailResult.error)
+      } else {
+        logStep('Welcome email sent successfully')
+      }
+    } catch (emailError) {
+      console.warn('Welcome email error (non-blocking):', emailError)
+    }
+
     return new Response(JSON.stringify({ 
       success: true, 
       tenantId,
       ownerId: userData.user.id,
-      message: `${requestData.restaurantName} has been successfully provisioned!`
+      message: `${requestData.restaurantName} has been successfully provisioned! Welcome email sent to ${requestData.ownerEmail}.`
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
