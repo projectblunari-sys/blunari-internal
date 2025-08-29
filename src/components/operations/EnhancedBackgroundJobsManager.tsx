@@ -14,7 +14,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { useBackgroundOpsAPI, BackgroundJob, SystemMetrics, HealthStatus } from '@/hooks/useBackgroundOpsAPI';
+import { useEnhancedBackgroundOpsAPI } from '@/hooks/useEnhancedBackgroundOpsAPI';
+import { BackgroundJob, SystemMetrics, HealthStatus } from '@/hooks/useEnhancedBackgroundOpsAPI';
 import { JobsDebugger } from './JobsDebugger';
 import { 
   Clock, 
@@ -79,8 +80,11 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
     cancelJob, 
     retryJob, 
     getHealthStatus, 
-    getMetrics 
-  } = useBackgroundOpsAPI();
+    getMetrics,
+    createJob,
+    bulkCancelJobs,
+    bulkRetryJobs
+  } = useEnhancedBackgroundOpsAPI();
   const { toast } = useToast();
 
   // Removed duplicate checkAlertConditions function since it's now inline in fetchData
@@ -93,8 +97,8 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
         getMetrics('system')
       ]);
       
-      // Handle jobs data - it might be an array or an object with jobs property
-      const jobsList = Array.isArray(jobsData) ? jobsData : (jobsData as any)?.jobs || [];
+      // Handle jobs data from enhanced API - it returns { jobs, total }
+      const jobsList = jobsData?.jobs || [];
       setJobs(jobsList);
       setHealthStatus(healthData);
       setMetrics(metricsData?.metrics || []);
@@ -195,23 +199,12 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
     if (selectedJobs.length === 0) return;
     
     try {
-      let successCount = 0;
-      let errorCount = 0;
-      
-      for (const jobId of selectedJobs) {
-        try {
-          await cancelJob(jobId);
-          successCount++;
-        } catch (error) {
-          errorCount++;
-          console.error(`Failed to cancel job ${jobId}:`, error);
-        }
-      }
+      const result = await bulkCancelJobs(selectedJobs);
       
       toast({
         title: "Bulk Cancel Completed",
-        description: `${successCount} jobs cancelled successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}.`,
-        variant: errorCount > 0 ? "destructive" : "default",
+        description: `${result.successful.length} jobs cancelled successfully${result.failed.length > 0 ? `, ${result.failed.length} failed` : ''}.`,
+        variant: result.failed.length > 0 ? "destructive" : "default",
       });
       setSelectedJobs([]);
       fetchData();
@@ -228,23 +221,12 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
     if (selectedJobs.length === 0) return;
     
     try {
-      let successCount = 0;
-      let errorCount = 0;
-      
-      for (const jobId of selectedJobs) {
-        try {
-          await retryJob(jobId);
-          successCount++;
-        } catch (error) {
-          errorCount++;
-          console.error(`Failed to retry job ${jobId}:`, error);
-        }
-      }
+      const result = await bulkRetryJobs(selectedJobs);
       
       toast({
         title: "Bulk Retry Completed",
-        description: `${successCount} jobs queued for retry${errorCount > 0 ? `, ${errorCount} failed` : ''}.`,
-        variant: errorCount > 0 ? "destructive" : "default",
+        description: `${result.successful.length} jobs queued for retry${result.failed.length > 0 ? `, ${result.failed.length} failed` : ''}.`,
+        variant: result.failed.length > 0 ? "destructive" : "default",
       });
       setSelectedJobs([]);
       fetchData();
@@ -544,12 +526,30 @@ export const EnhancedBackgroundJobsManager: React.FC = () => {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button onClick={() => {
-                          // Create test job logic here
-                          toast({
-                            title: "Test job created",
-                            description: "A test background job has been queued",
-                          });
+                        <Button onClick={async () => {
+                          try {
+                            const testJob = await createJob({
+                              type: 'test-job',
+                              payload: { 
+                                message: 'Test background job',
+                                timestamp: new Date().toISOString()
+                              },
+                              priority: 1
+                            });
+                            
+                            toast({
+                              title: "Test job created",
+                              description: `Job ${testJob.id} has been queued successfully`,
+                            });
+                            
+                            fetchData(); // Refresh the jobs list
+                          } catch (error) {
+                            toast({
+                              title: "Error creating job",
+                              description: "Failed to create test job",
+                              variant: "destructive",
+                            });
+                          }
                         }}>
                           Create Job
                         </Button>
