@@ -31,16 +31,30 @@ serve(async (req) => {
     )
 
     if (authError || !user) {
+      console.error('Health check auth error:', authError)
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    // Parse request body (if any) - health check doesn't require body parameters
+    let requestData = {}
+    try {
+      if (req.body) {
+        requestData = await req.json()
+      }
+    } catch (e) {
+      // No body or invalid JSON, use empty object
+      console.log('Health check called without body (this is normal)')
+    }
+
     const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://services.blunari.ai'
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
     console.log('Health check request to background-ops')
+    console.log(`Background Ops URL: ${backgroundOpsUrl}`)
+    console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
 
     const response = await fetch(`${backgroundOpsUrl}/api/health`, {
       method: 'GET',
@@ -50,7 +64,16 @@ serve(async (req) => {
       },
     })
 
+    console.log(`Health check response status: ${response.status}`)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Background service health error: ${response.status} - ${errorText}`)
+      throw new Error(`Health check failed: ${response.status} - ${errorText}`)
+    }
+
     const data = await response.json()
+    console.log(`Health check data: ${JSON.stringify(data)}`)
 
     // Store health check result in database
     await supabaseClient

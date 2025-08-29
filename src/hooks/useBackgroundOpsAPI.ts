@@ -59,6 +59,7 @@ export const useBackgroundOpsAPI = () => {
 
   // Job Management
   const getJobs = async (): Promise<BackgroundJob[]> => {
+    console.log('Calling jobs-api with action: list')
     return callAPI('jobs-api', {
       body: { action: 'list' }
     })
@@ -102,6 +103,7 @@ export const useBackgroundOpsAPI = () => {
     metrics: SystemMetrics[]
     timestamp: string
   }> => {
+    console.log('Calling metrics-api with type:', type)
     return callAPI('metrics-api', {
       body: { type }
     })
