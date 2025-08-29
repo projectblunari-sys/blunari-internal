@@ -1,0 +1,846 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { useBackgroundOpsAPI, BackgroundJob, SystemMetrics, HealthStatus } from '@/hooks/useBackgroundOpsAPI';
+import { JobsDebugger } from './JobsDebugger';
+import { 
+  Clock, 
+  Play, 
+  Pause, 
+  RotateCcw, 
+  Trash2, 
+  Activity,
+  Server,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Search,
+  Filter,
+  Download,
+  Upload,
+  Settings,
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  Calendar
+} from 'lucide-react';
+import { formatDistanceToNow, format } from 'date-fns';
+
+interface AlertRule {
+  id: string;
+  metric: string;
+  threshold: number;
+  operator: 'gt' | 'lt' | 'eq';
+  enabled: boolean;
+}
+
+interface JobFilter {
+  status?: string;
+  type?: string;
+  priority?: string;
+  search?: string;
+}
+
+export const EnhancedBackgroundJobsManager: React.FC = () => {
+  const [jobs, setJobs] = useState<BackgroundJob[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<BackgroundJob[]>([]);
+  const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null);
+  const [metrics, setMetrics] = useState<SystemMetrics[]>([]);
+  const [selectedJobs, setSelectedJobs] = useState<string[]>([]);
+  const [jobFilter, setJobFilter] = useState<JobFilter>({});
+  const [activeTab, setActiveTab] = useState('jobs');
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30);
+  const [alertRules, setAlertRules] = useState<AlertRule[]>([
+    { id: '1', metric: 'cpu_usage', threshold: 90, operator: 'gt', enabled: true },
+    { id: '2', metric: 'memory_usage', threshold: 85, operator: 'gt', enabled: true },
+    { id: '3', metric: 'error_rate', threshold: 5, operator: 'gt', enabled: true },
+    { id: '4', metric: 'response_time', threshold: 500, operator: 'gt', enabled: true },
+  ]);
+  const [alerts, setAlerts] = useState<Array<{ id: string; message: string; severity: 'low' | 'medium' | 'high'; timestamp: Date }>>([]);
+  
+  const { 
+    loading, 
+    getJobs, 
+    cancelJob, 
+    retryJob, 
+    getHealthStatus, 
+    getMetrics 
+  } = useBackgroundOpsAPI();
+  const { toast } = useToast();
+
+  const fetchData = useCallback(async () => {
+    try {
+      const [jobsData, healthData, metricsData] = await Promise.all([
+        getJobs(),
+        getHealthStatus(),
+        getMetrics('system')
+      ]);
+      
+      setJobs(jobsData);
+      setHealthStatus(healthData);
+      setMetrics(metricsData.metrics);
+      
+      // Check alerts
+      checkAlertConditions(metricsData.metrics);
+    } catch (error) {
+      console.error('Failed to fetch background ops data:', error);
+    }
+  }, [getJobs, getHealthStatus, getMetrics]);
+
+  const checkAlertConditions = (currentMetrics: SystemMetrics[]) => {
+    const newAlerts: Array<{ id: string; message: string; severity: 'low' | 'medium' | 'high'; timestamp: Date }> = [];
+    
+    alertRules.forEach(rule => {
+      if (!rule.enabled) return;
+      
+      const metric = currentMetrics.find(m => m.name === rule.metric);
+      if (!metric) return;
+      
+      let triggered = false;
+      switch (rule.operator) {
+        case 'gt':
+          triggered = metric.value > rule.threshold;
+          break;
+        case 'lt':
+          triggered = metric.value < rule.threshold;
+          break;
+        case 'eq':
+          triggered = metric.value === rule.threshold;
+          break;
+      }
+      
+      if (triggered) {
+        const severity = rule.threshold > 80 ? 'high' : rule.threshold > 50 ? 'medium' : 'low';
+        newAlerts.push({
+          id: `${rule.id}-${Date.now()}`,
+          message: `${rule.metric} is ${metric.value}${metric.unit} (threshold: ${rule.threshold}${metric.unit})`,
+          severity,
+          timestamp: new Date()
+        });
+      }
+    });
+    
+    if (newAlerts.length > 0) {
+      setAlerts(prev => [...newAlerts, ...prev].slice(0, 50)); // Keep last 50 alerts
+      
+      newAlerts.forEach(alert => {
+        toast({
+          title: `Alert: ${alert.severity.toUpperCase()}`,
+          description: alert.message,
+          variant: alert.severity === 'high' ? 'destructive' : 'default',
+        });
+      });
+    }
+  };
+
+  // Filter jobs based on criteria
+  useEffect(() => {
+    let filtered = jobs;
+    
+    if (jobFilter.status) {
+      filtered = filtered.filter(job => job.status === jobFilter.status);
+    }
+    
+    if (jobFilter.type) {
+      filtered = filtered.filter(job => job.type.includes(jobFilter.type!));
+    }
+    
+    if (jobFilter.priority) {
+      filtered = filtered.filter(job => job.priority.toString() === jobFilter.priority);
+    }
+    
+    if (jobFilter.search) {
+      filtered = filtered.filter(job => 
+        job.type.toLowerCase().includes(jobFilter.search!.toLowerCase()) ||
+        job.id.toLowerCase().includes(jobFilter.search!.toLowerCase())
+      );
+    }
+    
+    setFilteredJobs(filtered);
+  }, [jobs, jobFilter]);
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (!autoRefresh) return;
+    
+    fetchData();
+    const interval = setInterval(fetchData, refreshInterval * 1000);
+    return () => clearInterval(interval);
+  }, [autoRefresh, refreshInterval, fetchData]);
+
+  const handleBulkCancel = async () => {
+    try {
+      await Promise.all(selectedJobs.map(jobId => cancelJob(jobId)));
+      toast({
+        title: "Bulk Operation Completed",
+        description: `${selectedJobs.length} jobs cancelled successfully.`,
+      });
+      setSelectedJobs([]);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to cancel some jobs.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkRetry = async () => {
+    try {
+      await Promise.all(selectedJobs.map(jobId => retryJob(jobId)));
+      toast({
+        title: "Bulk Operation Completed",
+        description: `${selectedJobs.length} jobs queued for retry.`,
+      });
+      setSelectedJobs([]);
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to retry some jobs.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const exportJobs = () => {
+    const csvContent = [
+      ['ID', 'Type', 'Status', 'Priority', 'Progress', 'Created', 'Started', 'Completed'].join(','),
+      ...filteredJobs.map(job => [
+        job.id,
+        job.type,
+        job.status,
+        job.priority,
+        job.progress,
+        job.created_at,
+        job.started_at || '',
+        job.completed_at || ''
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `background-jobs-${format(new Date(), 'yyyy-MM-dd-HH-mm')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportMetrics = () => {
+    const csvContent = [
+      ['Metric', 'Value', 'Unit', 'Timestamp'].join(','),
+      ...metrics.map(metric => [
+        metric.name,
+        metric.value,
+        metric.unit,
+        new Date().toISOString()
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `system-metrics-${format(new Date(), 'yyyy-MM-dd-HH-mm')}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'failed':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'running':
+        return <Activity className="h-4 w-4 text-blue-500" />;
+      case 'pending':
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'default';
+      case 'failed':
+        return 'destructive';
+      case 'running':
+        return 'secondary';
+      case 'pending':
+        return 'outline';
+      default:
+        return 'outline';
+    }
+  };
+
+  const getMetricTrend = (metric: SystemMetrics) => {
+    // Simple trend simulation based on current value
+    const isHigh = metric.value > 70;
+    const isMedium = metric.value > 40;
+    
+    if (isHigh) {
+      return <TrendingUp className="h-4 w-4 text-red-500" />;
+    } else if (isMedium) {
+      return <TrendingUp className="h-4 w-4 text-yellow-500" />;
+    } else {
+      return <TrendingDown className="h-4 w-4 text-green-500" />;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Alert Banner */}
+      {alerts.length > 0 && (
+        <Card className="border-red-200 bg-red-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center text-red-700">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Active Alerts ({alerts.filter(a => Date.now() - a.timestamp.getTime() < 300000).length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {alerts.slice(0, 3).map(alert => (
+                <div key={alert.id} className="flex items-center justify-between text-sm">
+                  <span className="text-red-700">{alert.message}</span>
+                  <Badge variant={alert.severity === 'high' ? 'destructive' : 'secondary'}>
+                    {alert.severity}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Auto-refresh Controls */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Background Operations</CardTitle>
+              <CardDescription>Monitor and manage system operations with real-time alerts</CardDescription>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={autoRefresh}
+                  onCheckedChange={setAutoRefresh}
+                />
+                <Label>Auto-refresh</Label>
+              </div>
+              <Select value={refreshInterval.toString()} onValueChange={(v) => setRefreshInterval(Number(v))}>
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10s</SelectItem>
+                  <SelectItem value="30">30s</SelectItem>
+                  <SelectItem value="60">1m</SelectItem>
+                  <SelectItem value="300">5m</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={fetchData} disabled={loading} size="sm">
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Health Status Overview */}
+      {healthStatus && (
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Server className="h-4 w-4 mr-2" />
+                Service Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                {healthStatus.status === 'healthy' ? (
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                )}
+                <span className="text-lg font-semibold capitalize">
+                  {healthStatus.status}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Activity className="h-4 w-4 mr-2" />
+                Uptime
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {Math.round(healthStatus.uptime)}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {healthStatus.version && `Version ${healthStatus.version}`}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Active Jobs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {jobs.filter(job => job.status === 'running' || job.status === 'pending').length}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {jobs.length} total jobs
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                System Load
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {metrics.find(m => m.name === 'cpu_usage')?.value.toFixed(1) || '0'}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                CPU Usage
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="jobs">Background Jobs</TabsTrigger>
+          <TabsTrigger value="metrics">System Metrics</TabsTrigger>
+          <TabsTrigger value="alerts">Alert Rules</TabsTrigger>
+          <TabsTrigger value="debug">Debug</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="jobs" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Background Jobs</CardTitle>
+                  <CardDescription>
+                    Monitor and manage background processing jobs
+                  </CardDescription>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button onClick={exportJobs} size="sm" variant="outline">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                  {selectedJobs.length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <Pause className="h-4 w-4 mr-2" />
+                            Cancel Selected ({selectedJobs.length})
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Cancel Jobs</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to cancel {selectedJobs.length} selected jobs? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleBulkCancel}>
+                              Confirm Cancel
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      
+                      <Button onClick={handleBulkRetry} size="sm" variant="outline">
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Retry Selected
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Filters */}
+              <div className="flex items-center space-x-4 pt-4">
+                <div className="flex items-center space-x-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search jobs..."
+                    value={jobFilter.search || ''}
+                    onChange={(e) => setJobFilter(prev => ({ ...prev, search: e.target.value }))}
+                    className="w-64"
+                  />
+                </div>
+                
+                <Select value={jobFilter.status || ''} onValueChange={(v) => setJobFilter(prev => ({ ...prev, status: v || undefined }))}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="running">Running</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={jobFilter.priority || ''} onValueChange={(v) => setJobFilter(prev => ({ ...prev, priority: v || undefined }))}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Priority</SelectItem>
+                    <SelectItem value="1">High (1)</SelectItem>
+                    <SelectItem value="2">Medium (2)</SelectItem>
+                    <SelectItem value="3">Low (3)</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setJobFilter({})}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {filteredJobs.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No background jobs found
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedJobs.length === filteredJobs.length}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedJobs(filteredJobs.map(job => job.id));
+                            } else {
+                              setSelectedJobs([]);
+                            }
+                          }}
+                        />
+                      </TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredJobs.map((job) => (
+                      <TableRow key={job.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedJobs.includes(job.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedJobs(prev => [...prev, job.id]);
+                              } else {
+                                setSelectedJobs(prev => prev.filter(id => id !== job.id));
+                              }
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            {getStatusIcon(job.status)}
+                            <Badge variant={getStatusVariant(job.status)}>
+                              {job.status}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{job.type}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{job.priority}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="w-24">
+                            <Progress value={job.progress} className="h-2" />
+                            <span className="text-xs text-muted-foreground">
+                              {job.progress}%
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {job.started_at && job.completed_at ? (
+                              `${Math.round((new Date(job.completed_at).getTime() - new Date(job.started_at).getTime()) / 1000)}s`
+                            ) : job.started_at ? (
+                              `${Math.round((Date.now() - new Date(job.started_at).getTime()) / 1000)}s`
+                            ) : (
+                              '-'
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            {job.status === 'failed' && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="outline">
+                                    <RotateCcw className="h-3 w-3" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Retry Job</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to retry this job? It will be queued for execution.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => retryJob(job.id)}>
+                                      Retry Job
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                            {(job.status === 'pending' || job.status === 'running') && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="outline">
+                                    <Pause className="h-3 w-3" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Cancel Job</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to cancel this job? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => cancelJob(job.id)}>
+                                      Cancel Job
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="metrics" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>System Metrics</CardTitle>
+                  <CardDescription>
+                    Real-time performance metrics with trend analysis
+                  </CardDescription>
+                </div>
+                <Button onClick={exportMetrics} size="sm" variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Metrics
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {metrics.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No metrics data available
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {metrics.map((metric, index) => (
+                    <Card key={index} className={`${
+                      metric.value > 80 ? 'border-red-200 bg-red-50' : 
+                      metric.value > 60 ? 'border-yellow-200 bg-yellow-50' : 
+                      'border-green-200 bg-green-50'
+                    }`}>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center justify-between">
+                          <span>{metric.name.replace('_', ' ').toUpperCase()}</span>
+                          {getMetricTrend(metric)}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {metric.value.toFixed(2)} {metric.unit}
+                        </div>
+                        <Progress 
+                          value={Math.min(metric.value, 100)} 
+                          className={`h-2 mt-2 ${
+                            metric.value > 80 ? '[&>div]:bg-red-500' : 
+                            metric.value > 60 ? '[&>div]:bg-yellow-500' : 
+                            '[&>div]:bg-green-500'
+                          }`}
+                        />
+                        {metric.metadata && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Last updated: {format(new Date(), 'HH:mm:ss')}
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="alerts" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Alert Rules Configuration</CardTitle>
+              <CardDescription>
+                Configure automated alerts for system metrics and thresholds
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {alertRules.map((rule) => (
+                  <div key={rule.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <Switch
+                        checked={rule.enabled}
+                        onCheckedChange={(enabled) => {
+                          setAlertRules(prev => prev.map(r => 
+                            r.id === rule.id ? { ...r, enabled } : r
+                          ));
+                        }}
+                      />
+                      <div>
+                        <div className="font-medium">{rule.metric.replace('_', ' ').toUpperCase()}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Alert when {rule.operator === 'gt' ? 'greater than' : rule.operator === 'lt' ? 'less than' : 'equal to'} {rule.threshold}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        type="number"
+                        value={rule.threshold}
+                        onChange={(e) => {
+                          setAlertRules(prev => prev.map(r => 
+                            r.id === rule.id ? { ...r, threshold: Number(e.target.value) } : r
+                          ));
+                        }}
+                        className="w-20"
+                      />
+                      <Select
+                        value={rule.operator}
+                        onValueChange={(operator: 'gt' | 'lt' | 'eq') => {
+                          setAlertRules(prev => prev.map(r => 
+                            r.id === rule.id ? { ...r, operator } : r
+                          ));
+                        }}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="gt">Greater than</SelectItem>
+                          <SelectItem value="lt">Less than</SelectItem>
+                          <SelectItem value="eq">Equal to</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <Separator className="my-6" />
+              
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Recent Alerts</h3>
+                {alerts.length === 0 ? (
+                  <p className="text-muted-foreground">No recent alerts</p>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {alerts.map(alert => (
+                      <div key={alert.id} className="flex items-center justify-between p-3 border rounded">
+                        <div>
+                          <div className="font-medium">{alert.message}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {formatDistanceToNow(alert.timestamp, { addSuffix: true })}
+                          </div>
+                        </div>
+                        <Badge variant={alert.severity === 'high' ? 'destructive' : alert.severity === 'medium' ? 'secondary' : 'default'}>
+                          {alert.severity}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="debug" className="space-y-4">
+          <JobsDebugger />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};

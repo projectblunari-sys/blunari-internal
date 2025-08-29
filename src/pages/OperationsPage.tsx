@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { DeploymentManager } from '@/components/operations/DeploymentManager';
 import { LoggingManager } from '@/components/operations/LoggingManager';
 import { BackupManager } from '@/components/operations/BackupManager';
-import { BackgroundJobsManager } from '@/components/operations/BackgroundJobsManager';
+import { EnhancedBackgroundJobsManager } from '@/components/operations/EnhancedBackgroundJobsManager';
 import { SystemHealthCard } from '@/components/settings/SystemHealthCard';
 import { Activity, Server, Database, Shield, Rocket, FileText, Settings, Cpu } from 'lucide-react';
 
@@ -175,7 +175,7 @@ const OperationsPage: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="jobs">
-            <BackgroundJobsManager />
+            <EnhancedBackgroundJobsManager />
           </TabsContent>
 
           <TabsContent value="deployments">
