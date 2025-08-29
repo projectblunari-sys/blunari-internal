@@ -21,8 +21,11 @@ export type Database = {
           details: Json | null
           id: string
           message: string
+          service: string | null
           service_name: string
           status: string
+          timestamp: string | null
+          type: string | null
         }
         Insert: {
           activity_type: string
@@ -30,8 +33,11 @@ export type Database = {
           details?: Json | null
           id?: string
           message: string
+          service?: string | null
           service_name: string
           status: string
+          timestamp?: string | null
+          type?: string | null
         }
         Update: {
           activity_type?: string
@@ -39,8 +45,11 @@ export type Database = {
           details?: Json | null
           id?: string
           message?: string
+          service?: string | null
           service_name?: string
           status?: string
+          timestamp?: string | null
+          type?: string | null
         }
         Relationships: []
       }
