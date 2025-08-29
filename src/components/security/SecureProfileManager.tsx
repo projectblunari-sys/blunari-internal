@@ -33,13 +33,20 @@ export function SecureProfileManager({ profile, onUpdate }: SecureProfileManager
         return;
       }
 
-      // Only allow safe profile updates
+      // Only allow safe profile updates - explicitly prevent role changes
       const allowedUpdates = {
         first_name: editedProfile.first_name,
         last_name: editedProfile.last_name,
         avatar_url: editedProfile.avatar_url,
-        // Never allow role updates through this interface
+        // SECURITY: Never allow role, email, or ID updates through this interface
       };
+
+      // Validate no restricted fields have changed
+      if (editedProfile.role !== profile.role) {
+        setShowRoleWarning(true);
+        setIsSaving(false);
+        return;
+      }
 
       const { error } = await supabase
         .from('profiles')
