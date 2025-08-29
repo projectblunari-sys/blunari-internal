@@ -41,7 +41,7 @@ serve(async (req) => {
     const requestData = await req.json()
     const metricType = requestData.type || 'system'
     
-    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://services.blunari.ai'
+    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://background-ops.fly.dev'
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
     console.log('Metrics API: Fetching system metrics')
@@ -50,11 +50,11 @@ serve(async (req) => {
     console.log(`Metric type: ${metricType}`)
 
     // Fetch metrics from background operations service
-    const response = await fetch(`${backgroundOpsUrl}/api/metrics?type=${metricType}`, {
+    const response = await fetch(`${backgroundOpsUrl}/metrics?type=${metricType}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': backgroundOpsApiKey,
+        'x-api-key': backgroundOpsApiKey,
       },
     })
 

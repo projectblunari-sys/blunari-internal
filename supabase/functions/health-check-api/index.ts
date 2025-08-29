@@ -49,18 +49,18 @@ serve(async (req) => {
       console.log('Health check called without body (this is normal)')
     }
 
-    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://services.blunari.ai'
+    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://background-ops.fly.dev'
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
     console.log('Health check request to background-ops')
     console.log(`Background Ops URL: ${backgroundOpsUrl}`)
     console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
 
-    const response = await fetch(`${backgroundOpsUrl}/api/health`, {
+    const response = await fetch(`${backgroundOpsUrl}/health`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': backgroundOpsApiKey,
+        'x-api-key': backgroundOpsApiKey,
       },
     })
 

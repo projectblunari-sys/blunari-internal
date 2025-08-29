@@ -41,7 +41,7 @@ serve(async (req) => {
     const url = new URL(req.url)
     const { endpoint, ...params } = await req.json()
     
-    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://services.blunari.ai'
+    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://background-ops.fly.dev'
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
     // Proxy request to background-ops
@@ -49,7 +49,7 @@ serve(async (req) => {
       method: req.method,
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': backgroundOpsApiKey,
+        'x-api-key': backgroundOpsApiKey,
       },
       body: Object.keys(params).length > 0 ? JSON.stringify(params) : undefined,
     })

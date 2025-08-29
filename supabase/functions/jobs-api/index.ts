@@ -41,24 +41,24 @@ serve(async (req) => {
     const requestData = await req.json()
     const action = requestData.action || 'list'
     
-    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://services.blunari.ai'
+    const backgroundOpsUrl = Deno.env.get('BACKGROUND_OPS_URL') ?? 'https://background-ops.fly.dev'
     const backgroundOpsApiKey = Deno.env.get('BACKGROUND_OPS_API_KEY') ?? ''
 
-    let endpoint = '/api/jobs'
+    let endpoint = '/jobs'
     let method = 'GET'
     let body = null
 
     switch (action) {
       case 'list':
-        endpoint = '/api/jobs'
+        endpoint = '/jobs'
         method = 'GET'
         break
       case 'get':
-        endpoint = `/api/jobs/${requestData.id}`
+        endpoint = `/jobs/${requestData.id}`
         method = 'GET'
         break
       case 'create':
-        endpoint = '/api/jobs'
+        endpoint = '/jobs'
         method = 'POST'
         body = JSON.stringify({
           type: requestData.type,
@@ -67,11 +67,11 @@ serve(async (req) => {
         })
         break
       case 'cancel':
-        endpoint = `/api/jobs/${requestData.id}/cancel`
+        endpoint = `/jobs/${requestData.id}/cancel`
         method = 'POST'
         break
       case 'retry':
-        endpoint = `/api/jobs/${requestData.id}/retry`
+        endpoint = `/jobs/${requestData.id}/retry`
         method = 'POST'
         break
       default:
@@ -89,7 +89,7 @@ serve(async (req) => {
       method,
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': backgroundOpsApiKey,
+        'x-api-key': backgroundOpsApiKey,
       },
       body,
     })
