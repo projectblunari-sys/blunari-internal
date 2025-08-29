@@ -55,6 +55,7 @@ serve(async (req) => {
     console.log('Health check request to background-ops')
     console.log(`Background Ops URL: ${backgroundOpsUrl}`)
     console.log(`API Key present: ${backgroundOpsApiKey ? 'Yes' : 'No'}`)
+    console.log('Using updated environment variables')
 
     const response = await fetch(`${backgroundOpsUrl}/api/v1/health`, {
       method: 'GET',
