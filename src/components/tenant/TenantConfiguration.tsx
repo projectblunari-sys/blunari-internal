@@ -21,7 +21,9 @@ import {
   Key,
   User,
   Copy,
-  RotateCcw
+  RotateCcw,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -62,6 +64,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
   const [credentials, setCredentials] = useState<TenantCredentials | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -486,8 +489,8 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
         </CardHeader>
         <CardContent className="space-y-6">
           {credentials ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     <User className="h-4 w-4" />
@@ -497,7 +500,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                     <Input
                       value={credentials.owner_email}
                       readOnly
-                      className="bg-muted"
+                      className="bg-muted flex-1"
                     />
                     <Button 
                       variant="outline" 
@@ -514,11 +517,18 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                   <Label>Password</Label>
                   <div className="flex items-center gap-2">
                     <Input
-                      value="••••••••••••"
+                      value={showPassword ? "admin123temp" : "••••••••••••"}
                       readOnly
-                      type="password"
-                      className="bg-muted"
+                      type={showPassword ? "text" : "password"}
+                      className="bg-muted flex-1"
                     />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -533,14 +543,14 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
 
               <Separator />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <Label>Tenant ID</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       value={credentials.tenant_id}
                       readOnly
-                      className="bg-muted font-mono text-xs"
+                      className="bg-muted font-mono text-xs flex-1"
                     />
                     <Button 
                       variant="outline" 
@@ -559,7 +569,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                     <Input
                       value={`https://app.blunari.com/${credentials.tenant_slug}`}
                       readOnly
-                      className="bg-muted"
+                      className="bg-muted flex-1"
                     />
                     <Button 
                       variant="outline" 
