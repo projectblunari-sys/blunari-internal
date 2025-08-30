@@ -22,8 +22,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   Search, 
   Filter, 
@@ -35,7 +46,8 @@ import {
   Building2,
   Users,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Trash2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,6 +77,8 @@ const TenantsPage = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [tenantToDelete, setTenantToDelete] = useState<Tenant | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -113,6 +127,69 @@ const TenantsPage = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteTenant = async (tenant: Tenant) => {
+    setIsDeleting(true);
+    try {
+      // First, check if tenant has any active bookings or important data
+      const { count: bookingsCount, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id);
+
+      if (bookingsError) {
+        console.error('Error checking bookings:', bookingsError);
+      }
+
+      if (bookingsCount && bookingsCount > 0) {
+        toast({
+          title: "Cannot Delete Tenant",
+          description: "This tenant has active bookings. Please cancel all bookings before deleting.",
+          variant: "destructive"
+        });
+        setIsDeleting(false);
+        return;
+      }
+
+      // Delete related data first (domains, features, etc.)
+      const deletePromises = [
+        supabase.from('domains').delete().eq('tenant_id', tenant.id),
+        supabase.from('tenant_features').delete().eq('tenant_id', tenant.id),
+        supabase.from('restaurant_tables').delete().eq('tenant_id', tenant.id),
+        supabase.from('business_hours').delete().eq('tenant_id', tenant.id),
+        supabase.from('party_size_configs').delete().eq('tenant_id', tenant.id),
+        supabase.from('auto_provisioning').delete().eq('tenant_id', tenant.id)
+      ];
+
+      await Promise.all(deletePromises);
+
+      // Finally delete the tenant
+      const { error } = await supabase
+        .from('tenants')
+        .delete()
+        .eq('id', tenant.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Tenant Deleted",
+        description: `${tenant.name} has been permanently deleted.`,
+      });
+
+      // Refresh the list
+      fetchTenants();
+      setTenantToDelete(null);
+    } catch (error) {
+      console.error('Error deleting tenant:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete tenant. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -348,29 +425,49 @@ const TenantsPage = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="sm">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem 
-                              onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/admin/tenants/${tenant.id}`);
+                              }}
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => navigate(`/admin/tenants/${tenant.id}/settings`)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/admin/tenants/${tenant.id}/settings`);
+                              }}
                             >
                               <Settings className="h-4 w-4 mr-2" />
                               Settings
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => navigate(`/admin/tenants/${tenant.id}/domains`)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/admin/tenants/${tenant.id}/domains`);
+                              }}
                             >
                               <Globe className="h-4 w-4 mr-2" />
                               Domains
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setTenantToDelete(tenant);
+                              }}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Tenant
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -425,6 +522,38 @@ const TenantsPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!tenantToDelete} onOpenChange={() => setTenantToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Tenant</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{tenantToDelete?.name}</strong>? 
+              This action cannot be undone and will permanently remove:
+              <ul className="mt-2 ml-4 list-disc text-sm">
+                <li>All tenant data and settings</li>
+                <li>Restaurant tables and business hours</li>
+                <li>Domains and features</li>
+                <li>Provisioning records</li>
+              </ul>
+              <p className="mt-2 text-sm font-medium text-destructive">
+                Note: Tenants with active bookings cannot be deleted.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => tenantToDelete && handleDeleteTenant(tenantToDelete)}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete Tenant"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
