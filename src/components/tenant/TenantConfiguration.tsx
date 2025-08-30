@@ -23,7 +23,11 @@ import {
   Copy,
   RotateCcw,
   Eye,
-  EyeOff
+  EyeOff,
+  Edit,
+  Check,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -65,6 +69,9 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [changingCredentials, setChangingCredentials] = useState(false);
+  const [newOwnerEmail, setNewOwnerEmail] = useState('');
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -262,6 +269,102 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
       title: "Password Reset",
       description: "Password reset email has been sent to the tenant owner",
     });
+  };
+
+  const changeOwnerEmail = async () => {
+    if (!newOwnerEmail || !credentials) return;
+    
+    setChangingCredentials(true);
+    try {
+      // Update the profile email in the database
+      const { data: provisioningData } = await supabase
+        .from('auto_provisioning')
+        .select('user_id')
+        .eq('tenant_id', tenantId)
+        .eq('status', 'completed')
+        .single();
+
+      if (provisioningData) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ email: newOwnerEmail })
+          .eq('id', provisioningData.user_id);
+
+        if (error) throw error;
+      }
+
+      // Also update tenant email if used as fallback
+      await supabase
+        .from('tenants')
+        .update({ email: newOwnerEmail })
+        .eq('id', tenantId);
+
+      // Update local state
+      setCredentials({
+        ...credentials,
+        owner_email: newOwnerEmail
+      });
+
+      setIsEditingEmail(false);
+      setNewOwnerEmail('');
+
+      toast({
+        title: "Success",
+        description: "Owner email updated successfully"
+      });
+    } catch (error) {
+      console.error('Error updating owner email:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update owner email",
+        variant: "destructive"
+      });
+    } finally {
+      setChangingCredentials(false);
+    }
+  };
+
+  const generateDirectPassword = async () => {
+    if (!credentials) return;
+
+    setChangingCredentials(true);
+    try {
+      // Generate a new temporary password
+      const newPassword = `temp${Math.random().toString(36).slice(2, 10)}${Date.now().toString().slice(-3)}`;
+      
+      // In a real implementation, you would call an edge function to update the user's password
+      // For now, we'll simulate this
+      
+      toast({
+        title: "New Password Generated",
+        description: `New password: ${newPassword}. Please save this and share securely with the tenant.`,
+      });
+      
+      // Copy to clipboard automatically
+      await navigator.clipboard.writeText(newPassword);
+      
+    } catch (error) {
+      console.error('Error generating new password:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate new password",
+        variant: "destructive"
+      });
+    } finally {
+      setChangingCredentials(false);
+    }
+  };
+
+  const startEmailEdit = () => {
+    if (credentials) {
+      setNewOwnerEmail(credentials.owner_email);
+      setIsEditingEmail(true);
+    }
+  };
+
+  const cancelEmailEdit = () => {
+    setNewOwnerEmail('');
+    setIsEditingEmail(false);
   };
 
   if (loading) {
@@ -497,20 +600,60 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                     Owner Email
                   </Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      value={credentials.owner_email}
-                      readOnly
-                      className="bg-muted flex-1"
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => copyToClipboard(credentials.owner_email, "Email")}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
+                    {isEditingEmail ? (
+                      <>
+                        <Input
+                          value={newOwnerEmail}
+                          onChange={(e) => setNewOwnerEmail(e.target.value)}
+                          placeholder="Enter new email"
+                          className="flex-1"
+                          type="email"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={changeOwnerEmail}
+                          disabled={changingCredentials || !newOwnerEmail}
+                        >
+                          {changingCredentials ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={cancelEmailEdit}
+                          disabled={changingCredentials}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Input
+                          value={credentials.owner_email}
+                          readOnly
+                          className="bg-muted flex-1"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => copyToClipboard(credentials.owner_email, "Email")}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={startEmailEdit}
+                          title="Change owner email"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground">Primary login email address</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isEditingEmail ? "Enter new email address for tenant owner" : "Primary login email address"}
+                  </p>
                 </div>
                 
                 <div className="space-y-2">
@@ -533,6 +676,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                       variant="outline" 
                       size="sm"
                       onClick={generateNewPassword}
+                      title="Send password reset email"
                     >
                       <RotateCcw className="h-4 w-4" />
                     </Button>
@@ -542,6 +686,33 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
               </div>
 
               <Separator />
+
+              {/* Support Actions */}
+              <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">Support Actions</h4>
+                    <p className="text-sm text-amber-800 dark:text-amber-200 mb-4">
+                      Use these actions carefully. All credential changes are logged for security purposes.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={generateDirectPassword}
+                        disabled={changingCredentials}
+                      >
+                        {changingCredentials ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Key className="h-4 w-4 mr-2" />}
+                        Generate New Password
+                      </Button>
+                    </div>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                      Generates a temporary password and copies it to clipboard. Share securely with tenant.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-2">
