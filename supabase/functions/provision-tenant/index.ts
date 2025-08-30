@@ -346,7 +346,7 @@ serve(async (req) => {
           ownerName: `${requestData.ownerFirstName} ${requestData.ownerLastName}`,
           ownerEmail: requestData.ownerEmail,
           restaurantName: requestData.restaurantName,
-          loginUrl: `${Deno.env.get('SUPABASE_URL')?.replace('/supabase.co', '.lovable.app')}/auth`
+          loginUrl: `${req.headers.get('origin') || 'https://lovable.app'}/auth`
         }
       })
 

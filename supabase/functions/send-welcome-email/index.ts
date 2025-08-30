@@ -34,11 +34,15 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { ownerName, ownerEmail, restaurantName, loginUrl }: WelcomeEmailRequest = await req.json();
 
+    console.log('Welcome email request received:', { ownerName, ownerEmail, restaurantName, loginUrl });
+
     const defaultLoginUrl = "https://your-app-domain.com/auth";
     const finalLoginUrl = loginUrl || defaultLoginUrl;
 
+    console.log('Attempting to send email with SMTP configuration');
+
     const emailResponse = await smtp.send({
-      from: "no-reply@blunari.ai",
+      from: "Blunari Team <no-reply@blunari.ai>",
       to: ownerEmail,
       subject: `Welcome to Blunari - ${restaurantName} is ready!`,
       html: `
