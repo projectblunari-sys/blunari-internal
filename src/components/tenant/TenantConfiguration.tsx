@@ -267,11 +267,33 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
   };
 
   const generateNewPassword = async () => {
-    // This would typically call an API to reset the user's password
-    toast({
-      title: "Password Reset",
-      description: "Password reset email has been sent to the tenant owner",
-    });
+    if (!credentials) return;
+
+    setChangingCredentials(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('manage-tenant-credentials', {
+        body: {
+          tenantId,
+          action: 'reset_password'
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Reset",
+        description: "Password reset email has been sent to the tenant owner",
+      });
+    } catch (error) {
+      console.error('Error sending password reset:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send password reset email",
+        variant: "destructive"
+      });
+    } finally {
+      setChangingCredentials(false);
+    }
   };
 
   const changeOwnerEmail = async () => {
@@ -279,28 +301,15 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
     
     setChangingCredentials(true);
     try {
-      // Update the profile email in the database
-      const { data: provisioningData } = await supabase
-        .from('auto_provisioning')
-        .select('user_id')
-        .eq('tenant_id', tenantId)
-        .eq('status', 'completed')
-        .single();
+      const { data, error } = await supabase.functions.invoke('manage-tenant-credentials', {
+        body: {
+          tenantId,
+          action: 'update_email',
+          newEmail: newOwnerEmail
+        }
+      });
 
-      if (provisioningData) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ email: newOwnerEmail })
-          .eq('id', provisioningData.user_id);
-
-        if (error) throw error;
-      }
-
-      // Also update tenant email if used as fallback
-      await supabase
-        .from('tenants')
-        .update({ email: newOwnerEmail })
-        .eq('id', tenantId);
+      if (error) throw error;
 
       // Update local state
       setCredentials({
@@ -332,15 +341,21 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
 
     setChangingCredentials(true);
     try {
-      // Generate a new temporary password
-      const newPassword = `temp${Math.random().toString(36).slice(2, 10)}${Date.now().toString().slice(-3)}`;
-      
-      // In a real implementation, you would call an edge function to update the user's password
-      // For now, we'll simulate this
+      const { data, error } = await supabase.functions.invoke('manage-tenant-credentials', {
+        body: {
+          tenantId,
+          action: 'generate_password'
+        }
+      });
+
+      if (error) throw error;
+
+      const newPassword = data.newPassword;
+      setCurrentPassword(newPassword);
       
       toast({
         title: "New Password Generated",
-        description: `New password: ${newPassword}. Please save this and share securely with the tenant.`,
+        description: `New password: ${newPassword}. Copied to clipboard. Share securely with tenant.`,
       });
       
       // Copy to clipboard automatically
@@ -375,9 +390,16 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
     
     setChangingCredentials(true);
     try {
-      // In a real implementation, you would call an edge function to update the user's password
-      // For now, we'll simulate this action and update the local password state
-      
+      const { data, error } = await supabase.functions.invoke('manage-tenant-credentials', {
+        body: {
+          tenantId,
+          action: 'update_password',
+          newPassword: newPassword
+        }
+      });
+
+      if (error) throw error;
+
       // Update the current password state to reflect the change
       setCurrentPassword(newPassword);
       
