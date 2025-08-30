@@ -121,8 +121,9 @@ serve(async (req) => {
 
     logStep("Supabase admin client created")
 
-    // Create the owner user account
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+    // Try to create the owner user account, or get existing user
+    let userData: any
+    const { data: createUserData, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email: requestData.ownerEmail,
       password: requestData.ownerPassword,
       email_confirm: true,
@@ -133,12 +134,33 @@ serve(async (req) => {
       }
     })
 
-    if (userError) {
+    if (userError && userError.message?.includes('already been registered')) {
+      logStep("User already exists, fetching existing user", { email: requestData.ownerEmail })
+      
+      // Try to get the existing user by email
+      const { data: existingUsers, error: getUserError } = await supabaseAdmin.auth.admin.listUsers()
+      
+      if (getUserError) {
+        logStep("Error fetching existing users", getUserError)
+        throw new Error(`Failed to fetch existing user: ${getUserError.message}`)
+      }
+      
+      const existingUser = existingUsers.users.find(user => user.email === requestData.ownerEmail)
+      
+      if (!existingUser) {
+        logStep("Existing user not found after email check")
+        throw new Error(`User with email ${requestData.ownerEmail} should exist but was not found`)
+      }
+      
+      userData = { user: existingUser }
+      logStep("Using existing user", { userId: existingUser.id })
+    } else if (userError) {
       logStep("Error creating user", userError)
       throw new Error(`Failed to create owner account: ${userError.message}`)
+    } else {
+      userData = createUserData
+      logStep("Owner user created", { userId: userData.user.id })
     }
-
-    logStep("Owner user created", { userId: userData.user.id })
 
     // Call the enhanced provision_tenant function
     const { data: tenantId, error: tenantError } = await supabaseAdmin.rpc('provision_tenant', {
