@@ -250,69 +250,100 @@ export function TenantDomainManagement({ tenantId }: TenantDomainManagementProps
         </Dialog>
       </div>
 
-      {/* Domain Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Domains</CardTitle>
-            <Globe className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{domains.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {domains.filter(d => d.status === 'active').length} active
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">SSL Certificates</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {domains.filter(d => d.ssl_status === 'active').length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Active SSL certificates
-            </p>
-          </CardContent>
-        </Card>
+      {/* Domain Overview Cards - Only show if loading or have data */}
+      {(isLoading || domains.length > 0) && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Domains</CardTitle>
+              <Globe className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-2xl font-bold animate-pulse">-</div>
+              ) : (
+                <div className="text-2xl font-bold">{domains.length}</div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {isLoading ? 'Loading...' : `${domains.filter(d => d.status === 'active').length} active`}
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">SSL Certificates</CardTitle>
+              <Shield className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-2xl font-bold animate-pulse">-</div>
+              ) : (
+                <div className="text-2xl font-bold">
+                  {domains.filter(d => d.ssl_status === 'active').length}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {isLoading ? 'Loading...' : 'Active SSL certificates'}
+              </p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Health Status</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">
-              {domains.length > 0 ? Math.round((domains.filter(d => d.status === 'active').length / domains.length) * 100) : 0}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Domains healthy
-            </p>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Health Status</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-2xl font-bold animate-pulse">-</div>
+              ) : (
+                <div className="text-2xl font-bold text-success">
+                  {domains.length > 0 ? Math.round((domains.filter(d => d.status === 'active').length / domains.length) * 100) : 0}%
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {isLoading ? 'Loading...' : 'Domains healthy'}
+              </p>
+            </CardContent>
+          </Card>
 
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-2xl font-bold animate-pulse">-</div>
+              ) : (
+                <div className="text-2xl font-bold text-warning">
+                  {domains.filter(d => {
+                    const daysRemaining = calculateSSLDaysRemaining(d.ssl_expires_at)
+                    return daysRemaining !== null && daysRemaining < 30
+                  }).length}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {isLoading ? 'Loading...' : 'SSL certs expiring in 30 days'}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Empty state when no domains and not loading */}
+      {!isLoading && domains.length === 0 && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-warning">
-              {domains.filter(d => {
-                const daysRemaining = calculateSSLDaysRemaining(d.ssl_expires_at)
-                return daysRemaining !== null && daysRemaining < 30
-              }).length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              SSL certs expiring in 30 days
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Globe className="h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No domains configured</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              This tenant hasn't added any custom domains yet. Add a domain to get started with custom branding.
             </p>
           </CardContent>
         </Card>
-      </div>
+      )}
 
       {/* Main Content */}
       <Tabs defaultValue="domains" className="space-y-4">
