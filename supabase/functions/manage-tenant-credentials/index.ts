@@ -35,6 +35,8 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { tenantId, action, newEmail, newPassword }: CredentialUpdateRequest = await req.json();
 
+    console.log(`[CREDENTIALS] Starting ${action} for tenant ${tenantId}`);
+
     // Verify admin access
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -46,8 +48,11 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     if (authError || !user) {
+      console.error('Auth error:', authError);
       throw new Error('Unauthorized');
     }
+
+    console.log(`[CREDENTIALS] User ${user.email} attempting ${action}`);
 
     // Check if user has admin privileges
     const { data: employee } = await supabaseAdmin
@@ -58,22 +63,55 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (!employee || !['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(employee.role)) {
+      console.error('Insufficient privileges. User role:', employee?.role);
       throw new Error('Insufficient privileges');
     }
 
-    // Get tenant owner user ID
+    // Get tenant owner user ID - try auto_provisioning first, then fallback to tenant email
+    let tenantOwnerId: string | null = null;
+    let ownerEmail: string | null = null;
+
+    // First try to get from auto_provisioning
     const { data: provisioning } = await supabaseAdmin
       .from('auto_provisioning')
       .select('user_id')
       .eq('tenant_id', tenantId)
       .eq('status', 'completed')
-      .single();
+      .maybeSingle();
 
-    if (!provisioning) {
-      throw new Error('Tenant not found');
+    if (provisioning) {
+      tenantOwnerId = provisioning.user_id;
+      console.log(`[CREDENTIALS] Found provisioning record for user ${tenantOwnerId}`);
+    } else {
+      // Fallback: look for tenant email and find matching user
+      const { data: tenant } = await supabaseAdmin
+        .from('tenants')
+        .select('email')
+        .eq('id', tenantId)
+        .single();
+
+      if (!tenant?.email) {
+        throw new Error('No tenant owner found. Tenant has no email and no provisioning record.');
+      }
+
+      // Find user by email
+      const { data: authUser, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+      if (userError) throw userError;
+
+      const matchingUser = authUser.users.find(u => u.email === tenant.email);
+      if (!matchingUser) {
+        throw new Error(`No user found with email ${tenant.email}`);
+      }
+
+      tenantOwnerId = matchingUser.id;
+      ownerEmail = tenant.email;
+      console.log(`[CREDENTIALS] Found tenant owner via email lookup: ${ownerEmail}`);
     }
 
-    const tenantOwnerId = provisioning.user_id;
+    if (!tenantOwnerId) {
+      throw new Error('Could not determine tenant owner');
+    }
+
     let result: any = {};
 
     switch (action) {

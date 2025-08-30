@@ -105,7 +105,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
 
       // Fetch tenant credentials (owner info)
       // First try to get from auto_provisioning
-      const { data: provisioningData, error: provisioningError } = await supabase
+      const { data: provisioningData } = await supabase
         .from('auto_provisioning')
         .select('user_id, tenant_id, created_at')
         .eq('tenant_id', tenantId)
@@ -133,6 +133,16 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
         if (tenantData.email) {
           setCredentials({
             owner_email: tenantData.email,
+            tenant_slug: tenantData.slug,
+            tenant_id: tenantId,
+            created_at: tenantData.created_at
+          });
+          console.log('[CREDENTIALS] Using tenant email as fallback:', tenantData.email);
+        } else {
+          console.warn('[CREDENTIALS] No auto_provisioning record and no tenant email found');
+          // Still set basic info even without email
+          setCredentials({
+            owner_email: 'admin@unknown.com', // Placeholder
             tenant_slug: tenantData.slug,
             tenant_id: tenantId,
             created_at: tenantData.created_at
@@ -660,6 +670,20 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
         <CardContent className="space-y-6">
           {credentials ? (
             <div className="space-y-6">
+              {credentials.owner_email === 'admin@unknown.com' && (
+                <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-yellow-900 dark:text-yellow-100 mb-1">Email Not Found</h4>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        No owner email found for this tenant. You can set one using the email field above, then use the credential management functions.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">

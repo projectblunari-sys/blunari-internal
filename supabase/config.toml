@@ -60,3 +60,6 @@ verify_jwt = false
 
 [functions.send-credentials-email]
 verify_jwt = false
+
+[functions.manage-tenant-credentials]
+verify_jwt = true
