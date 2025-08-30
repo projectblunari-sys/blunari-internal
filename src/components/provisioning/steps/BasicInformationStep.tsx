@@ -35,9 +35,6 @@ export function BasicInformationStep({ data, updateData }: BasicInformationStepP
 
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Basic Information</h2>
-      </div>
 
       <Card>
         <CardHeader>

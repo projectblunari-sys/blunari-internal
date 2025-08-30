@@ -13,9 +13,6 @@ interface ContactInformationStepProps {
 export function ContactInformationStep({ data, updateData }: ContactInformationStepProps) {
   return (
     <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-foreground mb-2">Contact Information</h2>
-      </div>
 
       <Card>
         <CardHeader>
