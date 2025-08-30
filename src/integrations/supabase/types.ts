@@ -1551,6 +1551,57 @@ export type Database = {
         }
         Relationships: []
       }
+      job_schedules: {
+        Row: {
+          created_at: string | null
+          current_runs: number | null
+          enabled: boolean | null
+          id: string
+          job_type: string
+          last_run_at: string | null
+          max_runs: number | null
+          name: string
+          next_run_at: string | null
+          payload: Json | null
+          schedule_expression: string
+          tags: string[] | null
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_runs?: number | null
+          enabled?: boolean | null
+          id: string
+          job_type: string
+          last_run_at?: string | null
+          max_runs?: number | null
+          name: string
+          next_run_at?: string | null
+          payload?: Json | null
+          schedule_expression: string
+          tags?: string[] | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_runs?: number | null
+          enabled?: boolean | null
+          id?: string
+          job_type?: string
+          last_run_at?: string | null
+          max_runs?: number | null
+          name?: string
+          next_run_at?: string | null
+          payload?: Json | null
+          schedule_expression?: string
+          tags?: string[] | null
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       maintenance_windows: {
         Row: {
           actual_end: string | null
