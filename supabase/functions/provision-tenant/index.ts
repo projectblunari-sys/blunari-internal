@@ -95,17 +95,56 @@ serve(async (req) => {
       })
     }
 
-    // Validate required fields
-    if (!requestData.restaurantName || !requestData.ownerEmail || !requestData.ownerPassword) {
-      const missingFields = []
-      if (!requestData.restaurantName) missingFields.push('restaurantName')
-      if (!requestData.ownerEmail) missingFields.push('ownerEmail')
-      if (!requestData.ownerPassword) missingFields.push('ownerPassword')
-      
-      logStep("Missing required fields", { missingFields })
+    // Validate required fields more thoroughly
+    const requiredFields = []
+    if (!requestData.restaurantName?.trim()) requiredFields.push('restaurantName')
+    if (!requestData.slug?.trim()) requiredFields.push('slug')
+    if (!requestData.ownerEmail?.trim()) requiredFields.push('ownerEmail')
+    if (!requestData.ownerPassword?.trim()) requiredFields.push('ownerPassword')
+    if (!requestData.ownerFirstName?.trim()) requiredFields.push('ownerFirstName')
+    if (!requestData.ownerLastName?.trim()) requiredFields.push('ownerLastName')
+    
+    if (requiredFields.length > 0) {
+      logStep("Missing required fields", { missingFields: requiredFields })
       return new Response(JSON.stringify({ 
         success: false, 
-        error: `Missing required fields: ${missingFields.join(', ')}` 
+        error: `Missing required fields: ${requiredFields.join(', ')}` 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      })
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(requestData.ownerEmail)) {
+      logStep("Invalid owner email format", { email: requestData.ownerEmail })
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "Invalid admin email format" 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      })
+    }
+
+    if (requestData.email && !emailRegex.test(requestData.email)) {
+      logStep("Invalid business email format", { email: requestData.email })
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "Invalid business email format" 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      })
+    }
+
+    // Validate password strength
+    if (requestData.ownerPassword.length < 8) {
+      logStep("Weak password", { length: requestData.ownerPassword.length })
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "Password must be at least 8 characters long" 
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -180,10 +219,19 @@ serve(async (req) => {
     if (tenantError) {
       logStep("Error creating tenant", tenantError)
       
-      // Provide specific error message for duplicate slug
-      if (tenantError.message.includes('duplicate key value violates unique constraint') && 
-          tenantError.message.includes('restaurant_slug')) {
-        throw new Error(`Restaurant slug "${requestData.slug}" is already taken. Please choose a different slug.`)
+      // Provide specific error messages for common issues
+      if (tenantError.message.includes('duplicate key value violates unique constraint')) {
+        if (tenantError.message.includes('restaurant_slug')) {
+          throw new Error(`Restaurant slug "${requestData.slug}" is already taken. Please choose a different slug.`)
+        }
+        if (tenantError.message.includes('email')) {
+          throw new Error(`Business email "${requestData.email}" is already registered. Please use a different email address.`)
+        }
+        throw new Error("This information is already registered. Please check your details and try again.")
+      }
+      
+      if (tenantError.message.includes('foreign key')) {
+        throw new Error("Invalid cuisine type selected. Please choose a valid cuisine type.")
       }
       
       throw new Error(`Failed to create tenant: ${tenantError.message}`)
@@ -238,42 +286,53 @@ serve(async (req) => {
 
     // Create subscription record (placeholder for now)
     if (requestData.selectedPlanId) {
-      const { error: subscriptionError } = await supabaseAdmin
-        .from('subscriptions')
-        .insert({
-          tenant_id: tenantId,
-          plan_id: requestData.selectedPlanId,
-          status: 'active',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + (requestData.billingCycle === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString()
-        })
+      try {
+        const { error: subscriptionError } = await supabaseAdmin
+          .from('subscriptions')
+          .insert({
+            tenant_id: tenantId,
+            plan_id: requestData.selectedPlanId,
+            status: 'active',
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(Date.now() + (requestData.billingCycle === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString()
+          })
 
-      if (subscriptionError) {
-        logStep("Error creating subscription", subscriptionError)
-      } else {
-        logStep("Subscription created")
+        if (subscriptionError) {
+          logStep("Error creating subscription", subscriptionError)
+          // Don't fail the whole process for subscription errors, just log
+        } else {
+          logStep("Subscription created")
+        }
+      } catch (subscriptionError) {
+        logStep("Subscription creation failed (non-blocking)", subscriptionError)
       }
     }
 
     // Enable additional features based on selection
-    const featuresToEnable = Object.entries(requestData.enabledFeatures)
-      .filter(([_, enabled]) => enabled)
-      .map(([feature, _]) => ({
-        tenant_id: tenantId,
-        feature_key: feature,
-        enabled: true,
-        source: 'provisioning'
-      }))
+    if (requestData.enabledFeatures && Object.keys(requestData.enabledFeatures).length > 0) {
+      try {
+        const featuresToEnable = Object.entries(requestData.enabledFeatures)
+          .filter(([_, enabled]) => enabled)
+          .map(([feature, _]) => ({
+            tenant_id: tenantId,
+            feature_key: feature,
+            enabled: true,
+            source: 'provisioning'
+          }))
 
-    if (featuresToEnable.length > 0) {
-      const { error: featuresError } = await supabaseAdmin
-        .from('tenant_features')
-        .insert(featuresToEnable)
+        if (featuresToEnable.length > 0) {
+          const { error: featuresError } = await supabaseAdmin
+            .from('tenant_features')
+            .insert(featuresToEnable)
 
-      if (featuresError) {
-        logStep("Error enabling features", featuresError)
-      } else {
-        logStep("Features enabled", { count: featuresToEnable.length })
+          if (featuresError) {
+            logStep("Error enabling features (non-blocking)", featuresError)
+          } else {
+            logStep("Features enabled", { count: featuresToEnable.length })
+          }
+        }
+      } catch (featuresError) {
+        logStep("Features setup failed (non-blocking)", featuresError)
       }
     }
 

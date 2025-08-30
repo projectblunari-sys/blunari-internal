@@ -182,13 +182,17 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1: // Basic Information
-        return !!(data.restaurantName && data.cuisineTypeId)
+        return !!(data.restaurantName?.trim() && data.cuisineTypeId)
       case 2: // Contact Information
-        return !!data.email
+        return !!(data.email?.trim() && isValidEmail(data.email))
       case 3: // Location
-        return !!(data.address.street && data.address.city && data.address.state && data.address.zipCode)
+        return !!(data.address.street?.trim() && data.address.city?.trim() && 
+                 data.address.state?.trim() && data.address.zipCode?.trim() && 
+                 data.address.country)
       case 4: // Owner Account
-        return !!(data.ownerFirstName && data.ownerLastName && data.ownerEmail && data.ownerPassword)
+        return !!(data.ownerFirstName?.trim() && data.ownerLastName?.trim() && 
+                 data.ownerEmail?.trim() && isValidEmail(data.ownerEmail) && 
+                 data.ownerPassword?.length >= 8)
       case 5: // Business Configuration
         return true // No required fields, can proceed
       case 6: // Plan Selection
@@ -198,11 +202,45 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
     }
   }
 
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
+
   const handleNext = async () => {
     if (!validateStep(currentStep)) {
+      const stepName = STEPS[currentStep - 1]?.title || 'step'
       toast({
         title: "Missing Information",
-        description: "Please fill in all required fields before continuing.",
+        description: `Please complete all required fields in ${stepName} before continuing.`,
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Additional validation for specific steps
+    if (currentStep === 2 && !isValidEmail(data.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (currentStep === 4 && !isValidEmail(data.ownerEmail)) {
+      toast({
+        title: "Invalid Admin Email",
+        description: "Please enter a valid admin email address.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    if (currentStep === 4 && data.ownerPassword.length < 8) {
+      toast({
+        title: "Weak Password",
+        description: "Password must be at least 8 characters long.",
         variant: "destructive"
       })
       return
@@ -239,6 +277,28 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
   const handleComplete = async () => {
     try {
       setIsProcessing(true)
+      
+      // Final validation before submission
+      if (!data.restaurantName.trim()) {
+        throw new Error("Restaurant name is required")
+      }
+      
+      if (!data.slug.trim()) {
+        throw new Error("Restaurant slug is missing")
+      }
+      
+      if (!isValidEmail(data.email)) {
+        throw new Error("Valid business email is required")
+      }
+      
+      if (!isValidEmail(data.ownerEmail)) {
+        throw new Error("Valid admin email is required")
+      }
+      
+      if (data.ownerPassword.length < 8) {
+        throw new Error("Password must be at least 8 characters long")
+      }
+      
       await onComplete(data)
       
       toast({
@@ -247,9 +307,11 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
       })
     } catch (error) {
       console.error('Provisioning error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
+      
       toast({
-        title: "Error",
-        description: "Failed to complete provisioning. Please try again.",
+        title: "Setup Failed",
+        description: errorMessage,
         variant: "destructive"
       })
     } finally {
