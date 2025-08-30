@@ -21,6 +21,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { KPICard } from "@/components/dashboard/KPICard";
+import { TenantConfiguration } from "@/components/tenant/TenantConfiguration";
 
 interface TenantDetail {
   id: string;
@@ -340,19 +341,7 @@ const TenantDetailPage = () => {
         </TabsContent>
 
         <TabsContent value="configuration">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tenant Configuration</CardTitle>
-              <CardDescription>
-                Manage tenant settings, features, and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                Configuration panel coming soon...
-              </div>
-            </CardContent>
-          </Card>
+          <TenantConfiguration tenantId={tenantId!} />
         </TabsContent>
 
         <TabsContent value="domains">
