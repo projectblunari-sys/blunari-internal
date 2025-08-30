@@ -1,7 +1,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const smtp = new SMTPClient({
+  connection: {
+    hostname: Deno.env.get("FASTMAIL_SMTP_HOST") || "smtp.fastmail.com",
+    port: parseInt(Deno.env.get("FASTMAIL_SMTP_PORT") || "587"),
+    tls: true,
+    auth: {
+      username: Deno.env.get("FASTMAIL_SMTP_USERNAME")!,
+      password: Deno.env.get("FASTMAIL_SMTP_PASSWORD")!,
+    },
+  },
+});
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,9 +37,9 @@ const handler = async (req: Request): Promise<Response> => {
     const defaultLoginUrl = "https://your-app-domain.com/auth";
     const finalLoginUrl = loginUrl || defaultLoginUrl;
 
-    const emailResponse = await resend.emails.send({
-      from: "Blunari <onboarding@resend.dev>",
-      to: [ownerEmail],
+    const emailResponse = await smtp.send({
+      from: "no-reply@blunari.ai",
+      to: ownerEmail,
       subject: `Welcome to Blunari - ${restaurantName} is ready!`,
       html: `
         <!DOCTYPE html>
