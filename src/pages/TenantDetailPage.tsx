@@ -43,6 +43,9 @@ interface TenantMetrics {
   tablesCount: number;
   domainsCount: number;
   featuresEnabled: number;
+  bookingsTrend: number;
+  revenueTrend: number;
+  activeBookingsTrend: number;
 }
 
 const TenantDetailPage = () => {
@@ -86,32 +89,64 @@ const TenantDetailPage = () => {
         supabase.from('tenant_features').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('enabled', true)
       ]);
 
-      // Fetch recent bookings for revenue calculation
-      const { data: recentBookings } = await supabase
-        .from('bookings')
-        .select('deposit_amount, party_size, created_at')
-        .eq('tenant_id', tenantId)
-        .eq('status', 'confirmed')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+      // Fetch recent bookings for revenue calculation and trends
+      const [{ data: recentBookings }, { data: previousBookings }] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('deposit_amount, party_size, created_at')
+          .eq('tenant_id', tenantId)
+          .eq('status', 'confirmed')
+          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
+        supabase
+          .from('bookings')
+          .select('deposit_amount, party_size, created_at')
+          .eq('tenant_id', tenantId)
+          .eq('status', 'confirmed')
+          .gte('created_at', new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString())
+          .lt('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      ]);
 
-      const totalRevenue = recentBookings?.reduce((sum, booking) => 
+      const currentRevenue = recentBookings?.reduce((sum, booking) => 
+        sum + (booking.deposit_amount || 0), 0) || 0;
+      const previousRevenue = previousBookings?.reduce((sum, booking) => 
         sum + (booking.deposit_amount || 0), 0) || 0;
       
       const avgBookingValue = recentBookings?.length 
-        ? totalRevenue / recentBookings.length 
+        ? currentRevenue / recentBookings.length 
+        : 0;
+
+      // Calculate trends
+      const bookingsTrend = previousBookings?.length 
+        ? ((recentBookings?.length || 0) - previousBookings.length) / previousBookings.length * 100
+        : 0;
+      const revenueTrend = previousRevenue > 0
+        ? (currentRevenue - previousRevenue) / previousRevenue * 100
+        : 0;
+      const activeBookingsThisWeek = recentBookings?.filter(booking => 
+        new Date(booking.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      ).length || 0;
+      const activeBookingsLastWeek = recentBookings?.filter(booking => {
+        const bookingDate = new Date(booking.created_at);
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+        return bookingDate >= twoWeeksAgo && bookingDate < weekAgo;
+      }).length || 0;
+      const activeBookingsTrend = activeBookingsLastWeek > 0
+        ? (activeBookingsThisWeek - activeBookingsLastWeek) / activeBookingsLastWeek * 100
         : 0;
 
       setMetrics({
         totalBookings: bookingsCount || 0,
-        totalRevenue: totalRevenue / 100, // Convert from cents
-        activeBookings: recentBookings?.filter(booking => 
-          new Date(booking.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-        ).length || 0, // Last 7 days bookings as "active"
+        totalRevenue: currentRevenue / 100, // Convert from cents
+        activeBookings: activeBookingsThisWeek,
         conversionRate: bookingsCount > 0 ? ((recentBookings?.length || 0) / bookingsCount * 100) : 0, // Real conversion rate
         avgBookingValue: avgBookingValue / 100, // Convert from cents
         tablesCount: tablesCount || 0,
         domainsCount: domainsCount || 0,
-        featuresEnabled: featuresCount || 0
+        featuresEnabled: featuresCount || 0,
+        bookingsTrend,
+        revenueTrend,
+        activeBookingsTrend
       });
 
     } catch (error) {
@@ -217,9 +252,9 @@ const TenantDetailPage = () => {
             title="Total Bookings"
             value={metrics.totalBookings.toString()}
             trend={{
-              value: 12,
-              label: "this month",
-              direction: "up"
+              value: Math.abs(metrics.bookingsTrend),
+              label: "vs last month",
+              direction: metrics.bookingsTrend >= 0 ? "up" : "down"
             }}
             icon={Calendar}
           />
@@ -227,9 +262,9 @@ const TenantDetailPage = () => {
             title="Revenue (30d)"
             value={`$${metrics.totalRevenue.toFixed(2)}`}
             trend={{
-              value: 18,
-              label: "this month", 
-              direction: "up"
+              value: Math.abs(metrics.revenueTrend),
+              label: "vs last month", 
+              direction: metrics.revenueTrend >= 0 ? "up" : "down"
             }}
             icon={DollarSign}
           />
@@ -237,19 +272,19 @@ const TenantDetailPage = () => {
             title="Active Bookings"
             value={metrics.activeBookings.toString()}
             trend={{
-              value: 5,
+              value: Math.abs(metrics.activeBookingsTrend),
               label: "vs last week",
-              direction: "up"
+              direction: metrics.activeBookingsTrend >= 0 ? "up" : "down"
             }}
             icon={Users}
           />
           <KPICard
             title="Conversion Rate"
-            value={`${metrics.conversionRate}%`}
+            value={`${metrics.conversionRate.toFixed(1)}%`}
             trend={{
-              value: 2.1,
-              label: "this month",
-              direction: "up"
+              value: 0,
+              label: "calculated",
+              direction: "neutral"
             }}
             icon={BarChart3}
           />
