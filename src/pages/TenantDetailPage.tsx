@@ -1,543 +1,304 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft, 
-  Settings, 
+  Building2, 
   Globe, 
-  BarChart3, 
-  Users, 
-  Calendar,
-  DollarSign,
+  Mail, 
+  Phone, 
   MapPin,
-  Clock,
-  Building2,
-  Utensils,
-  CreditCard
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { KPICard } from "@/components/dashboard/KPICard";
-import { TenantConfiguration } from "@/components/tenant/TenantConfiguration";
-import { TenantDomainManagement } from "@/components/tenant/TenantDomainManagement";
+  Calendar,
+  Settings,
+  RefreshCw
+} from 'lucide-react';
+import { useAdminAPI } from '@/hooks/useAdminAPI';
+import { TenantFeaturesTab } from '@/components/admin/TenantFeaturesTab';
+import { LoadingState, ErrorState } from '@/components/ui/states';
+import { useToast } from '@/hooks/use-toast';
+import type { TenantData } from '@/types/admin';
 
-interface TenantDetail {
-  id: string;
-  name: string;
-  slug: string;
-  status: string;
-  currency: string;
-  timezone: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface TenantMetrics {
-  totalBookings: number;
-  totalRevenue: number;
-  activeBookings: number;
-  conversionRate: number;
-  avgBookingValue: number;
-  tablesCount: number;
-  domainsCount: number;
-  featuresEnabled: number;
-  bookingsTrend: number;
-  revenueTrend: number;
-  activeBookingsTrend: number;
-}
-
-const TenantDetailPage = () => {
-  const { tenantId } = useParams();
+export default function TenantDetailPage() {
+  const { tenantId } = useParams<{ tenantId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { getTenant, resendWelcomeEmail, loading } = useAdminAPI();
   
-  const [tenant, setTenant] = useState<TenantDetail | null>(null);
-  const [metrics, setMetrics] = useState<TenantMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [tenant, setTenant] = useState<TenantData | null>(null);
+  const [loadingPage, setLoadingPage] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (tenantId) {
-      fetchTenantDetails();
+      fetchTenant();
     }
   }, [tenantId]);
 
-  const fetchTenantDetails = async () => {
-    setLoading(true);
+  const fetchTenant = async () => {
+    if (!tenantId) return;
+    
     try {
-      // Fetch tenant basic info
-      const { data: tenantData, error: tenantError } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('id', tenantId)
-        .single();
-
-      if (tenantError) throw tenantError;
+      setLoadingPage(true);
+      setError(null);
+      const tenantData = await getTenant(tenantId);
       setTenant(tenantData);
-
-      // Fetch tenant metrics
-      const [
-        { count: bookingsCount },
-        { count: tablesCount },
-        { count: domainsCount },
-        { count: featuresCount }
-      ] = await Promise.all([
-        supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('restaurant_tables').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('domains').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('tenant_features').select('*', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('enabled', true)
-      ]);
-
-      // Fetch recent bookings for revenue calculation and trends
-      const [{ data: recentBookings }, { data: previousBookings }] = await Promise.all([
-        supabase
-          .from('bookings')
-          .select('deposit_amount, party_size, created_at')
-          .eq('tenant_id', tenantId)
-          .eq('status', 'confirmed')
-          .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
-        supabase
-          .from('bookings')
-          .select('deposit_amount, party_size, created_at')
-          .eq('tenant_id', tenantId)
-          .eq('status', 'confirmed')
-          .gte('created_at', new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString())
-          .lt('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      ]);
-
-      const currentRevenue = recentBookings?.reduce((sum, booking) => 
-        sum + (booking.deposit_amount || 0), 0) || 0;
-      const previousRevenue = previousBookings?.reduce((sum, booking) => 
-        sum + (booking.deposit_amount || 0), 0) || 0;
-      
-      const avgBookingValue = recentBookings?.length 
-        ? currentRevenue / recentBookings.length 
-        : 0;
-
-      // Calculate trends
-      const bookingsTrend = previousBookings?.length 
-        ? ((recentBookings?.length || 0) - previousBookings.length) / previousBookings.length * 100
-        : 0;
-      const revenueTrend = previousRevenue > 0
-        ? (currentRevenue - previousRevenue) / previousRevenue * 100
-        : 0;
-      const activeBookingsThisWeek = recentBookings?.filter(booking => 
-        new Date(booking.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-      ).length || 0;
-      const activeBookingsLastWeek = recentBookings?.filter(booking => {
-        const bookingDate = new Date(booking.created_at);
-        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-        return bookingDate >= twoWeeksAgo && bookingDate < weekAgo;
-      }).length || 0;
-      const activeBookingsTrend = activeBookingsLastWeek > 0
-        ? (activeBookingsThisWeek - activeBookingsLastWeek) / activeBookingsLastWeek * 100
-        : 0;
-
-      setMetrics({
-        totalBookings: bookingsCount || 0,
-        totalRevenue: currentRevenue / 100, // Convert from cents
-        activeBookings: activeBookingsThisWeek,
-        conversionRate: bookingsCount > 0 ? ((recentBookings?.length || 0) / bookingsCount * 100) : 0, // Real conversion rate
-        avgBookingValue: avgBookingValue / 100, // Convert from cents
-        tablesCount: tablesCount || 0,
-        domainsCount: domainsCount || 0,
-        featuresEnabled: featuresCount || 0,
-        bookingsTrend,
-        revenueTrend,
-        activeBookingsTrend
-      });
-
     } catch (error) {
-      console.error('Error fetching tenant details:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch tenant details",
-        variant: "destructive"
-      });
+      console.error('Error fetching tenant:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load tenant');
     } finally {
-      setLoading(false);
+      setLoadingPage(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Active</Badge>;
-      case 'inactive':
-        return <Badge variant="secondary">Inactive</Badge>;
-      case 'suspended':
-        return <Badge variant="destructive">Suspended</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const handleResendWelcomeEmail = async () => {
+    if (!tenant) return;
+    
+    try {
+      await resendWelcomeEmail(tenant.slug);
+    } catch (error) {
+      console.error('Error resending welcome email:', error);
     }
   };
 
-  if (loading) {
+  if (loadingPage) {
+    return <LoadingState title="Loading Tenant" description="Fetching tenant details and configuration" />;
+  }
+
+  if (error) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="h-8 w-8 bg-muted rounded animate-pulse" />
-          <div className="h-8 bg-muted rounded animate-pulse w-64" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-32 bg-muted rounded animate-pulse" />
-          ))}
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
+        <ErrorState 
+          title="Failed to Load Tenant"
+          description={error}
+        />
+        <Button onClick={fetchTenant} variant="outline">
+          Try Again
+        </Button>
       </div>
     );
   }
 
   if (!tenant) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Tenant not found</p>
-        <Button 
-          variant="outline" 
-          onClick={() => navigate('/admin/tenants')}
-          className="mt-4"
-        >
+      <div className="flex flex-col items-center justify-center min-h-96 space-y-4">
+        <ErrorState 
+          title="Tenant Not Found"
+          description="The requested tenant could not be found"
+        />
+        <Button onClick={() => navigate('/admin/tenants')} variant="outline">
           Back to Tenants
         </Button>
       </div>
     );
   }
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <Badge variant="default" className="bg-success/10 text-success border-success/20">Active</Badge>;
+      case 'inactive':
+        return <Badge variant="secondary" className="bg-muted/50 text-muted-foreground">Inactive</Badge>;
+      case 'suspended':
+        return <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">Suspended</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button 
+        <Button
           variant="ghost" 
           size="sm"
           onClick={() => navigate('/admin/tenants')}
+          className="hover:bg-muted"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Tenants
         </Button>
+        
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-heading font-bold text-foreground">
-              {tenant.name}
-            </h1>
+          <div className="flex items-center gap-3">
+            <Building2 className="h-6 w-6 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{tenant.name}</h1>
+              <p className="text-sm text-muted-foreground">/{tenant.slug}</p>
+            </div>
             {getStatusBadge(tenant.status)}
           </div>
-          <p className="text-muted-foreground">
-            Tenant ID: {tenant.id} • Created {new Date(tenant.created_at).toLocaleDateString()}
-          </p>
         </div>
+
         <div className="flex gap-2">
-          <Button 
+          <Button
             variant="outline"
-            onClick={() => navigate(`/admin/tenants/${tenant.id}/settings`)}
+            size="sm"
+            onClick={handleResendWelcomeEmail}
+            disabled={loading}
           >
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => navigate(`/admin/tenants/${tenant.id}/domains`)}
-          >
-            <Globe className="h-4 w-4 mr-2" />
-            Domains
+            {loading ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Mail className="h-4 w-4 mr-2" />
+            )}
+            Resend Welcome Email
           </Button>
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      {metrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <KPICard
-            title="Total Bookings"
-            value={metrics.totalBookings.toString()}
-            trend={{
-              value: Math.abs(metrics.bookingsTrend),
-              label: "vs last month",
-              direction: metrics.bookingsTrend >= 0 ? "up" : "down"
-            }}
-            icon={Calendar}
-          />
-          <KPICard
-            title="Revenue (30d)"
-            value={`$${metrics.totalRevenue.toFixed(2)}`}
-            trend={{
-              value: Math.abs(metrics.revenueTrend),
-              label: "vs last month", 
-              direction: metrics.revenueTrend >= 0 ? "up" : "down"
-            }}
-            icon={DollarSign}
-          />
-          <KPICard
-            title="Active Bookings"
-            value={metrics.activeBookings.toString()}
-            trend={{
-              value: Math.abs(metrics.activeBookingsTrend),
-              label: "vs last week",
-              direction: metrics.activeBookingsTrend >= 0 ? "up" : "down"
-            }}
-            icon={Users}
-          />
-          <KPICard
-            title="Conversion Rate"
-            value={`${metrics.conversionRate.toFixed(1)}%`}
-            trend={{
-              value: 0,
-              label: "calculated",
-              direction: "neutral"
-            }}
-            icon={BarChart3}
-          />
-        </div>
-      )}
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <Globe className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Domains</p>
+                <p className="text-2xl font-bold">{tenant.domainsCount || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="configuration">Configuration</TabsTrigger>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Total Bookings</p>
+                <p className="text-2xl font-bold">{tenant.analytics?.total_bookings || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <Settings className="h-5 w-5 text-orange-600" />
+              <div>
+                <p className="text-sm text-muted-foreground">Active Tables</p>
+                <p className="text-2xl font-bold">{tenant.analytics?.active_tables || 0}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tenant Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tenant Information</CardTitle>
+          <CardDescription>
+            Basic tenant configuration and contact details
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Restaurant Name</label>
+              <p className="text-foreground">{tenant.name}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Slug</label>
+              <p className="font-mono text-sm">/{tenant.slug}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Timezone</label>
+              <p className="text-foreground">{tenant.timezone}</p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Currency</label>
+              <p className="text-foreground">{tenant.currency}</p>
+            </div>
+
+            {tenant.email && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Email</label>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-foreground">{tenant.email}</p>
+                </div>
+              </div>
+            )}
+
+            {tenant.phone && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-muted-foreground">Phone</label>
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <p className="text-foreground">{tenant.phone}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Created</label>
+              <p className="text-foreground">{new Date(tenant.created_at).toLocaleDateString()}</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
+              <p className="text-foreground">{new Date(tenant.updated_at).toLocaleDateString()}</p>
+            </div>
+          </div>
+
+          {tenant.description && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Description</label>
+              <p className="text-foreground">{tenant.description}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Tabs for different sections */}
+      <Tabs defaultValue="features" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="features">Features</TabsTrigger>
           <TabsTrigger value="domains">Domains</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Tenant Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Tenant Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Restaurant Name</label>
-                    <p className="text-foreground">{tenant.name}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Slug</label>
-                    <p className="text-foreground">/{tenant.slug}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Status</label>
-                    <div className="mt-1">{getStatusBadge(tenant.status)}</div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Currency</label>
-                    <p className="text-foreground">{tenant.currency}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Timezone</label>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-foreground">{tenant.timezone}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Created</label>
-                    <p className="text-foreground">{new Date(tenant.created_at).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Resource Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Utensils className="h-5 w-5" />
-                  Resource Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {metrics && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-muted/50 rounded-lg">
-                      <div className="text-2xl font-bold text-foreground">{metrics.tablesCount}</div>
-                      <div className="text-sm text-muted-foreground">Tables</div>
-                    </div>
-                    <div className="text-center p-4 bg-muted/50 rounded-lg">
-                      <div className="text-2xl font-bold text-foreground">{metrics.domainsCount}</div>
-                      <div className="text-sm text-muted-foreground">Domains</div>
-                    </div>
-                    <div className="text-center p-4 bg-muted/50 rounded-lg">
-                      <div className="text-2xl font-bold text-foreground">{metrics.featuresEnabled}</div>
-                      <div className="text-sm text-muted-foreground">Features</div>
-                    </div>
-                    <div className="text-center p-4 bg-muted/50 rounded-lg">
-                      <div className="text-2xl font-bold text-foreground">${metrics.avgBookingValue.toFixed(2)}</div>
-                      <div className="text-sm text-muted-foreground">Avg Booking</div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="configuration">
-          <TenantConfiguration tenantId={tenantId!} />
+        <TabsContent value="features">
+          <TenantFeaturesTab tenantSlug={tenant.slug} />
         </TabsContent>
 
         <TabsContent value="domains">
-          <TenantDomainManagement tenantId={tenantId!} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Domain Management</CardTitle>
+              <CardDescription>
+                Manage custom domains and DNS configuration
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Domain management coming soon...</p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="analytics">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tenant Analytics</CardTitle>
-                <CardDescription>
-                  Detailed analytics and performance metrics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {metrics && (
-                  <div className="grid gap-6">
-                    {/* Revenue Analytics */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Revenue Analytics</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <DollarSign className="h-4 w-4 text-green-600" />
-                            <span className="text-sm font-medium">Total Revenue (30d)</span>
-                          </div>
-                          <div className="text-2xl font-bold">${metrics.totalRevenue.toFixed(2)}</div>
-                          <div className="text-xs text-muted-foreground">Last 30 days</div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <CreditCard className="h-4 w-4 text-blue-600" />
-                            <span className="text-sm font-medium">Average Booking Value</span>
-                          </div>
-                          <div className="text-2xl font-bold">${metrics.avgBookingValue.toFixed(2)}</div>
-                          <div className="text-xs text-muted-foreground">Per booking</div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <BarChart3 className="h-4 w-4 text-purple-600" />
-                            <span className="text-sm font-medium">Conversion Rate</span>
-                          </div>
-                          <div className="text-2xl font-bold">{metrics.conversionRate}%</div>
-                          <div className="text-xs text-muted-foreground">Visit to booking</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bookings Analytics */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Booking Analytics</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Calendar className="h-4 w-4 text-indigo-600" />
-                            <span className="text-sm font-medium">Total Bookings</span>
-                          </div>
-                          <div className="text-2xl font-bold">{metrics.totalBookings}</div>
-                          <div className="text-xs text-muted-foreground">All time</div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Users className="h-4 w-4 text-orange-600" />
-                            <span className="text-sm font-medium">Active Bookings</span>
-                          </div>
-                          <div className="text-2xl font-bold">{metrics.activeBookings}</div>
-                          <div className="text-xs text-muted-foreground">Currently active</div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="h-4 w-4 text-teal-600" />
-                            <span className="text-sm font-medium">Booking Rate</span>
-                          </div>
-                          <div className="text-2xl font-bold">
-                            {metrics.totalBookings > 0 ? (metrics.activeBookings / metrics.totalBookings * 100).toFixed(1) : '0.0'}%
-                          </div>
-                          <div className="text-xs text-muted-foreground">Active vs total</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Resource Utilization */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Resource Utilization</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Utensils className="h-4 w-4 text-amber-600" />
-                            <span className="text-sm font-medium">Tables</span>
-                          </div>
-                          <div className="text-2xl font-bold">{metrics.tablesCount}</div>
-                          <div className="text-xs text-muted-foreground">Available tables</div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Globe className="h-4 w-4 text-cyan-600" />
-                            <span className="text-sm font-medium">Domains</span>
-                          </div>
-                          <div className="text-2xl font-bold">{metrics.domainsCount}</div>
-                          <div className="text-xs text-muted-foreground">Connected domains</div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Settings className="h-4 w-4 text-emerald-600" />
-                            <span className="text-sm font-medium">Features</span>
-                          </div>
-                          <div className="text-2xl font-bold">{metrics.featuresEnabled}</div>
-                          <div className="text-xs text-muted-foreground">Enabled features</div>
-                        </div>
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <MapPin className="h-4 w-4 text-rose-600" />
-                            <span className="text-sm font-medium">Capacity Utilization</span>
-                          </div>
-                          <div className="text-2xl font-bold">
-                            {metrics.tablesCount > 0 && metrics.totalBookings > 0 
-                              ? (metrics.activeBookings / metrics.tablesCount * 100).toFixed(1) 
-                              : '0.0'}%
-                          </div>
-                          <div className="text-xs text-muted-foreground">Table utilization</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Performance Summary */}
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Performance Summary</h3>
-                      <div className="p-6 border rounded-lg bg-muted/20">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <h4 className="font-medium mb-2">Revenue Performance</h4>
-                            <ul className="space-y-1 text-sm text-muted-foreground">
-                              <li>• Total revenue in last 30 days: ${metrics.totalRevenue.toFixed(2)}</li>
-                              <li>• Average booking value: ${metrics.avgBookingValue.toFixed(2)}</li>
-                              <li>• Estimated monthly recurring revenue: ${(metrics.totalRevenue * 1.2).toFixed(2)}</li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h4 className="font-medium mb-2">Operational Metrics</h4>
-                            <ul className="space-y-1 text-sm text-muted-foreground">
-                              <li>• Total bookings processed: {metrics.totalBookings}</li>
-                              <li>• Currently active bookings: {metrics.activeBookings}</li>
-                              <li>• Table utilization rate: {metrics.tablesCount > 0 ? (metrics.activeBookings / metrics.tablesCount * 100).toFixed(1) : '0.0'}%</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytics Overview</CardTitle>
+              <CardDescription>
+                Performance metrics and usage statistics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Analytics dashboard coming soon...</p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
   );
-};
-
-export default TenantDetailPage;
+}

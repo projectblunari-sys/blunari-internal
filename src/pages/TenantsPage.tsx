@@ -278,12 +278,12 @@ const TenantsPage = () => {
           </p>
         </div>
         <Button 
-          onClick={() => navigate('/admin/tenants/new')}
+          onClick={() => navigate('/admin/tenants/provision')}
           variant="premium"
           className="hover:scale-105 transition-all duration-200"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add New Tenant
+          Provision New Tenant
         </Button>
       </div>
 
@@ -412,8 +412,8 @@ const TenantsPage = () => {
                           ? 'Try adjusting your search criteria or filters to find tenants.'
                           : 'Get started by creating your first tenant to manage restaurant operations.'}
                         action={{
-                          label: 'Add New Tenant',
-                          onClick: () => navigate('/admin/tenants/new')
+                          label: 'Provision New Tenant',
+                          onClick: () => navigate('/admin/tenants/provision')
                         }}
                         className="m-6"
                       />
