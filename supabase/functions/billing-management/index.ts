@@ -83,118 +83,21 @@ serve(async (req) => {
           .order('created_at', { ascending: false })
           .limit(100);
 
-        // If no real data, return sample restaurants for demonstration
-        const sampleRestaurants = [
-          {
-            id: '550e8400-e29b-41d4-a716-446655440001',
-            name: 'Bella Vista Restaurant',
-            slug: 'bella-vista',
-            status: 'active',
-            created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-            subscribers: [{
-              id: '550e8400-e29b-41d4-a716-446655440011',
-              subscribed: true,
-              subscription_tier: 'professional',
-              subscription_status: 'active',
-              billing_cycle: 'monthly',
-              current_period_end: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-              stripe_customer_id: 'cus_sample_001'
-            }],
-            lastPayment: {
-              status: 'paid',
-              amount: 18900,
-              created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-            },
-            failedPayments: 0,
-            totalRevenue: 37800
-          },
-          {
-            id: '550e8400-e29b-41d4-a716-446655440002',
-            name: 'The Golden Spoon',
-            slug: 'golden-spoon',
-            status: 'active',
-            created_at: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000).toISOString(),
-            subscribers: [{
-              id: '550e8400-e29b-41d4-a716-446655440012',
-              subscribed: true,
-              subscription_tier: 'starter',
-              subscription_status: 'active',
-              billing_cycle: 'monthly',
-              current_period_end: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString(),
-              stripe_customer_id: 'cus_sample_002'
-            }],
-            lastPayment: {
-              status: 'paid',
-              amount: 7900,
-              created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-            },
-            failedPayments: 0,
-            totalRevenue: 15800
-          },
-          {
-            id: '550e8400-e29b-41d4-a716-446655440003',
-            name: 'Ocean Breeze Café',
-            slug: 'ocean-breeze',
-            status: 'active',
-            created_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
-            subscribers: [{
-              id: '550e8400-e29b-41d4-a716-446655440013',
-              subscribed: true,
-              subscription_tier: 'enterprise',
-              subscription_status: 'past_due',
-              billing_cycle: 'monthly',
-              current_period_end: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-              stripe_customer_id: 'cus_sample_003'
-            }],
-            lastPayment: {
-              status: 'failed',
-              amount: 38900,
-              created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-            },
-            failedPayments: 1,
-            totalRevenue: 116700
-          },
-          {
-            id: '550e8400-e29b-41d4-a716-446655440004',
-            name: 'Rustic Kitchen',
-            slug: 'rustic-kitchen',
-            status: 'active',
-            created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
-            subscribers: [{
-              id: '550e8400-e29b-41d4-a716-446655440014',
-              subscribed: true,
-              subscription_tier: 'professional',
-              subscription_status: 'active',
-              billing_cycle: 'yearly',
-              current_period_end: new Date(Date.now() + 320 * 24 * 60 * 60 * 1000).toISOString(),
-              stripe_customer_id: 'cus_sample_004'
-            }],
-            lastPayment: {
-              status: 'paid',
-              amount: 189600,
-              created_at: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString()
-            },
-            failedPayments: 0,
-            totalRevenue: 189600
-          }
-        ];
+        // Use real tenant data - no mock data
+        const enhancedTenants = tenants?.map(tenant => {
+          const payments = recentPayments?.filter(p => p.tenant_id === tenant.id) || [];
+          const lastPayment = payments[0];
+          const failedPayments = payments.filter(p => p.status === 'failed').length;
+          
+          return {
+            ...tenant,
+            lastPayment,
+            failedPayments,
+            totalRevenue: payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0)
+          };
+        }) || [];
 
-        // Enhance data with payment info or use sample data
-        const enhancedTenants = tenants && tenants.length > 0 ? 
-          tenants.map(tenant => {
-            const payments = recentPayments?.filter(p => p.tenant_id === tenant.id) || [];
-            const lastPayment = payments[0];
-            const failedPayments = payments.filter(p => p.status === 'failed').length;
-            
-            return {
-              ...tenant,
-              lastPayment,
-              failedPayments,
-              totalRevenue: payments.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0)
-            };
-          }) : sampleRestaurants;
-
-        logStep("Fetched restaurants", { count: enhancedTenants?.length, real: tenants && tenants.length > 0 });
+        logStep("Fetched restaurants", { count: enhancedTenants?.length, tenants: tenants?.map(t => t.name) });
         return new Response(JSON.stringify({ restaurants: enhancedTenants }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -218,53 +121,9 @@ serve(async (req) => {
 
         const { data: payments } = await query.limit(50);
 
-        // If no real payments, return sample data
-        const samplePayments = [
-          {
-            id: '550e8400-e29b-41d4-a716-446655440021',
-            tenant_id: '550e8400-e29b-41d4-a716-446655440001',
-            amount: 18900,
-            currency: 'usd',
-            status: 'paid',
-            billing_reason: 'subscription_cycle',
-            paid_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            due_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-            tenants: { name: 'Bella Vista Restaurant', slug: 'bella-vista' },
-            subscribers: { subscription_tier: 'professional' }
-          },
-          {
-            id: '550e8400-e29b-41d4-a716-446655440022',
-            tenant_id: '550e8400-e29b-41d4-a716-446655440002',
-            amount: 7900,
-            currency: 'usd',
-            status: 'paid',
-            billing_reason: 'subscription_cycle',
-            paid_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            due_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-            tenants: { name: 'The Golden Spoon', slug: 'golden-spoon' },
-            subscribers: { subscription_tier: 'starter' }
-          },
-          {
-            id: '550e8400-e29b-41d4-a716-446655440023',
-            tenant_id: '550e8400-e29b-41d4-a716-446655440003',
-            amount: 38900,
-            currency: 'usd',
-            status: 'failed',
-            billing_reason: 'subscription_cycle',
-            paid_at: null,
-            due_date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-            tenants: { name: 'Ocean Breeze Café', slug: 'ocean-breeze' },
-            subscribers: { subscription_tier: 'enterprise' }
-          }
-        ];
-
-        const finalPayments = payments && payments.length > 0 ? payments : samplePayments;
-
-        logStep("Fetched payment history", { count: finalPayments?.length, tenantId, real: payments && payments.length > 0 });
-        return new Response(JSON.stringify({ payments: finalPayments }), {
+        // Return real payment data only - no mock data
+        logStep("Fetched payment history", { count: payments?.length || 0, tenantId });
+        return new Response(JSON.stringify({ payments: payments || [] }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
@@ -307,7 +166,7 @@ serve(async (req) => {
           new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
         const endDate = body.end_date || new Date().toISOString();
 
-        // Revenue analytics
+        // Revenue analytics from real data
         const { data: revenue } = await supabaseClient
           .from('billing_history')
           .select('amount, status, created_at, billing_reason')
@@ -315,41 +174,28 @@ serve(async (req) => {
           .lte('created_at', endDate)
           .eq('status', 'paid');
 
-        // Subscription analytics
+        // Subscription analytics from real data
         const { data: subscriptions } = await supabaseClient
           .from('subscribers')
           .select('subscription_tier, subscription_status, billing_cycle, created_at');
 
-        // If no real data, return sample data for demonstration
-        const sampleAnalytics = {
-          totalRevenue: 47850, // $478.50
-          totalTransactions: 15,
-          revenueByPlan: {
-            'starter': 15800, // $158.00
-            'professional': 18900, // $189.00
-            'enterprise': 13150  // $131.50
-          },
-          subscriptionsByTier: {
-            'starter': 12,
-            'professional': 8,
-            'enterprise': 3
-          },
-        };
-
-        const analytics = revenue && revenue.length > 0 ? {
+        // Use real data only
+        const analytics = {
           totalRevenue: revenue?.reduce((sum, r) => sum + r.amount, 0) || 0,
           totalTransactions: revenue?.length || 0,
           revenueByPlan: revenue?.reduce((acc, r) => {
-            acc['professional'] = (acc['professional'] || 0) + r.amount;
+            // Since we don't have plan info in billing_history, group generically
+            acc['subscription'] = (acc['subscription'] || 0) + r.amount;
             return acc;
           }, {} as Record<string, number>) || {},
           subscriptionsByTier: subscriptions?.reduce((acc, s) => {
-            acc[s.subscription_tier || 'starter'] = (acc[s.subscription_tier || 'starter'] || 0) + 1;
+            const tier = s.subscription_tier || 'free';
+            acc[tier] = (acc[tier] || 0) + 1;
             return acc;
           }, {} as Record<string, number>) || {},
-        } : sampleAnalytics;
+        };
 
-        logStep("Generated analytics", analytics);
+        logStep("Generated analytics", { analytics, revenueCount: revenue?.length, subsCount: subscriptions?.length });
         return new Response(JSON.stringify({ analytics }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
