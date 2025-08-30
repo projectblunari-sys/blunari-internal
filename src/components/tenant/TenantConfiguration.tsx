@@ -127,6 +127,8 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
             tenant_id: tenantId,
             created_at: provisioningData.created_at
           });
+          // Set a placeholder to indicate password exists but can't be displayed
+          setCurrentPassword('••••••••••••');
         }
       } else {
         // Fallback: use tenant's email if auto_provisioning not found
@@ -137,6 +139,8 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
             tenant_id: tenantId,
             created_at: tenantData.created_at
           });
+          // Set a placeholder to indicate password exists but can't be displayed
+          setCurrentPassword('••••••••••••');
           console.log('[CREDENTIALS] Using tenant email as fallback:', tenantData.email);
         } else {
           console.warn('[CREDENTIALS] No auto_provisioning record and no tenant email found');
