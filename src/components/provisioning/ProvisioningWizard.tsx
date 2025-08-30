@@ -5,11 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { BasicInformationStep } from './steps/BasicInformationStep'
-import { OwnerAccountStep } from './steps/OwnerAccountStep'
-import { BusinessConfigurationStep } from './steps/BusinessConfigurationStep'
-import { BillingSetupStep } from './steps/BillingSetupStep'
-import { FeatureConfigurationStep } from './steps/FeatureConfigurationStep'
+import { MinimalBasicStep } from './steps/MinimalBasicStep'
+import { MinimalBusinessStep } from './steps/MinimalBusinessStep'
+import { MinimalPlanStep } from './steps/MinimalPlanStep'
 import { ProvisioningSummary } from './ProvisioningSummary'
 import { supabase } from '@/integrations/supabase/client'
 
@@ -70,11 +68,9 @@ export interface ProvisioningData {
 }
 
 const STEPS = [
-  { id: 1, title: 'Basic Information', description: 'Restaurant details and contact' },
-  { id: 2, title: 'Owner Account', description: 'Create your admin account' },
-  { id: 3, title: 'Business Configuration', description: 'Hours, timezone, and settings' },
-  { id: 4, title: 'Billing Setup', description: 'Choose your plan and billing' },
-  { id: 5, title: 'Feature Configuration', description: 'Enable advanced features' },
+  { id: 1, title: 'Restaurant & Owner', description: 'Basic details and admin account' },
+  { id: 2, title: 'Business Setup', description: 'Hours, timezone, and settings' },
+  { id: 3, title: 'Plan Selection', description: 'Choose your subscription plan' },
 ]
 
 interface ProvisioningWizardProps {
@@ -156,15 +152,11 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(data.restaurantName && data.slug && data.email && data.phone && data.cuisineTypeId)
+        return !!(data.restaurantName && data.email && data.ownerFirstName && data.ownerLastName && data.ownerEmail && data.ownerPassword && data.cuisineTypeId)
       case 2:
-        return !!(data.ownerFirstName && data.ownerLastName && data.ownerEmail && data.ownerPassword)
-      case 3:
         return data.businessHours.some(h => h.isOpen)
-      case 4:
+      case 3:
         return !!data.selectedPlanId
-      case 5:
-        return true // Feature configuration is optional
       default:
         return false
     }
@@ -219,15 +211,11 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <BasicInformationStep data={data} updateData={updateData} />
+        return <MinimalBasicStep data={data} updateData={updateData} />
       case 2:
-        return <OwnerAccountStep data={data} updateData={updateData} />
+        return <MinimalBusinessStep data={data} updateData={updateData} />
       case 3:
-        return <BusinessConfigurationStep data={data} updateData={updateData} />
-      case 4:
-        return <BillingSetupStep data={data} updateData={updateData} />
-      case 5:
-        return <FeatureConfigurationStep data={data} updateData={updateData} />
+        return <MinimalPlanStep data={data} updateData={updateData} />
       default:
         return null
     }
@@ -257,7 +245,7 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
             <Progress value={progress} className="mb-4" />
             
             {/* Step Indicators */}
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {STEPS.map((step) => (
                 <div
                   key={step.id}
