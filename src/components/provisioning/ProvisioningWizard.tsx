@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { CheckCircle, ArrowLeft, ArrowRight, Sparkles } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { MinimalBasicStep } from './steps/MinimalBasicStep'
-import { MinimalBusinessStep } from './steps/MinimalBusinessStep'
-import { MinimalPlanStep } from './steps/MinimalPlanStep'
+import { RestaurantInfoStep } from './steps/RestaurantInfoStep'
+import { BusinessSetupStep } from './steps/BusinessSetupStep'
+import { PlanSelectionStep } from './steps/PlanSelectionStep'
 import { ProvisioningSummary } from './ProvisioningSummary'
 import { supabase } from '@/integrations/supabase/client'
 import { useSlugValidation } from '@/hooks/useSlugValidation'
@@ -175,9 +175,9 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        return !!(data.restaurantName && data.email && data.ownerFirstName && data.ownerLastName && data.ownerEmail && data.ownerPassword && data.cuisineTypeId)
+        return !!(data.restaurantName && data.email && data.cuisineTypeId)
       case 2:
-        return data.businessHours.some(h => h.isOpen)
+        return !!(data.ownerFirstName && data.ownerLastName && data.ownerEmail && data.ownerPassword)
       case 3:
         return !!data.selectedPlanId
       default:
@@ -234,11 +234,11 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <MinimalBasicStep data={data} updateData={updateData} />
+        return <RestaurantInfoStep data={data} updateData={updateData} />
       case 2:
-        return <MinimalBusinessStep data={data} updateData={updateData} />
+        return <BusinessSetupStep data={data} updateData={updateData} />
       case 3:
-        return <MinimalPlanStep data={data} updateData={updateData} />
+        return <PlanSelectionStep data={data} updateData={updateData} />
       default:
         return null
     }
