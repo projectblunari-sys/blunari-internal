@@ -27,8 +27,16 @@ export const EmailOptionsDialog: React.FC<EmailOptionsDialogProps> = ({
   const { toast } = useToast();
 
   const sendWelcomePack = async () => {
+    console.log('Sending welcome pack email...');
     setSendingWelcome(true);
     try {
+      console.log('Invoking send-welcome-pack function with data:', {
+        ownerName: provisioningData.ownerName,
+        ownerEmail: provisioningData.ownerEmail,
+        restaurantName: provisioningData.restaurantName,
+        loginUrl: provisioningData.loginUrl
+      });
+
       const { data, error } = await supabase.functions.invoke('send-welcome-pack', {
         body: {
           ownerName: provisioningData.ownerName,
@@ -38,7 +46,12 @@ export const EmailOptionsDialog: React.FC<EmailOptionsDialogProps> = ({
         }
       });
 
-      if (error) throw error;
+      console.log('Welcome pack response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       if (data?.success) {
         toast({
@@ -61,8 +74,17 @@ export const EmailOptionsDialog: React.FC<EmailOptionsDialogProps> = ({
   };
 
   const sendCredentials = async () => {
+    console.log('Sending credentials email...');
     setSendingCredentials(true);
     try {
+      console.log('Invoking send-credentials-email function with data:', {
+        ownerName: provisioningData.ownerName,
+        ownerEmail: provisioningData.ownerEmail,
+        ownerPassword: '***HIDDEN***',
+        restaurantName: provisioningData.restaurantName,
+        loginUrl: provisioningData.loginUrl
+      });
+
       const { data, error } = await supabase.functions.invoke('send-credentials-email', {
         body: {
           ownerName: provisioningData.ownerName,
@@ -73,7 +95,12 @@ export const EmailOptionsDialog: React.FC<EmailOptionsDialogProps> = ({
         }
       });
 
-      if (error) throw error;
+      console.log('Credentials response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       if (data?.success) {
         toast({
@@ -94,6 +121,8 @@ export const EmailOptionsDialog: React.FC<EmailOptionsDialogProps> = ({
       setSendingCredentials(false);
     }
   };
+
+  console.log('EmailOptionsDialog rendering with data:', provisioningData);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
