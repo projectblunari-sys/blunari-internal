@@ -13,9 +13,42 @@ export default function NewTenantPage() {
       console.log('Starting tenant provisioning...', { restaurantName: data.restaurantName })
       console.log('Full provisioning data:', data)
       
+      // Transform data to match the provision-tenant function expected format
+      const provisionData = {
+        // Basic Information
+        restaurantName: data.restaurantName,
+        slug: data.slug,
+        description: data.description,
+        phone: data.phone,
+        email: data.email,
+        website: data.website,
+        address: data.address,
+        cuisineTypeId: data.cuisineTypeId,
+
+        // Owner Account
+        ownerFirstName: data.ownerFirstName,
+        ownerLastName: data.ownerLastName,
+        ownerEmail: data.ownerEmail,
+        ownerPassword: data.ownerPassword,
+
+        // Business Configuration
+        timezone: data.timezone,
+        businessHours: data.businessHours,
+        partySizeConfig: data.partySizeConfig,
+
+        // Billing Setup
+        selectedPlanId: data.selectedPlanId,
+        billingCycle: data.billingCycle,
+        
+        // Feature Configuration
+        enabledFeatures: data.enabledFeatures
+      }
+
+      console.log('Transformed provision data:', provisionData)
+      
       // Call the comprehensive provision-tenant edge function
       const response = await supabase.functions.invoke('provision-tenant', {
-        body: data
+        body: provisionData
       })
 
       console.log('Raw Supabase response:', response)

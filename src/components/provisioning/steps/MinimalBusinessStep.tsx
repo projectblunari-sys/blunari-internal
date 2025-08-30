@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +22,24 @@ const TIMEZONES = [
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
 export function MinimalBusinessStep({ data, updateData }: MinimalBusinessStepProps) {
+  // Set default values if not already set
+  useEffect(() => {
+    if (!data.timezone) {
+      updateData({ timezone: 'America/New_York' })
+    }
+    if (!data.businessHours || data.businessHours.length === 0) {
+      const defaultHours = [
+        { dayOfWeek: 0, isOpen: false, openTime: '09:00', closeTime: '22:00' }, // Sunday
+        { dayOfWeek: 1, isOpen: true, openTime: '09:00', closeTime: '22:00' },  // Monday
+        { dayOfWeek: 2, isOpen: true, openTime: '09:00', closeTime: '22:00' },  // Tuesday
+        { dayOfWeek: 3, isOpen: true, openTime: '09:00', closeTime: '22:00' },  // Wednesday
+        { dayOfWeek: 4, isOpen: true, openTime: '09:00', closeTime: '22:00' },  // Thursday
+        { dayOfWeek: 5, isOpen: true, openTime: '09:00', closeTime: '23:00' },  // Friday
+        { dayOfWeek: 6, isOpen: true, openTime: '09:00', closeTime: '23:00' },  // Saturday
+      ]
+      updateData({ businessHours: defaultHours })
+    }
+  }, [])
   const updateBusinessHours = (dayOfWeek: number, updates: Partial<typeof data.businessHours[0]>) => {
     const newHours = data.businessHours.map(h => 
       h.dayOfWeek === dayOfWeek ? { ...h, ...updates } : h

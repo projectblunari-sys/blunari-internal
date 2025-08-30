@@ -23,6 +23,12 @@ interface MinimalPlanStepProps {
 }
 
 export function MinimalPlanStep({ data, updateData }: MinimalPlanStepProps) {
+  // Set default plan if not selected
+  useEffect(() => {
+    if (!data.selectedPlanId) {
+      updateData({ selectedPlanId: 'starter' })
+    }
+  }, [])
   const [plans, setPlans] = useState<PricingPlan[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
