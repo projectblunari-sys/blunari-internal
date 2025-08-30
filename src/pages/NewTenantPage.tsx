@@ -1,10 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ProvisioningWizard, type ProvisioningData } from '@/components/provisioning/ProvisioningWizard'
+import { EmailOptionsDialog } from '@/components/provisioning/EmailOptionsDialog'
 import { supabase } from '@/integrations/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
 export default function NewTenantPage() {
+  const [showEmailDialog, setShowEmailDialog] = useState(false)
+  const [provisioningData, setProvisioningData] = useState<any>(null)
   const navigate = useNavigate()
   const { toast } = useToast()
 
@@ -70,13 +73,22 @@ export default function NewTenantPage() {
         throw new Error(result.error || 'Failed to provision tenant')
       }
 
-      toast({
-        title: "Success!",
-        description: result.message || `${data.restaurantName} has been successfully created!`,
-      })
-
-      // Navigate back to tenants list
-      navigate('/admin/tenants')
+      if (result.provisioningData) {
+        toast({
+          title: "Tenant Provisioned Successfully! 🎉",
+          description: `${result.message} Choose which emails to send.`,
+        })
+        
+        // Store provisioning data and show email dialog
+        setProvisioningData(result.provisioningData)
+        setShowEmailDialog(true)
+      } else {
+        toast({
+          title: "Success!",
+          description: result.message || `${data.restaurantName} has been successfully created!`,
+        })
+        navigate('/admin/tenants')
+      }
     } catch (error) {
       console.error('Provisioning error:', error)
       toast({
@@ -92,10 +104,25 @@ export default function NewTenantPage() {
     navigate('/admin/tenants')
   }
 
+  const handleEmailDialogClose = () => {
+    setShowEmailDialog(false)
+    navigate('/admin/tenants')
+  }
+
   return (
-    <ProvisioningWizard 
-      onComplete={handleProvisioningComplete}
-      onCancel={handleCancel}
-    />
+    <>
+      <ProvisioningWizard 
+        onComplete={handleProvisioningComplete}
+        onCancel={handleCancel}
+      />
+      
+      {showEmailDialog && provisioningData && (
+        <EmailOptionsDialog
+          isOpen={showEmailDialog}
+          onClose={handleEmailDialogClose}
+          provisioningData={provisioningData}
+        />
+      )}
+    </>
   )
 }
