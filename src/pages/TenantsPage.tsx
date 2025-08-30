@@ -153,14 +153,16 @@ const TenantsPage = () => {
         return;
       }
 
-      // Delete related data first (domains, features, etc.)
+      // Delete auto_provisioning first to avoid foreign key constraint
+      await supabase.from('auto_provisioning').delete().eq('tenant_id', tenant.id);
+
+      // Delete related data (domains, features, etc.)
       const deletePromises = [
         supabase.from('domains').delete().eq('tenant_id', tenant.id),
         supabase.from('tenant_features').delete().eq('tenant_id', tenant.id),
         supabase.from('restaurant_tables').delete().eq('tenant_id', tenant.id),
         supabase.from('business_hours').delete().eq('tenant_id', tenant.id),
-        supabase.from('party_size_configs').delete().eq('tenant_id', tenant.id),
-        supabase.from('auto_provisioning').delete().eq('tenant_id', tenant.id)
+        supabase.from('party_size_configs').delete().eq('tenant_id', tenant.id)
       ];
 
       await Promise.all(deletePromises);
