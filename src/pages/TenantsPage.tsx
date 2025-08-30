@@ -262,37 +262,63 @@ const TenantsPage = () => {
     }
   };
 
-  // Memoized stats for performance
-  const stats = useMemo(() => [
-    {
-      title: "Total Tenants",
-      value: totalCount.toString(),
-      icon: Building2,
-      color: "from-blue-500 to-blue-600"
-    },
-    {
-      title: "Active Tenants", 
-      value: tenants.filter(t => t.status === 'active').length.toString(),
-      icon: Users,
-      color: "from-green-500 to-green-600"
-    },
-    {
-      title: "New This Month",
-      value: tenants.filter(t => {
-        const created = new Date(t.created_at);
-        const now = new Date();
-        return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
-      }).length.toString(),
-      icon: Calendar,
-      color: "from-purple-500 to-purple-600"
-    },
-    {
-      title: "Growth Rate",
-      value: "+12.5%",
-      icon: TrendingUp,
-      color: "from-orange-500 to-orange-600"
-    }
-  ], [tenants, totalCount]);
+  // Memoized stats for performance with real data calculations
+  const stats = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Calculate tenants from this month
+    const thisMonthTenants = tenants.filter(t => {
+      const created = new Date(t.created_at);
+      return created.getMonth() === currentMonth && created.getFullYear() === currentYear;
+    });
+    
+    // Calculate tenants from last month
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    const lastMonthTenants = tenants.filter(t => {
+      const created = new Date(t.created_at);
+      return created.getMonth() === lastMonth && created.getFullYear() === lastMonthYear;
+    });
+    
+    // Calculate growth rate
+    const calculateGrowthRate = () => {
+      if (lastMonthTenants.length === 0) {
+        return thisMonthTenants.length > 0 ? "+100%" : "0%";
+      }
+      const growth = ((thisMonthTenants.length - lastMonthTenants.length) / lastMonthTenants.length) * 100;
+      const sign = growth >= 0 ? "+" : "";
+      return `${sign}${growth.toFixed(1)}%`;
+    };
+
+    return [
+      {
+        title: "Total Tenants",
+        value: totalCount.toString(),
+        icon: Building2,
+        color: "from-blue-500 to-blue-600"
+      },
+      {
+        title: "Active Tenants", 
+        value: tenants.filter(t => t.status === 'active').length.toString(),
+        icon: Users,
+        color: "from-green-500 to-green-600"
+      },
+      {
+        title: "New This Month",
+        value: thisMonthTenants.length.toString(),
+        icon: Calendar,
+        color: "from-purple-500 to-purple-600"
+      },
+      {
+        title: "Growth Rate",
+        value: calculateGrowthRate(),
+        icon: TrendingUp,
+        color: "from-orange-500 to-orange-600"
+      }
+    ];
+  }, [tenants, totalCount]);
 
   if (loading) {
     return <LoadingState title="Loading Tenants" description="Fetching tenant directory and statistics" rows={8} />;
