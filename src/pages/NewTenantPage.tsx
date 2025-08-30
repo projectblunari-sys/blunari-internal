@@ -10,14 +10,22 @@ export default function NewTenantPage() {
 
   const handleProvisioningComplete = async (data: ProvisioningData) => {
     try {
+      console.log('Starting tenant provisioning...', { restaurantName: data.restaurantName })
+      
       // Call the comprehensive provision-tenant edge function
       const { data: result, error } = await supabase.functions.invoke('provision-tenant', {
         body: data
       })
 
-      if (error) throw error
+      console.log('Provisioning response:', { result, error })
+
+      if (error) {
+        console.error('Supabase function error:', error)
+        throw error
+      }
 
       if (!result.success) {
+        console.error('Provisioning failed:', result.error)
         throw new Error(result.error || 'Failed to provision tenant')
       }
 
@@ -30,6 +38,11 @@ export default function NewTenantPage() {
       navigate('/admin/tenants')
     } catch (error) {
       console.error('Provisioning error:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      })
       throw error
     }
   }
