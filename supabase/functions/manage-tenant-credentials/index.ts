@@ -54,18 +54,31 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`[CREDENTIALS] User ${user.email} attempting ${action}`);
 
-    // Check if user has admin privileges
+    // Check if user has admin privileges - check both employee role and profile role
     const { data: employee } = await supabaseAdmin
       .from('employees')
       .select('role')
       .eq('user_id', user.id)
       .eq('status', 'ACTIVE')
-      .single();
+      .maybeSingle();
 
-    if (!employee || !['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(employee.role)) {
-      console.error('Insufficient privileges. User role:', employee?.role);
+    // Also check profiles table for role
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const userRole = employee?.role || profile?.role;
+    const hasAdminAccess = employee && ['SUPER_ADMIN', 'ADMIN', 'SUPPORT'].includes(employee.role) ||
+                          profile && ['owner', 'admin'].includes(profile.role);
+
+    if (!hasAdminAccess) {
+      console.error('Insufficient privileges. Employee role:', employee?.role, 'Profile role:', profile?.role);
       throw new Error('Insufficient privileges');
     }
+
+    console.log(`[CREDENTIALS] User has access. Employee role: ${employee?.role}, Profile role: ${profile?.role}`);
 
     // Get tenant owner user ID - try auto_provisioning first, then fallback to tenant email
     let tenantOwnerId: string | null = null;
