@@ -4314,9 +4314,27 @@ export type Database = {
         }
         Returns: string
       }
+      decrypt_sensitive_data: {
+        Args: { encrypted_data: string; encryption_key?: string }
+        Returns: string
+      }
       delete_tenant_complete: {
         Args: { p_tenant_id: string }
         Returns: boolean
+      }
+      encrypt_sensitive_data: {
+        Args: { data: string; encryption_key?: string }
+        Returns: string
+      }
+      enhanced_security_audit: {
+        Args: {
+          operation_type: string
+          resource_id?: string
+          resource_type?: string
+          risk_level?: string
+          sensitive_data_accessed?: boolean
+        }
+        Returns: undefined
       }
       generate_ticket_number: {
         Args: Record<PropertyKey, never>
@@ -4496,6 +4514,10 @@ export type Database = {
           p_severity?: string
           p_status_code?: number
         }
+        Returns: string
+      }
+      sanitize_html_input: {
+        Args: { input_text: string }
         Returns: string
       }
       strict_tenant_access_check: {
