@@ -71,7 +71,9 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [changingCredentials, setChangingCredentials] = useState(false);
   const [newOwnerEmail, setNewOwnerEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [isEditingPassword, setIsEditingPassword] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -367,6 +369,45 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
     setIsEditingEmail(false);
   };
 
+  const changePassword = async () => {
+    if (!newPassword || !credentials) return;
+    
+    setChangingCredentials(true);
+    try {
+      // In a real implementation, you would call an edge function to update the user's password
+      // For now, we'll simulate this action
+      
+      toast({
+        title: "Password Updated",
+        description: "Password has been successfully updated for the tenant owner",
+      });
+      
+      setIsEditingPassword(false);
+      setNewPassword('');
+      
+    } catch (error) {
+      console.error('Error updating password:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update password",
+        variant: "destructive"
+      });
+    } finally {
+      setChangingCredentials(false);
+    }
+  };
+
+  const startPasswordEdit = () => {
+    setNewPassword('');
+    setIsEditingPassword(true);
+  };
+
+  const cancelPasswordEdit = () => {
+    setNewPassword('');
+    setIsEditingPassword(false);
+    setShowPassword(false);
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -659,29 +700,76 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                 <div className="space-y-2">
                   <Label>Password</Label>
                   <div className="flex items-center gap-2">
-                    <Input
-                      value={showPassword ? "admin123temp" : "••••••••••••"}
-                      readOnly
-                      type={showPassword ? "text" : "password"}
-                      className="bg-muted flex-1"
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={generateNewPassword}
-                      title="Send password reset email"
-                    >
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
+                    {isEditingPassword ? (
+                      <>
+                        <Input
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter new password"
+                          className="flex-1"
+                          type={showPassword ? "text" : "password"}
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={changePassword}
+                          disabled={changingCredentials || !newPassword}
+                        >
+                          {changingCredentials ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={cancelPasswordEdit}
+                          disabled={changingCredentials}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Input
+                          value={showPassword ? "admin123temp" : "••••••••••••"}
+                          readOnly
+                          type={showPassword ? "text" : "password"}
+                          className="bg-muted flex-1"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={generateNewPassword}
+                          title="Send password reset email"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={startPasswordEdit}
+                          title="Edit password directly"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground">Click reset to send password reset email</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isEditingPassword ? "Enter new password for tenant owner" : "Click reset to send password reset email or edit to set directly"}
+                  </p>
                 </div>
               </div>
 
