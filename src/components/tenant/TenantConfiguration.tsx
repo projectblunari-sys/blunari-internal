@@ -72,7 +72,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
   const [changingCredentials, setChangingCredentials] = useState(false);
   const [newOwnerEmail, setNewOwnerEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [currentPassword, setCurrentPassword] = useState(''); // Store current password
+  const [currentPassword, setCurrentPassword] = useState(''); // Only shows generated passwords
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const { toast } = useToast();
@@ -127,8 +127,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
             tenant_id: tenantId,
             created_at: provisioningData.created_at
           });
-          // Set a placeholder to indicate password exists but can't be displayed
-          setCurrentPassword('••••••••••••');
+          // Don't set currentPassword - existing passwords can't be displayed
         }
       } else {
         // Fallback: use tenant's email if auto_provisioning not found
@@ -139,8 +138,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
             tenant_id: tenantId,
             created_at: tenantData.created_at
           });
-          // Set a placeholder to indicate password exists but can't be displayed
-          setCurrentPassword('••••••••••••');
+          // Don't set currentPassword - existing passwords can't be displayed
           console.log('[CREDENTIALS] Using tenant email as fallback:', tenantData.email);
         } else {
           console.warn('[CREDENTIALS] No auto_provisioning record and no tenant email found');
@@ -790,15 +788,18 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                     ) : (
                       <>
                         <Input
-                          value={showPassword ? currentPassword : "••••••••••••"}
+                          value={currentPassword ? (showPassword ? currentPassword : "••••••••••••") : "••••••••••••"}
                           readOnly
-                          type={showPassword ? "text" : "password"}
+                          type="password"
                           className="bg-muted flex-1"
+                          placeholder={currentPassword ? "" : "Existing password (cannot be displayed)"}
                         />
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => setShowPassword(!showPassword)}
+                          disabled={!currentPassword}
+                          title={currentPassword ? "Toggle password visibility" : "Password can only be viewed after generating a new one"}
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </Button>
@@ -822,7 +823,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {isEditingPassword ? "Enter new password for tenant owner" : "Click reset to send password reset email or edit to set directly"}
+                    {isEditingPassword ? "Enter new password for tenant owner" : currentPassword ? "Click the eye to view generated password" : "Existing passwords cannot be displayed. Generate a new password to view it."}
                   </p>
                 </div>
               </div>
