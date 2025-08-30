@@ -72,7 +72,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
   const [changingCredentials, setChangingCredentials] = useState(false);
   const [newOwnerEmail, setNewOwnerEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [currentPassword, setCurrentPassword] = useState('admin123temp'); // Store current password
+  const [currentPassword, setCurrentPassword] = useState(''); // Store current password
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const { toast } = useToast();
