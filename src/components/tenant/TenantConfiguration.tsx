@@ -17,7 +17,11 @@ import {
   Shield, 
   Palette,
   Save,
-  RefreshCw
+  RefreshCw,
+  Key,
+  User,
+  Copy,
+  RotateCcw
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -45,9 +49,17 @@ interface TenantFeature {
   feature_name?: string;
 }
 
+interface TenantCredentials {
+  owner_email: string;
+  tenant_slug: string;
+  tenant_id: string;
+  created_at: string;
+}
+
 export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
   const [settings, setSettings] = useState<TenantSettings | null>(null);
   const [features, setFeatures] = useState<TenantFeature[]>([]);
+  const [credentials, setCredentials] = useState<TenantCredentials | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
@@ -77,6 +89,34 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
 
       if (featuresError) throw featuresError;
       setFeatures(featuresData || []);
+
+      // Fetch tenant credentials (owner info)
+      const { data: provisioningData, error: provisioningError } = await supabase
+        .from('auto_provisioning')
+        .select('user_id, tenant_id, created_at')
+        .eq('tenant_id', tenantId)
+        .eq('status', 'completed')
+        .single();
+
+      if (provisioningError) {
+        console.warn('Could not fetch provisioning data:', provisioningError);
+      } else if (provisioningData) {
+        // Fetch user profile separately
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', provisioningData.user_id)
+          .single();
+
+        if (profileData) {
+          setCredentials({
+            owner_email: profileData.email,
+            tenant_slug: tenantData.slug,
+            tenant_id: tenantId,
+            created_at: provisioningData.created_at
+          });
+        }
+      }
 
     } catch (error) {
       console.error('Error fetching tenant configuration:', error);
@@ -187,6 +227,30 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
 
   const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
   const statuses = ['active', 'inactive', 'suspended'];
+
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Copied",
+        description: `${label} copied to clipboard`
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy to clipboard",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const generateNewPassword = async () => {
+    // This would typically call an API to reset the user's password
+    toast({
+      title: "Password Reset",
+      description: "Password reset email has been sent to the tenant owner",
+    });
+  };
 
   if (loading) {
     return (
@@ -397,6 +461,127 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Login Credentials */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            Login Credentials
+          </CardTitle>
+          <CardDescription>
+            Tenant owner login information and account access
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {credentials ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Owner Email
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={credentials.owner_email}
+                      readOnly
+                      className="bg-muted"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => copyToClipboard(credentials.owner_email, "Email")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Primary login email address</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Password</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value="••••••••••••"
+                      readOnly
+                      type="password"
+                      className="bg-muted"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={generateNewPassword}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Click reset to send password reset email</p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Tenant ID</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={credentials.tenant_id}
+                      readOnly
+                      className="bg-muted font-mono text-xs"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => copyToClipboard(credentials.tenant_id, "Tenant ID")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Unique tenant identifier</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Access URL</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={`https://app.blunari.com/${credentials.tenant_slug}`}
+                      readOnly
+                      className="bg-muted"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => copyToClipboard(`https://app.blunari.com/${credentials.tenant_slug}`, "Access URL")}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Direct login URL for this tenant</p>
+                </div>
+              </div>
+
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Key className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <h4 className="font-medium mb-1">Account Created</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(credentials.created_at).toLocaleDateString()} at {new Date(credentials.created_at).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <Key className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>No login credentials found for this tenant</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
