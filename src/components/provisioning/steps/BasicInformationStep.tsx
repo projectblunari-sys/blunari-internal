@@ -37,7 +37,6 @@ export function BasicInformationStep({ data, updateData }: BasicInformationStepP
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2">Basic Information</h2>
-        <p className="text-muted-foreground">Essential details about your restaurant</p>
       </div>
 
       <Card>

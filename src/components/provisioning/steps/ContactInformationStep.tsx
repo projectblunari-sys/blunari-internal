@@ -15,7 +15,6 @@ export function ContactInformationStep({ data, updateData }: ContactInformationS
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2">Contact Information</h2>
-        <p className="text-muted-foreground">How customers and partners can reach your restaurant</p>
       </div>
 
       <Card>
