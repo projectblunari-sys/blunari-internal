@@ -10,6 +10,7 @@ import { MinimalBusinessStep } from './steps/MinimalBusinessStep'
 import { MinimalPlanStep } from './steps/MinimalPlanStep'
 import { ProvisioningSummary } from './ProvisioningSummary'
 import { supabase } from '@/integrations/supabase/client'
+import { useSlugValidation } from '@/hooks/useSlugValidation'
 
 export interface ProvisioningData {
   // Basic Information
@@ -83,6 +84,7 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
   const [isProcessing, setIsProcessing] = useState(false)
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
   const { toast } = useToast()
+  const { generateUniqueSlug, isValidating } = useSlugValidation()
 
   const [data, setData] = useState<ProvisioningData>({
     restaurantName: '',
@@ -132,18 +134,39 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
     }
   })
 
-  // Auto-generate slug from restaurant name
+  // Auto-generate unique slug from restaurant name
   useEffect(() => {
-    if (data.restaurantName && !data.slug) {
-      const generatedSlug = data.restaurantName
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim()
-      setData(prev => ({ ...prev, slug: generatedSlug }))
+     const generateSlug = async () => {
+      if (data.restaurantName && (!data.slug || data.slug === '')) {
+        console.log('Generating slug for:', data.restaurantName)
+        try {
+          const uniqueSlug = await generateUniqueSlug(data.restaurantName)
+          console.log('Generated unique slug:', uniqueSlug)
+          setData(prev => ({ ...prev, slug: uniqueSlug }))
+        } catch (error) {
+          console.error('Error generating slug:', error)
+          // Fallback to simple slug generation
+          let fallbackSlug = data.restaurantName
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .trim()
+          
+          if (fallbackSlug.length < 3) {
+            fallbackSlug = fallbackSlug + '-restaurant'
+          }
+          
+          setData(prev => ({ ...prev, slug: fallbackSlug }))
+        }
+      }
     }
-  }, [data.restaurantName, data.slug])
+    
+    if (data.restaurantName && !isValidating) {
+      generateSlug()
+    }
+  }, [data.restaurantName, generateUniqueSlug, isValidating])
 
   const updateData = (updates: Partial<ProvisioningData>) => {
     setData(prev => ({ ...prev, ...updates }))

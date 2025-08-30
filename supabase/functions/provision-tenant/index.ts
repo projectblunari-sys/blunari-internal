@@ -179,6 +179,13 @@ serve(async (req) => {
 
     if (tenantError) {
       logStep("Error creating tenant", tenantError)
+      
+      // Provide specific error message for duplicate slug
+      if (tenantError.message.includes('duplicate key value violates unique constraint') && 
+          tenantError.message.includes('restaurant_slug')) {
+        throw new Error(`Restaurant slug "${requestData.slug}" is already taken. Please choose a different slug.`)
+      }
+      
       throw new Error(`Failed to create tenant: ${tenantError.message}`)
     }
 
