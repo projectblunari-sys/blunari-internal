@@ -59,14 +59,21 @@ export const useBillingAPI = () => {
   const callBillingAPI = async (endpoint: string, options?: { method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'; body?: any }) => {
     try {
       setLoading(true);
+      console.log('Calling billing API:', endpoint, options);
       
       const { data, error } = await supabase.functions.invoke('billing-management', {
-        body: options?.body,
-        method: options?.method || 'GET',
+        body: { 
+          action: endpoint,
+          ...options?.body 
+        },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Billing API error:', error);
+        throw error;
+      }
       
+      console.log('Billing API response:', data);
       return data;
     } catch (error: any) {
       console.error('Billing API error:', error);
