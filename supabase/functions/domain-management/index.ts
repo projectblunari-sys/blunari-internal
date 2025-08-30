@@ -42,14 +42,10 @@ serve(async (req) => {
     }
 
     const cloudflareToken = Deno.env.get('CLOUDFLARE_API_TOKEN')
-    if (!cloudflareToken) {
-      throw new Error('Cloudflare API token not configured')
-    }
-
-    const cloudflareHeaders = {
+    const cloudflareHeaders = cloudflareToken ? {
       'Authorization': `Bearer ${cloudflareToken}`,
       'Content-Type': 'application/json',
-    }
+    } : null
 
     let result
     
@@ -131,7 +127,7 @@ async function addDomain(supabase: any, params: any, cloudflareHeaders: any) {
 
   // Check if Cloudflare is configured
   const cloudflareZoneId = Deno.env.get('CLOUDFLARE_ZONE_ID')
-  if (!cloudflareZoneId) {
+  if (!cloudflareZoneId || !cloudflareHeaders) {
     console.log('Cloudflare not configured, skipping external DNS setup')
     return { domain_id: domainData, cloudflare_data: null }
   }
@@ -157,7 +153,9 @@ async function addDomain(supabase: any, params: any, cloudflareHeaders: any) {
   const cloudflareData: CloudflareResponse = await cloudflareResponse.json()
   
   if (!cloudflareData.success) {
-    throw new Error(`Cloudflare error: ${cloudflareData.errors?.[0]?.message || 'Unknown error'}`)
+    console.log('Cloudflare error:', cloudflareData.errors)
+    // Don't throw error - just log it and continue without Cloudflare
+    return { domain_id: domainData, cloudflare_data: null, warning: 'Domain created but Cloudflare setup failed' }
   }
 
   // Update domain with Cloudflare data
