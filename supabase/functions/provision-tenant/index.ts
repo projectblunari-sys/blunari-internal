@@ -353,7 +353,10 @@ serve(async (req) => {
       console.log('Email payload:', emailPayload);
       
       const emailResult = await supabaseAdmin.functions.invoke('send-welcome-email', {
-        body: emailPayload
+        body: emailPayload,
+        headers: {
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`
+        }
       });
 
       if (emailResult.error) {
