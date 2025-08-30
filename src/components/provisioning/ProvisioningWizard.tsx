@@ -83,6 +83,7 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
   const [currentStep, setCurrentStep] = useState(1)
   const [isProcessing, setIsProcessing] = useState(false)
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
+  const [isAnimating, setIsAnimating] = useState(false)
   const { toast } = useToast()
   const { generateUniqueSlug, isValidating } = useSlugValidation()
 
@@ -195,18 +196,31 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
       return
     }
 
+    if (isAnimating) return
+
     setCompletedSteps(prev => new Set([...prev, currentStep]))
 
     if (currentStep < STEPS.length) {
-      setCurrentStep(currentStep + 1)
+      setIsAnimating(true)
+      
+      // Small delay for smooth transition
+      setTimeout(() => {
+        setCurrentStep(currentStep + 1)
+        setIsAnimating(false)
+      }, 150)
     } else {
       await handleComplete()
     }
   }
 
   const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+    if (currentStep > 1 && !isAnimating) {
+      setIsAnimating(true)
+      
+      setTimeout(() => {
+        setCurrentStep(currentStep - 1)
+        setIsAnimating(false)
+      }, 150)
     }
   }
 
@@ -232,16 +246,31 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
   }
 
   const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return <RestaurantInfoStep data={data} updateData={updateData} />
-      case 2:
-        return <BusinessSetupStep data={data} updateData={updateData} />
-      case 3:
-        return <PlanSelectionStep data={data} updateData={updateData} />
-      default:
-        return null
-    }
+    const stepContent = (() => {
+      switch (currentStep) {
+        case 1:
+          return <RestaurantInfoStep data={data} updateData={updateData} />
+        case 2:
+          return <BusinessSetupStep data={data} updateData={updateData} />
+        case 3:
+          return <PlanSelectionStep data={data} updateData={updateData} />
+        default:
+          return null
+      }
+    })()
+
+    return (
+      <div 
+        key={currentStep}
+        className={`
+          transition-all duration-300 ease-out
+          ${isAnimating ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}
+          animate-fade-in
+        `}
+      >
+        {stepContent}
+      </div>
+    )
   }
 
   const progress = (currentStep / STEPS.length) * 100
@@ -250,79 +279,178 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4">
       <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-primary to-primary/80">
+        <motion.div 
+          className="mb-8 text-center"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.div 
+            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-primary to-primary/80 shadow-lg"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ 
+              duration: 0.8, 
+              delay: 0.2,
+              type: "spring",
+              stiffness: 200,
+              damping: 15
+            }}
+          >
             <Sparkles className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">Restaurant Setup Wizard</h1>
-          <p className="text-muted-foreground">Let's get your restaurant online in just a few steps</p>
-        </div>
+          </motion.div>
+          <motion.h1 
+            className="text-3xl font-bold tracking-tight"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            Restaurant Setup Wizard
+          </motion.h1>
+          <motion.p 
+            className="text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+          >
+            Let's get your restaurant online in just a few steps
+          </motion.p>
+        </motion.div>
 
         {/* Progress Bar */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm font-medium">Step {currentStep} of {STEPS.length}</span>
-              <span className="text-sm text-muted-foreground">{Math.round(progress)}% Complete</span>
-            </div>
-            <Progress value={progress} className="mb-4" />
-            
-            {/* Step Indicators */}
-            <div className="grid grid-cols-3 gap-2">
-              {STEPS.map((step) => (
-                <div
-                  key={step.id}
-                  className={`flex items-center gap-2 rounded-lg p-2 text-xs transition-colors ${
-                    step.id === currentStep
-                      ? 'bg-primary/10 text-primary'
-                      : completedSteps.has(step.id)
-                      ? 'bg-green-50 text-green-600'
-                      : 'text-muted-foreground'
-                  }`}
-                >
-                  {completedSteps.has(step.id) ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <div className={`h-4 w-4 rounded-full ${
-                      step.id === currentStep ? 'bg-primary' : 'bg-muted'
-                    }`} />
-                  )}
-                  <div className="hidden sm:block">
-                    <div className="font-medium">{step.title}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card className="mb-8 border-0 shadow-md bg-gradient-to-r from-background to-background/95">
+            <CardContent className="pt-6">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-sm font-medium">Step {currentStep} of {STEPS.length}</span>
+                <span className="text-sm text-muted-foreground">{Math.round(progress)}% Complete</span>
+              </div>
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                style={{ originX: 0 }}
+              >
+                <Progress value={progress} className="mb-4 h-2" />
+              </motion.div>
+              
+              {/* Step Indicators */}
+              <div className="grid grid-cols-3 gap-2">
+                {STEPS.map((step, index) => (
+                  <motion.div
+                    key={step.id}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ 
+                      opacity: 1, 
+                      scale: 1,
+                      transition: { delay: 0.4 + index * 0.1, duration: 0.3 }
+                    }}
+                    className={`flex items-center gap-2 rounded-lg p-3 text-xs transition-all duration-300 ${
+                      step.id === currentStep
+                        ? 'bg-primary/10 text-primary shadow-sm scale-105'
+                        : completedSteps.has(step.id)
+                        ? 'bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400'
+                        : 'text-muted-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    <motion.div
+                      animate={completedSteps.has(step.id) ? { scale: [1, 1.2, 1] } : {}}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {completedSteps.has(step.id) ? (
+                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <div className={`h-4 w-4 rounded-full transition-all duration-300 ${
+                          step.id === currentStep ? 'bg-primary shadow-md' : 'bg-muted'
+                        }`} />
+                      )}
+                    </motion.div>
+                    <div className="hidden sm:block">
+                      <div className="font-medium">{step.title}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Step Content */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, x: 50, scale: 0.98 }}
+            animate={{ 
+              opacity: 1, 
+              x: 0, 
+              scale: 1,
+              transition: {
+                duration: 0.4,
+                ease: [0.4, 0, 0.2, 1],
+                when: "beforeChildren",
+                staggerChildren: 0.1
+              }
+            }}
+            exit={{ 
+              opacity: 0, 
+              x: -50, 
+              scale: 0.98,
+              transition: { duration: 0.2 }
+            }}
           >
-            <Card>
-              <CardHeader>
-                <CardTitle>{STEPS[currentStep - 1]?.title}</CardTitle>
-                <CardDescription>{STEPS[currentStep - 1]?.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {renderStep()}
+            <Card className="overflow-hidden shadow-lg border-0 bg-gradient-to-br from-background to-background/80 backdrop-blur-sm">
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { delay: 0.1, duration: 0.3 }
+                }}
+              >
+                <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10 border-b border-primary/10">
+                  <CardTitle className="text-2xl font-bold text-foreground">
+                    {STEPS[currentStep - 1]?.title}
+                  </CardTitle>
+                  <CardDescription className="text-muted-foreground">
+                    {STEPS[currentStep - 1]?.description}
+                  </CardDescription>
+                </CardHeader>
+              </motion.div>
+              <CardContent className="p-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0,
+                    transition: { delay: 0.2, duration: 0.4 }
+                  }}
+                >
+                  {renderStep()}
+                </motion.div>
               </CardContent>
             </Card>
           </motion.div>
         </AnimatePresence>
 
         {/* Navigation */}
-        <div className="mt-8 flex items-center justify-between">
+        <motion.div 
+          className="mt-8 flex items-center justify-between"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ 
+            opacity: 1, 
+            y: 0,
+            transition: { delay: 0.5, duration: 0.3 }
+          }}
+        >
           <Button 
             variant="outline" 
             onClick={currentStep === 1 ? onCancel : handleBack}
             disabled={isProcessing}
+            className="transition-all duration-200 hover:scale-105 hover:shadow-md"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             {currentStep === 1 ? 'Cancel' : 'Back'}
@@ -331,26 +459,61 @@ export function ProvisioningWizard({ onComplete, onCancel }: ProvisioningWizardP
           <Button 
             onClick={handleNext}
             disabled={isProcessing || !validateStep(currentStep)}
-            className="min-w-32"
+            className={`min-w-32 transition-all duration-200 hover:scale-105 hover:shadow-md ${
+              currentStep === STEPS.length 
+                ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800' 
+                : ''
+            }`}
           >
+            {isProcessing ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"
+              />
+            ) : null}
             {isProcessing ? (
               'Processing...'
             ) : currentStep === STEPS.length ? (
-              'Complete Setup'
+              <>
+                Complete Setup
+                <motion.div
+                  animate={{ x: [0, 5, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity }}
+                  className="ml-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                </motion.div>
+              </>
             ) : (
               <>
                 Next
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <motion.div
+                  animate={{ x: [0, 3, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity }}
+                  className="ml-2"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </motion.div>
               </>
             )}
           </Button>
-        </div>
+        </motion.div>
 
         {/* Summary Panel */}
         {currentStep > 1 && (
-          <div className="mt-8">
+          <motion.div 
+            className="mt-8"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ 
+              opacity: 1, 
+              height: "auto",
+              transition: { delay: 0.6, duration: 0.4 }
+            }}
+            exit={{ opacity: 0, height: 0 }}
+          >
             <ProvisioningSummary data={data} currentStep={currentStep} />
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
