@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { TenantConfiguration } from "@/components/tenant/TenantConfiguration";
+import { TenantDomainManagement } from "@/components/tenant/TenantDomainManagement";
 
 interface TenantDetail {
   id: string;
@@ -382,19 +383,7 @@ const TenantDetailPage = () => {
         </TabsContent>
 
         <TabsContent value="domains">
-          <Card>
-            <CardHeader>
-              <CardTitle>Domain Management</CardTitle>
-              <CardDescription>
-                Manage custom domains and SSL certificates
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                Domain management panel coming soon...
-              </div>
-            </CardContent>
-          </Card>
+          <TenantDomainManagement tenantId={tenantId!} />
         </TabsContent>
 
         <TabsContent value="analytics">
