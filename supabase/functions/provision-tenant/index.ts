@@ -338,32 +338,45 @@ serve(async (req) => {
 
     logStep("Provisioning completed successfully", { tenantId })
 
-    // Send welcome email to the owner
+    // Send welcome email to the owner (non-blocking)
+    let emailStatus = "not_sent";
     try {
       logStep('Sending welcome email to owner')
+      
+      const emailPayload = {
+        ownerName: `${requestData.ownerFirstName} ${requestData.ownerLastName}`,
+        ownerEmail: requestData.ownerEmail,
+        restaurantName: requestData.restaurantName,
+        loginUrl: `${req.headers.get('origin') || 'https://lovable.app'}/auth`
+      };
+      
+      console.log('Email payload:', emailPayload);
+      
       const emailResult = await supabaseAdmin.functions.invoke('send-welcome-email', {
-        body: {
-          ownerName: `${requestData.ownerFirstName} ${requestData.ownerLastName}`,
-          ownerEmail: requestData.ownerEmail,
-          restaurantName: requestData.restaurantName,
-          loginUrl: `${req.headers.get('origin') || 'https://lovable.app'}/auth`
-        }
-      })
+        body: emailPayload
+      });
 
       if (emailResult.error) {
-        console.warn('Failed to send welcome email:', emailResult.error)
+        console.warn('Failed to send welcome email:', emailResult.error);
+        emailStatus = "failed";
+      } else if (emailResult.data?.success) {
+        logStep('Welcome email sent successfully');
+        emailStatus = "sent";
       } else {
-        logStep('Welcome email sent successfully')
+        console.warn('Welcome email response unclear:', emailResult.data);
+        emailStatus = "unknown";
       }
     } catch (emailError) {
-      console.warn('Welcome email error (non-blocking):', emailError)
+      console.warn('Welcome email error (non-blocking):', emailError);
+      emailStatus = "error";
     }
 
     return new Response(JSON.stringify({ 
       success: true, 
       tenantId,
       ownerId: userData.user.id,
-      message: `${requestData.restaurantName} has been successfully provisioned! Welcome email sent to ${requestData.ownerEmail}.`
+      emailStatus,
+      message: `${requestData.restaurantName} has been successfully provisioned!${emailStatus === 'sent' ? ' Welcome email sent to ' + requestData.ownerEmail + '.' : emailStatus === 'failed' ? ' Note: Welcome email delivery failed but tenant was created successfully.' : ' Note: Welcome email status unknown but tenant was created successfully.'}`
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
