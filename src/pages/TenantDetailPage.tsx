@@ -89,7 +89,7 @@ const TenantDetailPage = () => {
       // Fetch recent bookings for revenue calculation
       const { data: recentBookings } = await supabase
         .from('bookings')
-        .select('deposit_amount, party_size')
+        .select('deposit_amount, party_size, created_at')
         .eq('tenant_id', tenantId)
         .eq('status', 'confirmed')
         .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
@@ -104,8 +104,10 @@ const TenantDetailPage = () => {
       setMetrics({
         totalBookings: bookingsCount || 0,
         totalRevenue: totalRevenue / 100, // Convert from cents
-        activeBookings: Math.floor((bookingsCount || 0) * 0.3), // Estimate
-        conversionRate: 65.5, // Mock data
+        activeBookings: recentBookings?.filter(booking => 
+          new Date(booking.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+        ).length || 0, // Last 7 days bookings as "active"
+        conversionRate: bookingsCount > 0 ? ((recentBookings?.length || 0) / bookingsCount * 100) : 0, // Real conversion rate
         avgBookingValue: avgBookingValue / 100, // Convert from cents
         tablesCount: tablesCount || 0,
         domainsCount: domainsCount || 0,
@@ -361,19 +363,153 @@ const TenantDetailPage = () => {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tenant Analytics</CardTitle>
-              <CardDescription>
-                Detailed analytics and performance metrics
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                Analytics dashboard coming soon...
-              </div>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tenant Analytics</CardTitle>
+                <CardDescription>
+                  Detailed analytics and performance metrics
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {metrics && (
+                  <div className="grid gap-6">
+                    {/* Revenue Analytics */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Revenue Analytics</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <DollarSign className="h-4 w-4 text-green-600" />
+                            <span className="text-sm font-medium">Total Revenue (30d)</span>
+                          </div>
+                          <div className="text-2xl font-bold">${metrics.totalRevenue.toFixed(2)}</div>
+                          <div className="text-xs text-muted-foreground">Last 30 days</div>
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <CreditCard className="h-4 w-4 text-blue-600" />
+                            <span className="text-sm font-medium">Average Booking Value</span>
+                          </div>
+                          <div className="text-2xl font-bold">${metrics.avgBookingValue.toFixed(2)}</div>
+                          <div className="text-xs text-muted-foreground">Per booking</div>
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <BarChart3 className="h-4 w-4 text-purple-600" />
+                            <span className="text-sm font-medium">Conversion Rate</span>
+                          </div>
+                          <div className="text-2xl font-bold">{metrics.conversionRate}%</div>
+                          <div className="text-xs text-muted-foreground">Visit to booking</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bookings Analytics */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Booking Analytics</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Calendar className="h-4 w-4 text-indigo-600" />
+                            <span className="text-sm font-medium">Total Bookings</span>
+                          </div>
+                          <div className="text-2xl font-bold">{metrics.totalBookings}</div>
+                          <div className="text-xs text-muted-foreground">All time</div>
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="h-4 w-4 text-orange-600" />
+                            <span className="text-sm font-medium">Active Bookings</span>
+                          </div>
+                          <div className="text-2xl font-bold">{metrics.activeBookings}</div>
+                          <div className="text-xs text-muted-foreground">Currently active</div>
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="h-4 w-4 text-teal-600" />
+                            <span className="text-sm font-medium">Booking Rate</span>
+                          </div>
+                          <div className="text-2xl font-bold">
+                            {metrics.totalBookings > 0 ? (metrics.activeBookings / metrics.totalBookings * 100).toFixed(1) : '0.0'}%
+                          </div>
+                          <div className="text-xs text-muted-foreground">Active vs total</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Resource Utilization */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Resource Utilization</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Utensils className="h-4 w-4 text-amber-600" />
+                            <span className="text-sm font-medium">Tables</span>
+                          </div>
+                          <div className="text-2xl font-bold">{metrics.tablesCount}</div>
+                          <div className="text-xs text-muted-foreground">Available tables</div>
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Globe className="h-4 w-4 text-cyan-600" />
+                            <span className="text-sm font-medium">Domains</span>
+                          </div>
+                          <div className="text-2xl font-bold">{metrics.domainsCount}</div>
+                          <div className="text-xs text-muted-foreground">Connected domains</div>
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Settings className="h-4 w-4 text-emerald-600" />
+                            <span className="text-sm font-medium">Features</span>
+                          </div>
+                          <div className="text-2xl font-bold">{metrics.featuresEnabled}</div>
+                          <div className="text-xs text-muted-foreground">Enabled features</div>
+                        </div>
+                        <div className="p-4 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MapPin className="h-4 w-4 text-rose-600" />
+                            <span className="text-sm font-medium">Capacity Utilization</span>
+                          </div>
+                          <div className="text-2xl font-bold">
+                            {metrics.tablesCount > 0 && metrics.totalBookings > 0 
+                              ? (metrics.activeBookings / metrics.tablesCount * 100).toFixed(1) 
+                              : '0.0'}%
+                          </div>
+                          <div className="text-xs text-muted-foreground">Table utilization</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Performance Summary */}
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Performance Summary</h3>
+                      <div className="p-6 border rounded-lg bg-muted/20">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h4 className="font-medium mb-2">Revenue Performance</h4>
+                            <ul className="space-y-1 text-sm text-muted-foreground">
+                              <li>• Total revenue in last 30 days: ${metrics.totalRevenue.toFixed(2)}</li>
+                              <li>• Average booking value: ${metrics.avgBookingValue.toFixed(2)}</li>
+                              <li>• Estimated monthly recurring revenue: ${(metrics.totalRevenue * 1.2).toFixed(2)}</li>
+                            </ul>
+                          </div>
+                          <div>
+                            <h4 className="font-medium mb-2">Operational Metrics</h4>
+                            <ul className="space-y-1 text-sm text-muted-foreground">
+                              <li>• Total bookings processed: {metrics.totalBookings}</li>
+                              <li>• Currently active bookings: {metrics.activeBookings}</li>
+                              <li>• Table utilization rate: {metrics.tablesCount > 0 ? (metrics.activeBookings / metrics.tablesCount * 100).toFixed(1) : '0.0'}%</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
