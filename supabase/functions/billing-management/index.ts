@@ -71,7 +71,7 @@ serve(async (req) => {
           .from('tenants')
           .select(`
             id, name, slug, status, created_at,
-            subscribers (
+            subscribers!inner (
               id, subscribed, subscription_tier, subscription_status, 
               billing_cycle, current_period_end, stripe_customer_id
             )

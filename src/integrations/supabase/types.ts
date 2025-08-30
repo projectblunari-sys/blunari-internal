@@ -3631,6 +3631,50 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_users: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string | null
+          permissions: Json | null
+          role: string
+          status: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          permissions?: Json | null
+          role?: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          permissions?: Json | null
+          role?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_users_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           address: Json | null
@@ -4000,6 +4044,16 @@ export type Database = {
           tenant_status: string
         }[]
       }
+      get_user_tenants: {
+        Args: { p_user_id: string }
+        Returns: {
+          tenant_id: string
+          tenant_name: string
+          tenant_slug: string
+          user_role: string
+          user_status: string
+        }[]
+      }
       has_admin_access: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -4095,6 +4149,23 @@ export type Database = {
               p_user_id: string
             }
         Returns: string
+      }
+      provision_tenant_with_user: {
+        Args: {
+          p_address?: Json
+          p_admin_user_id?: string
+          p_cuisine_type_id?: string
+          p_currency?: string
+          p_description?: string
+          p_email: string
+          p_password: string
+          p_phone?: string
+          p_restaurant_name: string
+          p_restaurant_slug: string
+          p_timezone?: string
+          p_website?: string
+        }
+        Returns: Json
       }
       record_system_metric: {
         Args: {
