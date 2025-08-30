@@ -91,16 +91,15 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
       setFeatures(featuresData || []);
 
       // Fetch tenant credentials (owner info)
+      // First try to get from auto_provisioning
       const { data: provisioningData, error: provisioningError } = await supabase
         .from('auto_provisioning')
         .select('user_id, tenant_id, created_at')
         .eq('tenant_id', tenantId)
         .eq('status', 'completed')
-        .single();
+        .maybeSingle();
 
-      if (provisioningError) {
-        console.warn('Could not fetch provisioning data:', provisioningError);
-      } else if (provisioningData) {
+      if (provisioningData) {
         // Fetch user profile separately
         const { data: profileData } = await supabase
           .from('profiles')
@@ -114,6 +113,16 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
             tenant_slug: tenantData.slug,
             tenant_id: tenantId,
             created_at: provisioningData.created_at
+          });
+        }
+      } else {
+        // Fallback: use tenant's email if auto_provisioning not found
+        if (tenantData.email) {
+          setCredentials({
+            owner_email: tenantData.email,
+            tenant_slug: tenantData.slug,
+            tenant_id: tenantId,
+            created_at: tenantData.created_at
           });
         }
       }
