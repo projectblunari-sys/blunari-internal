@@ -134,7 +134,7 @@ const TenantsPage = () => {
     console.log('Delete tenant called for:', tenant.name, tenant.id);
     setIsDeleting(true);
     try {
-      // First, check if tenant has any active bookings or important data
+      // First, check if tenant has any active bookings
       const { count: bookingsCount, error: bookingsError } = await supabase
         .from('bookings')
         .select('*', { count: 'exact', head: true })
@@ -154,82 +154,20 @@ const TenantsPage = () => {
         return;
       }
 
-      // Complete tenant cleanup - delete all related data in proper order
-      console.log(`Starting complete deletion of tenant: ${tenant.name} (${tenant.id})`);
+      console.log('Starting tenant deletion using database function...');
       
-      try {
-        // Step 1: Delete auto_provisioning first (foreign key constraint)
-        const { error: autoProvError } = await supabase.from('auto_provisioning').delete().eq('tenant_id', tenant.id);
-        if (autoProvError) {
-          console.error('Error deleting auto_provisioning:', autoProvError);
-          throw new Error(`Failed to delete provisioning data: ${autoProvError.message}`);
-        }
+      // Use the secure database function to delete the tenant completely
+      const { error } = await supabase.rpc('delete_tenant_complete', {
+        p_tenant_id: tenant.id
+      });
 
-        // Step 2: Delete all tenant-related data individually with error checking
-        const cleanupOperations = [
-          () => supabase.from('analytics_events').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('api_request_logs').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('business_metrics').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('booking_holds').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('booking_availability_cache').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('bookings').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('notification_queue').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('api_rate_limits').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('domain_analytics').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('domain_events').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('domain_health_checks').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('dns_records').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('domains').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('tenant_features').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('party_size_configs').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('business_hours').delete().eq('tenant_id', tenant.id),
-          () => supabase.from('restaurant_tables').delete().eq('tenant_id', tenant.id),
-        ];
-
-        for (let i = 0; i < cleanupOperations.length; i++) {
-          const operation = cleanupOperations[i];
-          console.log(`Deleting tenant data - operation ${i + 1}/${cleanupOperations.length}...`);
-          try {
-            const { error: deleteError } = await operation();
-            if (deleteError) {
-              console.error(`Error in cleanup operation ${i + 1}:`, deleteError);
-              // Continue with other operations even if one fails
-            }
-          } catch (opError) {
-            console.error(`Exception in cleanup operation ${i + 1}:`, opError);
-          }
-        }
-        
-        // Step 3: Check for any remaining references
-        console.log('Checking for remaining references...');
-        const { data: remainingRefs } = await supabase
-          .from('auto_provisioning')
-          .select('id')
-          .eq('tenant_id', tenant.id);
-        
-        if (remainingRefs && remainingRefs.length > 0) {
-          console.error('Still have auto_provisioning references:', remainingRefs);
-          throw new Error('Unable to remove all tenant references');
-        }
-        
-        // Step 4: Finally delete the tenant record
-        console.log('Deleting tenant record...');
-        const { error: tenantError } = await supabase
-          .from('tenants')
-          .delete()
-          .eq('id', tenant.id);
-
-        if (tenantError) {
-          console.error('Error deleting tenant:', tenantError);
-          throw new Error(`Failed to delete tenant: ${tenantError.message}`);
-        }
-
-        console.log('Tenant deletion completed successfully');
-      } catch (deleteError) {
-        console.error('Detailed deletion error:', deleteError);
-        throw deleteError;
+      if (error) {
+        console.error('Database function error:', error);
+        throw new Error(error.message);
       }
 
+      console.log('Tenant deletion completed successfully');
+      
       toast({
         title: "Tenant Deleted",
         description: `${tenant.name} has been permanently deleted.`,

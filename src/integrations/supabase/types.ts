@@ -3796,6 +3796,10 @@ export type Database = {
         }
         Returns: string
       }
+      delete_tenant_complete: {
+        Args: { p_tenant_id: string }
+        Returns: boolean
+      }
       generate_ticket_number: {
         Args: Record<PropertyKey, never>
         Returns: string
