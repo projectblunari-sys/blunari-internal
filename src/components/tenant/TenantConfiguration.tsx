@@ -72,6 +72,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
   const [changingCredentials, setChangingCredentials] = useState(false);
   const [newOwnerEmail, setNewOwnerEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('admin123temp'); // Store current password
   const [isEditingEmail, setIsEditingEmail] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const { toast } = useToast();
@@ -375,7 +376,10 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
     setChangingCredentials(true);
     try {
       // In a real implementation, you would call an edge function to update the user's password
-      // For now, we'll simulate this action
+      // For now, we'll simulate this action and update the local password state
+      
+      // Update the current password state to reflect the change
+      setCurrentPassword(newPassword);
       
       toast({
         title: "Password Updated",
@@ -736,7 +740,7 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                     ) : (
                       <>
                         <Input
-                          value={showPassword ? "admin123temp" : "••••••••••••"}
+                          value={showPassword ? currentPassword : "••••••••••••"}
                           readOnly
                           type={showPassword ? "text" : "password"}
                           className="bg-muted flex-1"
