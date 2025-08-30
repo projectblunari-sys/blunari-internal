@@ -131,6 +131,7 @@ const TenantsPage = () => {
   };
 
   const handleDeleteTenant = async (tenant: Tenant) => {
+    console.log('Delete tenant called for:', tenant.name, tenant.id);
     setIsDeleting(true);
     try {
       // First, check if tenant has any active bookings or important data
