@@ -75,8 +75,42 @@ serve(async (req) => {
     logStep("Function started")
 
     // Parse request body
-    const requestData: ProvisionRequest = await req.json()
-    logStep("Request data received", { restaurantName: requestData.restaurantName })
+    let requestData: ProvisionRequest
+    try {
+      requestData = await req.json()
+      logStep("Request data received", { 
+        restaurantName: requestData.restaurantName,
+        hasOwnerEmail: !!requestData.ownerEmail,
+        hasOwnerPassword: !!requestData.ownerPassword,
+        hasSelectedPlan: !!requestData.selectedPlanId 
+      })
+    } catch (parseError) {
+      logStep("JSON parse error", parseError)
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: `Invalid request body: ${parseError instanceof Error ? parseError.message : 'Unknown error'}` 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      })
+    }
+
+    // Validate required fields
+    if (!requestData.restaurantName || !requestData.ownerEmail || !requestData.ownerPassword) {
+      const missingFields = []
+      if (!requestData.restaurantName) missingFields.push('restaurantName')
+      if (!requestData.ownerEmail) missingFields.push('ownerEmail')
+      if (!requestData.ownerPassword) missingFields.push('ownerPassword')
+      
+      logStep("Missing required fields", { missingFields })
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: `Missing required fields: ${missingFields.join(', ')}` 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      })
+    }
 
     // Create Supabase clients
     const supabaseAdmin = createClient(

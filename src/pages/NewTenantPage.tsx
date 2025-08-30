@@ -11,21 +11,29 @@ export default function NewTenantPage() {
   const handleProvisioningComplete = async (data: ProvisioningData) => {
     try {
       console.log('Starting tenant provisioning...', { restaurantName: data.restaurantName })
+      console.log('Full provisioning data:', data)
       
       // Call the comprehensive provision-tenant edge function
-      const { data: result, error } = await supabase.functions.invoke('provision-tenant', {
+      const response = await supabase.functions.invoke('provision-tenant', {
         body: data
       })
 
-      console.log('Provisioning response:', { result, error })
+      console.log('Raw Supabase response:', response)
+      console.log('Response data:', response.data)
+      console.log('Response error:', response.error)
 
-      if (error) {
-        console.error('Supabase function error:', error)
-        throw error
+      if (response.error) {
+        console.error('Supabase function error:', response.error)
+        throw new Error(`Function error: ${response.error.message}`)
+      }
+
+      const result = response.data
+      if (!result) {
+        throw new Error('No response data received from provisioning function')
       }
 
       if (!result.success) {
-        console.error('Provisioning failed:', result.error)
+        console.error('Provisioning failed:', result)
         throw new Error(result.error || 'Failed to provision tenant')
       }
 
