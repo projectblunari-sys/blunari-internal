@@ -286,21 +286,30 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
       const { data, error } = await supabase.functions.invoke('manage-tenant-credentials', {
         body: {
           tenantId,
-          action: 'reset_password'
+          action: 'generate_password'
         }
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Password Reset",
-        description: "Password reset email has been sent to the tenant owner",
-      });
+      // Set the new password so it can be viewed
+      if (data.newPassword) {
+        setCurrentPassword(data.newPassword);
+        setShowPassword(true); // Automatically show the new password
+        
+        // Copy to clipboard
+        await copyToClipboard(data.newPassword, 'Password copied to clipboard!');
+        
+        toast({
+          title: "New Password Generated",
+          description: "Password generated, copied to clipboard, and displayed below",
+        });
+      }
     } catch (error) {
-      console.error('Error sending password reset:', error);
+      console.error('Error generating password:', error);
       toast({
         title: "Error",
-        description: "Failed to send password reset email",
+        description: "Failed to generate new password",
         variant: "destructive"
       });
     } finally {
@@ -788,11 +797,11 @@ export function TenantConfiguration({ tenantId }: TenantConfigurationProps) {
                     ) : (
                       <>
                         <Input
-                          value={currentPassword ? (showPassword ? currentPassword : "••••••••••••") : "••••••••••••"}
+                          value={currentPassword && showPassword ? currentPassword : "••••••••••••"}
                           readOnly
-                          type="password"
+                          type={currentPassword && showPassword ? "text" : "password"}
                           className="bg-muted flex-1"
-                          placeholder={currentPassword ? "" : "Existing password (cannot be displayed)"}
+                          placeholder={currentPassword ? "" : "Click 'Generate New Password' to create a viewable password"}
                         />
                         <Button 
                           variant="outline" 
