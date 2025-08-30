@@ -99,6 +99,17 @@ serve(async (req) => {
 async function addDomain(supabase: any, params: any, cloudflareHeaders: any) {
   const { domain, tenant_id, domain_type = 'custom' } = params
   
+  // Check if domain already exists
+  const { data: existingDomain } = await supabase
+    .from('domains')
+    .select('id')
+    .eq('domain', domain)
+    .single()
+    
+  if (existingDomain) {
+    throw new Error(`Domain ${domain} already exists`)
+  }
+  
   // Create domain in our database
   const { data: domainData, error: domainError } = await supabase
     .rpc('add_domain', {
@@ -118,8 +129,15 @@ async function addDomain(supabase: any, params: any, cloudflareHeaders: any) {
     .eq('id', domainData)
     .single()
 
+  // Check if Cloudflare is configured
+  const cloudflareZoneId = Deno.env.get('CLOUDFLARE_ZONE_ID')
+  if (!cloudflareZoneId) {
+    console.log('Cloudflare not configured, skipping external DNS setup')
+    return { domain_id: domainData, cloudflare_data: null }
+  }
+
   // Add to Cloudflare as custom hostname
-  const cloudflareResponse = await fetch(`https://api.cloudflare.com/client/v4/zones/${Deno.env.get('CLOUDFLARE_ZONE_ID')}/custom_hostnames`, {
+  const cloudflareResponse = await fetch(`https://api.cloudflare.com/client/v4/zones/${cloudflareZoneId}/custom_hostnames`, {
     method: 'POST',
     headers: cloudflareHeaders,
     body: JSON.stringify({
