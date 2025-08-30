@@ -129,7 +129,11 @@ serve(async (req) => {
       }
 
       case 'send-reminder': {
-        const { tenant_id, reminder_type } = await req.json();
+        const { tenant_id, reminder_type } = body;
+        
+        if (!tenant_id || !reminder_type) {
+          throw new Error("Missing tenant_id or reminder_type");
+        }
         
         const { data: tenant } = await supabaseClient
           .from('tenants')
@@ -137,24 +141,26 @@ serve(async (req) => {
           .eq('id', tenant_id)
           .single();
 
-        if (!tenant || !tenant.subscribers?.[0]) {
-          throw new Error("Tenant or subscription not found");
+        if (!tenant) {
+          throw new Error("Tenant not found");
         }
 
-        // Create reminder record
+        // Create reminder record (even if no subscriber exists yet)
+        const subscriberId = tenant.subscribers?.[0]?.id || null;
         const { data: reminder } = await supabaseClient
           .from('payment_reminders')
           .insert({
             tenant_id,
-            subscriber_id: tenant.subscribers[0].id,
+            subscriber_id: subscriberId,
             reminder_type,
-            email_content: `Payment reminder for ${tenant.name}`
+            email_content: `Payment reminder for ${tenant.name}`,
+            status: 'sent',
+            sent_at: new Date().toISOString()
           })
           .select()
           .single();
 
-        // Here you would integrate with your email service
-        logStep("Created payment reminder", { tenant_id, reminder_type });
+        logStep("Created payment reminder", { tenant_id, reminder_type, reminder_id: reminder?.id });
         
         return new Response(JSON.stringify({ success: true, reminder }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

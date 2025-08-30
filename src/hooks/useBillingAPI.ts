@@ -105,11 +105,6 @@ export const useBillingAPI = () => {
       body: { tenant_id: tenantId, reminder_type: reminderType },
     });
     
-    toast({
-      title: "Success",
-      description: "Payment reminder sent successfully",
-    });
-    
     return data;
   };
 

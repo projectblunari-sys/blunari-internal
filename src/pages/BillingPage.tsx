@@ -65,6 +65,10 @@ const BillingPage = () => {
   const handleSendReminder = async (tenantId: string, type: 'overdue' | 'failed' | 'upcoming') => {
     try {
       await sendPaymentReminder(tenantId, type);
+      toast({
+        title: "Success",
+        description: "Payment reminder sent successfully",
+      });
       await loadData();
     } catch (error) {
       console.error('Error sending reminder:', error);
@@ -306,9 +310,9 @@ const BillingPage = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {getStatusIcon(subscription?.subscription_status || 'inactive')}
-                            <Badge className={getStatusColor(subscription?.subscription_status || 'inactive')}>
-                              {subscription?.subscription_status || 'inactive'}
+                            {getStatusIcon(restaurant.status)}
+                            <Badge className={getStatusColor(restaurant.status)}>
+                              {restaurant.status}
                             </Badge>
                           </div>
                         </TableCell>
