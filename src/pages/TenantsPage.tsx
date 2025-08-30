@@ -153,21 +153,45 @@ const TenantsPage = () => {
         return;
       }
 
-      // Delete auto_provisioning first to avoid foreign key constraint
+      // Complete tenant cleanup - delete all related data in proper order
+      console.log(`Starting complete deletion of tenant: ${tenant.name} (${tenant.id})`);
+      
+      // Step 1: Delete auto_provisioning first (foreign key constraint)
       await supabase.from('auto_provisioning').delete().eq('tenant_id', tenant.id);
-
-      // Delete related data (domains, features, etc.)
-      const deletePromises = [
+      
+      // Step 2: Delete all tenant-related data (order matters for foreign keys)
+      const cleanupOperations = [
+        // Analytics and logs
+        supabase.from('analytics_events').delete().eq('tenant_id', tenant.id),
+        supabase.from('api_request_logs').delete().eq('tenant_id', tenant.id),
+        supabase.from('business_metrics').delete().eq('tenant_id', tenant.id),
+        
+        // Bookings and availability
+        supabase.from('booking_holds').delete().eq('tenant_id', tenant.id),
+        supabase.from('booking_availability_cache').delete().eq('tenant_id', tenant.id),
+        supabase.from('bookings').delete().eq('tenant_id', tenant.id),
+        
+        // Notifications and rate limiting
+        supabase.from('notification_queue').delete().eq('tenant_id', tenant.id),
+        supabase.from('api_rate_limits').delete().eq('tenant_id', tenant.id),
+        
+        // Domain related data
+        supabase.from('domain_analytics').delete().eq('tenant_id', tenant.id),
+        supabase.from('domain_events').delete().eq('tenant_id', tenant.id),
+        supabase.from('domain_health_checks').delete().eq('tenant_id', tenant.id),
+        supabase.from('dns_records').delete().eq('tenant_id', tenant.id),
         supabase.from('domains').delete().eq('tenant_id', tenant.id),
+        
+        // Configuration and features
         supabase.from('tenant_features').delete().eq('tenant_id', tenant.id),
-        supabase.from('restaurant_tables').delete().eq('tenant_id', tenant.id),
+        supabase.from('party_size_configs').delete().eq('tenant_id', tenant.id),
         supabase.from('business_hours').delete().eq('tenant_id', tenant.id),
-        supabase.from('party_size_configs').delete().eq('tenant_id', tenant.id)
+        supabase.from('restaurant_tables').delete().eq('tenant_id', tenant.id)
       ];
 
-      await Promise.all(deletePromises);
-
-      // Finally delete the tenant
+      await Promise.all(cleanupOperations);
+      
+      // Step 3: Finally delete the tenant record
       const { error } = await supabase
         .from('tenants')
         .delete()
