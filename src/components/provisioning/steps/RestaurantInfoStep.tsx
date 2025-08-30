@@ -4,9 +4,11 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
-import { Store, Globe, Mail, Phone, MapPin } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Store, Globe, Mail, Phone, MapPin, Edit3, Check, X } from 'lucide-react'
 import type { ProvisioningData } from '../ProvisioningWizard'
 import { supabase } from '@/integrations/supabase/client'
+import { useSlugValidation } from '@/hooks/useSlugValidation'
 
 interface CuisineType {
   id: string
@@ -21,6 +23,9 @@ interface RestaurantInfoStepProps {
 
 export function RestaurantInfoStep({ data, updateData }: RestaurantInfoStepProps) {
   const [cuisineTypes, setCuisineTypes] = useState<CuisineType[]>([])
+  const [isEditingSlug, setIsEditingSlug] = useState(false)
+  const [tempSlug, setTempSlug] = useState('')
+  const { generateUniqueSlug, validateSlug, isValidating } = useSlugValidation()
 
   useEffect(() => {
     const fetchCuisineTypes = async () => {
@@ -32,6 +37,41 @@ export function RestaurantInfoStep({ data, updateData }: RestaurantInfoStepProps
     }
     fetchCuisineTypes()
   }, [])
+
+  // Auto-generate slug when restaurant name changes
+  useEffect(() => {
+    const generateSlug = async () => {
+      if (data.restaurantName && data.restaurantName.length >= 3 && !isEditingSlug) {
+        console.log('Generating slug for:', data.restaurantName)
+        const slug = await generateUniqueSlug(data.restaurantName)
+        console.log('Generated unique slug:', slug)
+        updateData({ slug })
+      }
+    }
+    
+    const timeoutId = setTimeout(generateSlug, 500) // Debounce for 500ms
+    return () => clearTimeout(timeoutId)
+  }, [data.restaurantName, generateUniqueSlug, updateData, isEditingSlug])
+
+  const handleEditSlug = () => {
+    setTempSlug(data.slug || '')
+    setIsEditingSlug(true)
+  }
+
+  const handleSaveSlug = async () => {
+    if (tempSlug && tempSlug.length >= 3) {
+      const isValid = await validateSlug(tempSlug)
+      if (isValid) {
+        updateData({ slug: tempSlug })
+        setIsEditingSlug(false)
+      }
+    }
+  }
+
+  const handleCancelSlug = () => {
+    setTempSlug('')
+    setIsEditingSlug(false)
+  }
 
   return (
     <div className="space-y-6">
@@ -271,14 +311,67 @@ export function RestaurantInfoStep({ data, updateData }: RestaurantInfoStepProps
       </Card>
 
       {data.slug && (
-        <div className="bg-muted/50 rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">
-            <strong>Your restaurant slug:</strong> <code className="bg-background px-2 py-1 rounded text-foreground">{data.slug}</code>
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            This unique identifier will be used for your restaurant's booking URLs and API endpoints
-          </p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5 text-primary" />
+              Restaurant Slug
+            </CardTitle>
+            <CardDescription>
+              This unique identifier will be used for your restaurant's booking URLs and API endpoints
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {isEditingSlug ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={tempSlug}
+                    onChange={(e) => setTempSlug(e.target.value)}
+                    placeholder="Enter custom slug"
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveSlug}
+                    disabled={isValidating || !tempSlug || tempSlug.length < 3}
+                    className="px-3"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCancelSlug}
+                    className="px-3"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <code className="bg-muted px-3 py-2 rounded text-sm font-mono">
+                      {data.slug}
+                    </code>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleEditSlug}
+                    className="ml-3"
+                  >
+                    <Edit3 className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Your booking URL will be: <span className="font-mono">yourdomain.com/{data.slug}</span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   )
