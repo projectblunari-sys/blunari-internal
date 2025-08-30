@@ -72,12 +72,12 @@ export interface ProvisioningData {
 }
 
 const STEPS = [
-  { id: 1, title: 'Basic Information', description: 'Restaurant name and cuisine type' },
-  { id: 2, title: 'Contact Information', description: 'Email, phone, and website' },
-  { id: 3, title: 'Location', description: 'Restaurant address details' },
-  { id: 4, title: 'Owner Account', description: 'Admin credentials setup' },
-  { id: 5, title: 'Business Configuration', description: 'Hours and capacity settings' },
-  { id: 6, title: 'Plan Selection', description: 'Choose your subscription plan' },
+  { id: 1, title: 'Restaurant Info', description: 'Name and cuisine type' },
+  { id: 2, title: 'Contact Details', description: 'Email, phone, and website' },
+  { id: 3, title: 'Address', description: 'Location details' },
+  { id: 4, title: 'Admin Account', description: 'Owner credentials' },
+  { id: 5, title: 'Business Hours', description: 'Operating schedule' },
+  { id: 6, title: 'Subscription', description: 'Choose your plan' },
 ]
 
 interface ProvisioningWizardProps {
