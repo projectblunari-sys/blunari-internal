@@ -1857,6 +1857,36 @@ export type Database = {
           },
         ]
       }
+      operation_rate_limits: {
+        Row: {
+          attempts_count: number
+          blocked_until: string | null
+          created_at: string
+          id: string
+          operation_type: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          attempts_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          operation_type: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          attempts_count?: number
+          blocked_until?: string | null
+          created_at?: string
+          id?: string
+          operation_type?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       party_size_configs: {
         Row: {
           allow_large_parties: boolean
@@ -4193,30 +4223,41 @@ export type Database = {
     Views: {
       tenant_public_info: {
         Row: {
+          cuisine_type_id: string | null
           currency: string | null
+          description: string | null
           id: string | null
           name: string | null
           slug: string | null
-          status: string | null
           timezone: string | null
         }
         Insert: {
+          cuisine_type_id?: string | null
           currency?: string | null
+          description?: string | null
           id?: string | null
           name?: string | null
           slug?: string | null
-          status?: string | null
           timezone?: string | null
         }
         Update: {
+          cuisine_type_id?: string | null
           currency?: string | null
+          description?: string | null
           id?: string | null
           name?: string | null
           slug?: string | null
-          status?: string | null
           timezone?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tenants_cuisine_type_id_fkey"
+            columns: ["cuisine_type_id"]
+            isOneToOne: false
+            referencedRelation: "cuisine_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -4562,6 +4603,10 @@ export type Database = {
           assigner_role: Database["public"]["Enums"]["employee_role"]
           target_role: Database["public"]["Enums"]["employee_role"]
         }
+        Returns: boolean
+      }
+      validate_sensitive_operation: {
+        Args: { operation_type: string; resource_id?: string }
         Returns: boolean
       }
       validate_tenant_access: {
